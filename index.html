@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="oscuro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Renasté · Portal</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="renaste-tokens.css">
+<style>
+  .app { min-height: 100vh; position: relative; }
+  .centro { max-width: 400px; margin: 0 auto; padding: 56px 20px; position: relative; }
+  .shell  { max-width: 900px; margin: 0 auto; padding: 28px 20px 48px; position: relative; }
+
+  .cabecera { display: flex; align-items: center; gap: 13px; margin-bottom: 26px; }
+  .mosaicos { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 13px; }
+
+  .pie { display: flex; gap: 14px; margin-top: 22px; padding-top: 14px;
+         border-top: var(--zx-hairline) solid var(--zx-borde);
+         font-family: var(--zx-mono); font-size: 10.5px; color: var(--zx-txt-3); }
+
+  .oculto { display: none; }
+  .aviso { font-size: 12.5px; color: var(--zx-error-txt); background: var(--zx-error-bg);
+           border-radius: var(--zx-r-control); padding: 10px 13px; margin-top: 14px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="zx-luz"></div>
+  <div class="zx-reticula"></div>
+
+  <!-- ============ Acceso ============ -->
+  <section class="centro" id="vista-acceso">
+    <div class="zx-cristal">
+      <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:28px">
+        <svg viewBox="0 0 256 256" width="62" height="62" class="zx-icono-3d" role="img" aria-label="Renasté">
+          <defs><linearGradient id="zx-g" x1=".1" y1=".06" x2=".9" y2=".94">
+            <stop offset="0" stop-color="#F6F4F3"/><stop offset=".2" stop-color="#A59281"/>
+            <stop offset=".42" stop-color="#D1C8C0"/><stop offset=".62" stop-color="#B09F91"/>
+            <stop offset=".82" stop-color="#E2DCD7"/><stop offset="1" stop-color="#A99686"/>
+          </linearGradient></defs>
+          <path fill="url(#zx-g)" fill-rule="evenodd" d="M118.82 255.41C94.51 253.72 70.91 244.94 51.29 230.28C45.14 225.69 34.40 215.44 29.14 209.15C18.12 195.97 8.53 177.24 4.12 160.30C0.63 146.88 -0.81 129.22 0.51 116.03C3.55 85.72 16.23 58.85 37.54 37.54C57.26 17.81 81.47 5.64 109.63 1.30C117.54 0.08 136.90 -0.07 144.42 1.03C163.92 3.88 182.10 10.68 197.84 21.01C209.49 28.64 220.71 39.03 229.17 50.00C242.65 67.49 251.73 89.43 254.59 111.47C255.66 119.73 255.69 136.33 254.64 144.14C252.37 161.02 246.99 177.02 238.73 191.42C219.75 224.53 186.76 247.50 148.83 254.02C144.08 254.84 129.38 256.07 126.33 255.91C125.57 255.87 122.18 255.65 118.82 255.41ZM133.02 216.54C144.07 208.20 153.23 199.14 163.47 186.43C169.07 179.48 185.92 154.34 191.17 145.11C197.82 133.42 203.27 119.32 206.28 106.02C207.62 100.09 209.80 86.64 209.81 84.25C209.81 83.32 208.80 82.62 204.77 80.77C194.69 76.15 182.06 72.35 168.63 69.90C146.73 65.89 110.34 64.51 93.50 67.05C81.38 68.87 68.27 72.73 54.65 78.49L47.81 81.38L48.17 85.35C49.58 100.65 54.07 117.56 61.27 134.68C64.51 142.37 73.43 160.12 78.61 169.18C90.14 189.34 101.67 202.25 121.31 216.98C124.21 219.16 126.72 220.94 126.89 220.94C127.05 220.94 129.81 218.96 133.02 216.54Z"/>
+        </svg>
+        <div class="zx-wordmark" style="font-size:17px;margin-top:15px">RENASTÉ</div>
+        <div class="zx-eyebrow" style="margin-top:7px">Centro quirúrgico especializado</div>
+      </div>
+
+      <div id="boton-google" style="display:flex;justify-content:center"></div>
+
+      <p style="text-align:center;font-size:11.5px;color:var(--zx-txt-3);margin:18px 0 0">
+        Acceso del personal
+      </p>
+      <div class="aviso oculto" id="error-acceso" role="alert"></div>
+      <label style="margin-top:16px;font-size:11.5px;color:var(--zx-txt-3);display:flex;
+                    gap:8px;align-items:flex-start;text-align:left;line-height:1.45">
+        <input type="checkbox" id="chk-compartida" style="margin-top:2px;flex:none">
+        <span>Esta computadora es compartida (la del quirófano). Al cerrar sesión se
+        cierra también la de Google, no se entra solo —siempre hay que elegir cuenta— y
+        la sesión se cierra sola a los 10 minutos sin uso.</span>
+      </label>
+    </div>
+  </section>
+
+  <!-- ============ Lanzador ============ -->
+  <section class="shell oculto" id="vista-lanzador">
+    <div class="cabecera">
+      <svg viewBox="0 0 256 256" width="34" height="34" class="zx-icono-3d" aria-hidden="true">
+        <defs><linearGradient id="zx-g2" x1=".1" y1=".06" x2=".9" y2=".94">
+          <stop offset="0" stop-color="#F6F4F3"/><stop offset=".2" stop-color="#A59281"/>
+          <stop offset=".42" stop-color="#D1C8C0"/><stop offset=".62" stop-color="#B09F91"/>
+          <stop offset=".82" stop-color="#E2DCD7"/><stop offset="1" stop-color="#A99686"/>
+        </linearGradient></defs>
+        <path fill="url(#zx-g2)" fill-rule="evenodd" d="M118.82 255.41C94.51 253.72 70.91 244.94 51.29 230.28C45.14 225.69 34.40 215.44 29.14 209.15C18.12 195.97 8.53 177.24 4.12 160.30C0.63 146.88 -0.81 129.22 0.51 116.03C3.55 85.72 16.23 58.85 37.54 37.54C57.26 17.81 81.47 5.64 109.63 1.30C117.54 0.08 136.90 -0.07 144.42 1.03C163.92 3.88 182.10 10.68 197.84 21.01C209.49 28.64 220.71 39.03 229.17 50.00C242.65 67.49 251.73 89.43 254.59 111.47C255.66 119.73 255.69 136.33 254.64 144.14C252.37 161.02 246.99 177.02 238.73 191.42C219.75 224.53 186.76 247.50 148.83 254.02C144.08 254.84 129.38 256.07 126.33 255.91C125.57 255.87 122.18 255.65 118.82 255.41ZM133.02 216.54C144.07 208.20 153.23 199.14 163.47 186.43C169.07 179.48 185.92 154.34 191.17 145.11C197.82 133.42 203.27 119.32 206.28 106.02C207.62 100.09 209.80 86.64 209.81 84.25C209.81 83.32 208.80 82.62 204.77 80.77C194.69 76.15 182.06 72.35 168.63 69.90C146.73 65.89 110.34 64.51 93.50 67.05C81.38 68.87 68.27 72.73 54.65 78.49L47.81 81.38L48.17 85.35C49.58 100.65 54.07 117.56 61.27 134.68C64.51 142.37 73.43 160.12 78.61 169.18C90.14 189.34 101.67 202.25 121.31 216.98C124.21 219.16 126.72 220.94 126.89 220.94C127.05 220.94 129.81 218.96 133.02 216.54Z"/></svg>
+      <div>
+        <div class="zx-wordmark" style="font-size:15px">RENASTÉ</div>
+        <div class="zx-eyebrow" style="margin-top:4px">Centro quirúrgico especializado</div>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div style="font-size:12.5px;color:var(--zx-txt-2)" id="quien"></div>
+        <button id="salir" style="background:none;border:none;padding:0;margin-top:3px;cursor:pointer;
+                font-family:var(--zx-texto);font-size:10.5px;color:var(--zx-txt-3)">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <div id="cinta-compartida" style="display:none;align-items:center;gap:10px;padding:7px 12px;
+         margin:0 0 14px;border-radius:8px;background:#685748;color:#fff;font-size:12.5px">
+      <span>Sesión de <b id="cinta-quien">—</b></span>
+      <span style="flex:1"></span>
+      <span>¿No es usted?</span>
+      <button type="button" id="cinta-salir" style="background:#fff;color:#685748;border:0;
+              border-radius:6px;padding:4px 11px;font:inherit;font-weight:700;cursor:pointer">Cerrar sesión</button>
+    </div>
+
+    <div class="mosaicos" id="mosaicos"></div>
+    <div class="pie"><span id="conteo"></span><span style="margin-left:auto">app.renaste.com</span></div>
+  </section>
+</div>
+
+<div id="cinta-inactividad" style="position:fixed;left:0;right:0;bottom:0;z-index:2147483000;
+     display:none;align-items:center;gap:14px;padding:13px 18px;background:#8a1c1c;color:#fff;
+     font-size:14px;box-shadow:0 -4px 18px rgba(0,0,0,.25)">
+  <span style="flex:1">Nadie ha usado esta pantalla en un rato. La sesión se cierra en
+    <b id="cuenta-inactividad">60</b> s.</span>
+  <button type="button" id="sigo-aqui" style="background:#fff;color:#8a1c1c;border:0;
+          border-radius:6px;padding:7px 16px;font:inherit;font-weight:700;cursor:pointer">Sigo aquí</button>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+const CONFIG = {
+  GATEWAY:   '__API_PORTAL__',
+  CLIENT_ID: '672831350436-kgll6i77picf8s8pqeraii4s77jlkgol.apps.googleusercontent.com'
+};
+
+/**
+ * Content-Type text/plain no es descuido: Apps Script no responde OPTIONS,
+ * y application/json dispara preflight CORS que mata la petición antes de salir.
+ * El cuerpo sí va en JSON.
+ */
+async function api(action, datos = {}) {
+  const token = sessionStorage.getItem('zx_token');
+  const r = await fetch(CONFIG.GATEWAY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, token, ...datos })
+  });
+  const res = await r.json();
+  if (!res.ok) {
+    if (/sesión/i.test(res.error)) { sessionStorage.removeItem('zx_token'); mostrar('vista-acceso'); }
+    throw new Error(res.error);
+  }
+  return res.data;
+}
+
+/* ── COMPUTADORA COMPARTIDA ────────────────────────────────────
+   En la computadora del quirófano, cerrar sesión tiene que cerrar también la
+   de Google: si sólo se borra la de Renasté, el siguiente que se siente entra
+   como el anterior. Y auto_select se apaga ahí, porque con él encendido ni
+   siquiera hace falta un clic. La marca es de la máquina, así que vive en
+   localStorage y la comparten las tres alas del mismo origen.
+
+   Se puede dejar puesta abriendo el portal con ?quirofano=1. */
+const LLAVE_COMPARTIDA = 'renaste-computadora-compartida';
+function esCompartida() {
+  try { return localStorage.getItem(LLAVE_COMPARTIDA) === '1'; } catch (e) { return false; }
+}
+function marcaCompartida(si) {
+  try {
+    if (si) localStorage.setItem(LLAVE_COMPARTIDA, '1');
+    else localStorage.removeItem(LLAVE_COMPARTIDA);
+  } catch (e) {}
+}
+(function () {
+  try {
+    const q = new URLSearchParams(location.search).get('quirofano');
+    if (q === '1') marcaCompartida(true);
+    if (q === '0') marcaCompartida(false);
+  } catch (e) {}
+})();
+
+/* ── Cierre por inactividad ────────────────────────────────────
+   Sólo en la compartida. Un portal abierto con la sesión viva es una puerta
+   abierta: desde aquí se entra a cualquier ala con un clic, y la credencial
+   dura una hora. Avisa un minuto antes; el ratón NO cancela el aviso, para que
+   un roce no salve una computadora que en realidad quedó sola. */
+const MINUTOS_INACTIVIDAD = 10;
+const SEGUNDOS_DE_GRACIA = 60;
+let RELOJ_QUIETO = null, RELOJ_CUENTA = null, QUEDAN = 0;
+
+function paraInactividad() {
+  clearTimeout(RELOJ_QUIETO); clearInterval(RELOJ_CUENTA);
+  RELOJ_QUIETO = null; RELOJ_CUENTA = null;
+  const c = document.getElementById('cinta-inactividad');
+  if (c) c.style.display = 'none';
+}
+
+function reiniciaInactividad() {
+  const dentro = !document.getElementById('vista-lanzador').classList.contains('oculto');
+  if (!esCompartida() || !dentro) return;
+  paraInactividad();
+  RELOJ_QUIETO = setTimeout(avisaInactividad, MINUTOS_INACTIVIDAD * 60000);
+}
+
+function avisaInactividad() {
+  const c = document.getElementById('cinta-inactividad');
+  if (!c) return;
+  QUEDAN = SEGUNDOS_DE_GRACIA;
+  document.getElementById('cuenta-inactividad').textContent = QUEDAN;
+  c.style.display = 'flex';
+  RELOJ_CUENTA = setInterval(function () {
+    QUEDAN--;
+    document.getElementById('cuenta-inactividad').textContent = QUEDAN;
+    if (QUEDAN <= 0) { paraInactividad(); salirDelPortal(); }
+  }, 1000);
+}
+
+['mousedown', 'keydown', 'touchstart', 'wheel'].forEach(function (ev) {
+  document.addEventListener(ev, function () {
+    const c = document.getElementById('cinta-inactividad');
+    if (c && c.style.display === 'flex') return;
+    reiniciaInactividad();
+  }, true);
+});
+
+function salirDelPortal() {
+  paraInactividad();
+  sessionStorage.removeItem('zx_token');
+  if (window.google?.accounts) google.accounts.id.disableAutoSelect();
+  if (esCompartida()) { location.replace('https://accounts.google.com/Logout'); return; }
+  mostrar('vista-acceso');
+}
+
+function pintaCompartida() {
+  const cinta = document.getElementById('cinta-compartida');
+  const dentro = !document.getElementById('vista-lanzador').classList.contains('oculto');
+  if (cinta) cinta.style.display = (esCompartida() && dentro) ? 'flex' : 'none';
+  const chk = document.getElementById('chk-compartida');
+  if (chk) chk.checked = esCompartida();
+}
+
+function mostrar(id) {
+  ['vista-acceso', 'vista-lanzador'].forEach(v =>
+    document.getElementById(v).classList.toggle('oculto', v !== id));
+  pintaCompartida();
+  if (id === 'vista-lanzador') reiniciaInactividad(); else paraInactividad();
+}
+
+function mostrarError(msg) {
+  const el = document.getElementById('error-acceso');
+  el.textContent = msg;
+  el.classList.remove('oculto');
+  mostrar('vista-acceso');
+}
+
+window.onload = () => {
+  if (window.google?.accounts) {
+    google.accounts.id.initialize({
+      client_id: CONFIG.CLIENT_ID,
+      callback: r => { sessionStorage.setItem('zx_token', r.credential); iniciar(); },
+      // Al expirar el token, si ya hay sesión de Google la renueva sin un clic.
+      // Es lo que evita que el staff sienta que se está logueando todo el día.
+      auto_select: !esCompartida()
+    });
+    google.accounts.id.renderButton(document.getElementById('boton-google'),
+      { theme: 'filled_black', size: 'large', width: 320, text: 'continue_with', locale: 'es' });
+    google.accounts.id.prompt();
+  }
+  if (sessionStorage.getItem('zx_token')) iniciar();
+};
+
+async function iniciar() {
+  try {
+    const s = await api('portal.sesion');
+
+    // Un médico que llega aquí recibe su puerta, no un error.
+    if (s.redirigir) { location.href = s.redirigir; return; }
+
+    document.getElementById('quien').textContent = s.nombre || s.correo;
+    document.getElementById('cinta-quien').textContent = s.nombre || s.correo;
+    mostrar('vista-lanzador');
+    cargarApps();
+  } catch (e) {
+    mostrarError(e.message);
+  }
+}
+
+async function cargarApps() {
+  const cont = document.getElementById('mosaicos');
+  try {
+    const apps = await api('portal.apps');
+    cont.innerHTML = apps.map(a => `
+      <button class="zx-mosaico"
+              ${a.nivel ? `onclick="location.href='${a.url}'"` : 'disabled aria-disabled="true"'}>
+        <span class="zx-anillo"><i class="ti ${a.icono}" style="font-size:20px" aria-hidden="true"></i></span>
+        <span class="zx-mosaico-nombre">${a.nombre}</span>
+        <span class="zx-mosaico-desc">${a.descripcion}</span>
+        ${etiqueta(a)}
+      </button>`).join('');
+
+    const abiertas = apps.filter(a => a.nivel).length;
+    document.getElementById('conteo').textContent =
+      `${apps.length} apps · ${abiertas} disponibles`;
+  } catch (e) {
+    cont.innerHTML = `<p style="color:var(--zx-error-txt);font-size:12.5px">${e.message}</p>`;
+  }
+}
+
+function etiqueta(a) {
+  if (!a.nivel) return '<span class="zx-pill" style="margin-top:9px;font-size:10px">sin permiso</span>';
+  if (a.pendiente) return `<span class="zx-pill ${a.pendiente.tono}" style="margin-top:9px;font-size:10px">${a.pendiente.texto}</span>`;
+  if (a.nivel === 'lectura') return '<span class="zx-pill" style="margin-top:9px;font-size:10px">solo lectura</span>';
+  return '<span style="display:block;height:9px"></span>';
+}
+
+document.getElementById('salir').onclick = salirDelPortal;
+document.getElementById('cinta-salir').onclick = salirDelPortal;
+document.getElementById('sigo-aqui').onclick = function () {
+  paraInactividad(); reiniciaInactividad();
+};
+document.getElementById('chk-compartida').onchange = function () {
+  marcaCompartida(this.checked); pintaCompartida();
+};
+pintaCompartida();
+</script>
+</body>
+</html>

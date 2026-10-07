@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="oscuro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Renasté · Cirujanos</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="../renaste-tokens.css">
+<style>
+  .app   { min-height: 100vh; position: relative; }
+  .centro{ max-width: 400px; margin: 0 auto; padding: 56px 20px; position: relative; }
+  .shell { max-width: 940px; margin: 0 auto; padding: 24px 20px 48px; position: relative; }
+
+  .barra { display:flex; align-items:center; gap:11px; background: var(--zx-superficie);
+           border: var(--zx-hairline) solid var(--zx-borde); border-radius: 11px;
+           padding: 11px 15px; margin-bottom: var(--zx-gap); position: relative; }
+  .volver{ background:none; border:none; padding:0; cursor:pointer; font-family:var(--zx-texto);
+           font-size:12px; color: var(--zx-txt-3); }
+
+  .rejilla { display:grid; grid-template-columns:repeat(auto-fit,minmax(238px,1fr)); gap:12px; }
+  .barra-estado { height:3px; border-radius:2px; margin-top:12px; position:relative; }
+  .pie { display:flex; align-items:center; gap:8px; margin-top:12px; position:relative; }
+  .doc-nom { font-size:14px; color:var(--zx-txt); margin-top:13px; line-height:1.35; position:relative; }
+  .doc-sub { font-size:11px; color:var(--zx-txt-3); margin-top:5px; position:relative; }
+
+  /* Tarjeta de médico en la cola de trabajo del staff. */
+  .med { display:flex; align-items:center; gap:14px; cursor:pointer; }
+  .med-nom { font-size:13.5px; color:var(--zx-txt); }
+  .med-esp { font-size:11px; color:var(--zx-txt-3); margin-top:4px; }
+
+  /* Validación: verde y rojo. El color de estado gana sobre el de marca. */
+  .val-ok { background:var(--zx-ok); border:none; color:#fff; box-shadow:none; }
+  .val-no { border:.5px solid var(--zx-error); color:var(--zx-error-txt); background:transparent; }
+
+  .oculto{ display:none; }
+  .aviso { font-size:12.5px; color: var(--zx-error-txt); background: var(--zx-error-bg);
+           border-radius: var(--zx-r-control); padding:10px 13px; margin-top:14px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="zx-luz">
+  <div class="zx-nube" style="width:430px;height:300px;top:-120px;left:-40px;background:#CFC5BC;opacity:.62"></div>
+  <div class="zx-nube" style="width:300px;height:240px;top:-40px;right:6%;background:#E7E2DE;opacity:.42"></div>
+  <div class="zx-nube" style="width:360px;height:280px;top:46%;left:26%;background:#B6A799;opacity:.52"></div>
+  <div class="zx-nube" style="width:250px;height:200px;bottom:-60px;right:-50px;background:#DFD9D3;opacity:.32"></div>
+  <div class="zx-nube" style="width:200px;height:160px;top:70%;left:52%;background:#F4F1EF;opacity:.18"></div>
+  </div>
+
+  <!-- ============ Acceso ============ -->
+  <section class="centro" id="v-acceso">
+    <div class="zx-cristal">
+      <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:26px;position:relative">
+        <svg viewBox="0 0 256 256" width="58" height="58" class="zx-icono-3d" role="img" aria-label="Renasté">
+          <defs><linearGradient id="zg" x1=".1" y1=".06" x2=".9" y2=".94">
+            <stop offset="0" stop-color="#FFFFFF"/><stop offset=".3" stop-color="#D9D2CB"/>
+            <stop offset=".6" stop-color="#F4F1EF"/><stop offset="1" stop-color="#CFC5BC"/>
+          </linearGradient></defs>
+          <path fill="url(#zg)" fill-rule="evenodd" d="M118.82 255.41C94.51 253.72 70.91 244.94 51.29 230.28C45.14 225.69 34.40 215.44 29.14 209.15C18.12 195.97 8.53 177.24 4.12 160.30C0.63 146.88 -0.81 129.22 0.51 116.03C3.55 85.72 16.23 58.85 37.54 37.54C57.26 17.81 81.47 5.64 109.63 1.30C117.54 0.08 136.90 -0.07 144.42 1.03C163.92 3.88 182.10 10.68 197.84 21.01C209.49 28.64 220.71 39.03 229.17 50.00C242.65 67.49 251.73 89.43 254.59 111.47C255.66 119.73 255.69 136.33 254.64 144.14C252.37 161.02 246.99 177.02 238.73 191.42C219.75 224.53 186.76 247.50 148.83 254.02C144.08 254.84 129.38 256.07 126.33 255.91C125.57 255.87 122.18 255.65 118.82 255.41ZM133.02 216.54C144.07 208.20 153.23 199.14 163.47 186.43C169.07 179.48 185.92 154.34 191.17 145.11C197.82 133.42 203.27 119.32 206.28 106.02C207.62 100.09 209.80 86.64 209.81 84.25C209.81 83.32 208.80 82.62 204.77 80.77C194.69 76.15 182.06 72.35 168.63 69.90C146.73 65.89 110.34 64.51 93.50 67.05C81.38 68.87 68.27 72.73 54.65 78.49L47.81 81.38L48.17 85.35C49.58 100.65 54.07 117.56 61.27 134.68C64.51 142.37 73.43 160.12 78.61 169.18C90.14 189.34 101.67 202.25 121.31 216.98C124.21 219.16 126.72 220.94 126.89 220.94C127.05 220.94 129.81 218.96 133.02 216.54Z"/>
+        </svg>
+        <div class="zx-wordmark" style="font-size:16px;margin-top:14px">RENASTÉ</div>
+        <div class="zx-eyebrow" style="margin-top:7px">Expediente del cirujano</div>
+      </div>
+      <div id="btn-google" style="display:flex;justify-content:center;position:relative"></div>
+      <div class="aviso oculto" id="err" role="alert"></div>
+    </div>
+  </section>
+
+  <!-- ============ Mi expediente · médico ============ -->
+  <section class="shell oculto" id="v-medico">
+    <div class="barra">
+      <svg viewBox="0 0 256 256" width="20" height="20" aria-hidden="true">
+        <path fill="var(--zx-txt-marca)" fill-rule="evenodd" d="M118.82 255.41C94.51 253.72 70.91 244.94 51.29 230.28C45.14 225.69 34.40 215.44 29.14 209.15C18.12 195.97 8.53 177.24 4.12 160.30C0.63 146.88 -0.81 129.22 0.51 116.03C3.55 85.72 16.23 58.85 37.54 37.54C57.26 17.81 81.47 5.64 109.63 1.30C117.54 0.08 136.90 -0.07 144.42 1.03C163.92 3.88 182.10 10.68 197.84 21.01C209.49 28.64 220.71 39.03 229.17 50.00C242.65 67.49 251.73 89.43 254.59 111.47C255.66 119.73 255.69 136.33 254.64 144.14C252.37 161.02 246.99 177.02 238.73 191.42C219.75 224.53 186.76 247.50 148.83 254.02C144.08 254.84 129.38 256.07 126.33 255.91C125.57 255.87 122.18 255.65 118.82 255.41ZM133.02 216.54C144.07 208.20 153.23 199.14 163.47 186.43C169.07 179.48 185.92 154.34 191.17 145.11C197.82 133.42 203.27 119.32 206.28 106.02C207.62 100.09 209.80 86.64 209.81 84.25C209.81 83.32 208.80 82.62 204.77 80.77C194.69 76.15 182.06 72.35 168.63 69.90C146.73 65.89 110.34 64.51 93.50 67.05C81.38 68.87 68.27 72.73 54.65 78.49L47.81 81.38L48.17 85.35C49.58 100.65 54.07 117.56 61.27 134.68C64.51 142.37 73.43 160.12 78.61 169.18C90.14 189.34 101.67 202.25 121.31 216.98C124.21 219.16 126.72 220.94 126.89 220.94C127.05 220.94 129.81 218.96 133.02 216.54Z"/></svg>
+      <span class="zx-wordmark" style="font-size:11px;letter-spacing:.2em">RENASTÉ</span>
+      <span style="color:var(--zx-txt-3)">/</span>
+      <span style="font-size:12.5px;color:var(--zx-txt-2)">Mi expediente</span>
+      <span style="margin-left:auto;font-size:11.5px;color:var(--zx-txt-2)" id="yo"></span>
+    </div>
+
+    <div class="zx-widget" style="padding:23px;margin-bottom:var(--zx-gap);display:flex;align-items:center;gap:26px">
+      <div style="flex:1;min-width:0;position:relative">
+        <div class="zx-widget-etq">Su documentación</div>
+        <div class="zx-titulo" style="font-size:25px;margin-top:9px" id="m-saludo">—</div>
+        <p style="font-size:12.5px;color:var(--zx-txt-2);margin:11px 0 0;line-height:1.6;max-width:56ch"
+           id="m-mensaje"></p>
+      </div>
+      <div id="m-anillo" style="position:relative;flex-shrink:0"></div>
+    </div>
+
+    <div class="rejilla" id="m-docs"></div>
+  </section>
+
+  <!-- ============ Lista · staff ============ -->
+  <section class="shell oculto" id="v-staff">
+    <div class="barra">
+      <svg viewBox="0 0 256 256" width="20" height="20" aria-hidden="true">
+        <path fill="var(--zx-txt-marca)" fill-rule="evenodd" d="M118.82 255.41C94.51 253.72 70.91 244.94 51.29 230.28C45.14 225.69 34.40 215.44 29.14 209.15C18.12 195.97 8.53 177.24 4.12 160.30C0.63 146.88 -0.81 129.22 0.51 116.03C3.55 85.72 16.23 58.85 37.54 37.54C57.26 17.81 81.47 5.64 109.63 1.30C117.54 0.08 136.90 -0.07 144.42 1.03C163.92 3.88 182.10 10.68 197.84 21.01C209.49 28.64 220.71 39.03 229.17 50.00C242.65 67.49 251.73 89.43 254.59 111.47C255.66 119.73 255.69 136.33 254.64 144.14C252.37 161.02 246.99 177.02 238.73 191.42C219.75 224.53 186.76 247.50 148.83 254.02C144.08 254.84 129.38 256.07 126.33 255.91C125.57 255.87 122.18 255.65 118.82 255.41ZM133.02 216.54C144.07 208.20 153.23 199.14 163.47 186.43C169.07 179.48 185.92 154.34 191.17 145.11C197.82 133.42 203.27 119.32 206.28 106.02C207.62 100.09 209.80 86.64 209.81 84.25C209.81 83.32 208.80 82.62 204.77 80.77C194.69 76.15 182.06 72.35 168.63 69.90C146.73 65.89 110.34 64.51 93.50 67.05C81.38 68.87 68.27 72.73 54.65 78.49L47.81 81.38L48.17 85.35C49.58 100.65 54.07 117.56 61.27 134.68C64.51 142.37 73.43 160.12 78.61 169.18C90.14 189.34 101.67 202.25 121.31 216.98C124.21 219.16 126.72 220.94 126.89 220.94C127.05 220.94 129.81 218.96 133.02 216.54Z"/></svg>
+      <span class="zx-wordmark" style="font-size:11px;letter-spacing:.2em">RENASTÉ</span>
+      <span style="color:var(--zx-txt-3)">/</span>
+      <span style="font-size:12.5px;color:var(--zx-txt-2)">Cirujanos</span>
+      <span style="margin-left:auto;font-size:11.5px;color:var(--zx-txt-2)" id="yo2"></span>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:var(--zx-gap);position:relative">
+      <button class="zx-btn" onclick="verAlta(true)">Dar de alta un médico</button>
+    </div>
+
+    <div class="zx-widget oculto" id="s-alta" style="margin-bottom:var(--zx-gap)">
+      <div class="zx-widget-etq" style="margin-bottom:14px">Nuevo médico</div>
+      <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:12px;position:relative">
+        <div><label class="zx-etiqueta" for="a-titulo">Título</label>
+          <select class="zx-campo" id="a-titulo">
+            <option value="Dr.">Dr.</option>
+            <option value="Dra.">Dra.</option>
+          </select></div>
+        <div><label class="zx-etiqueta" for="a-nombre">Nombre</label>
+          <input class="zx-campo" id="a-nombre" placeholder="Sofía"></div>
+        <div><label class="zx-etiqueta" for="a-apellido">Apellido</label>
+          <input class="zx-campo" id="a-apellido" placeholder="Rivas"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;position:relative">
+        <div><label class="zx-etiqueta" for="a-tipo">Función</label>
+          <select class="zx-campo" id="a-tipo">
+            <option value="cirujano">Cirujano</option>
+            <option value="anestesiologo">Anestesiólogo</option>
+            <option value="especialista">Otro especialista</option>
+          </select></div>
+        <div><label class="zx-etiqueta" for="a-esp">Especialidad</label>
+          <input class="zx-campo" id="a-esp" placeholder="Cirugía plástica"></div>
+      </div>
+      <div style="margin-top:12px;position:relative">
+        <label class="zx-etiqueta" for="a-correo">Correo de Google</label>
+        <input class="zx-campo" id="a-correo" type="email" placeholder="nombre@gmail.com">
+        <p style="font-size:11px;color:var(--zx-txt-3);margin:7px 0 0">
+          Tiene que ser una cuenta de Google: es con la que va a entrar.
+        </p>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;align-items:center;position:relative">
+        <button class="zx-btn" onclick="darAlta()">Dar de alta</button>
+        <button class="zx-btn-2" onclick="verAlta(false)">Cancelar</button>
+        <span style="font-size:11.5px;color:var(--zx-txt-3);margin-left:auto" id="a-msg"></span>
+      </div>
+    </div>
+
+    <!-- Invitación lista para pegar en WhatsApp, que es como les hablan de verdad. -->
+    <div class="zx-widget oculto" id="s-invita" style="margin-bottom:var(--zx-gap)">
+      <div class="zx-widget-etq" style="margin-bottom:11px">Listo · invítelo</div>
+      <p style="font-size:13px;color:var(--zx-txt-2);margin:0 0 13px;line-height:1.6;position:relative" id="i-quien"></p>
+      <textarea id="i-texto" class="zx-campo" readonly
+        style="height:140px;padding:12px 13px;line-height:1.55;resize:none;position:relative"></textarea>
+      <div style="display:flex;gap:10px;margin-top:13px;align-items:center;position:relative">
+        <button class="zx-btn" onclick="copiarInvitacion()">Copiar invitación</button>
+        <button class="zx-btn-2" onclick="cerrarInvita()">Cerrar</button>
+        <span style="font-size:11.5px;color:var(--zx-ok-txt);margin-left:auto" id="i-msg"></span>
+      </div>
+    </div>
+
+    <div class="rejilla" id="s-metricas" style="margin-bottom:var(--zx-gap)"></div>
+    <div class="rejilla" id="s-lista"></div>
+  </section>
+
+  <!-- ============ Detalle · staff ============ -->
+  <section class="shell oculto" id="v-detalle">
+    <div class="barra">
+      <button class="volver" onclick="verLista()">‹ Cirujanos</button>
+      <span style="color:var(--zx-txt-3)">/</span>
+      <span style="font-size:12.5px;color:var(--zx-txt)" id="d-nombre"></span>
+    </div>
+
+    <div class="zx-widget" style="padding:23px;margin-bottom:var(--zx-gap);display:flex;align-items:center;gap:26px">
+      <div style="flex:1;min-width:0;position:relative">
+        <div class="zx-widget-etq">Expediente</div>
+        <div class="zx-titulo" style="font-size:22px;margin-top:9px" id="d-titulo">Documentación del cirujano</div>
+        <p style="font-size:12.5px;color:var(--zx-txt-2);margin:9px 0 0" id="d-esp"></p>
+      </div>
+      <div id="d-anillo" style="position:relative;flex-shrink:0"></div>
+    </div>
+
+    <!-- Invitación. Sólo aparece cuando de verdad falta algo: un botón que
+         no tiene nada que pedir es un botón que alguien va a apretar. -->
+    <div class="zx-widget oculto" id="d-invitar"
+         style="padding:20px 23px;margin-bottom:var(--zx-gap);position:relative"></div>
+
+    <div class="rejilla" id="d-docs"></div>
+  </section>
+</div>
+
+<input type="file" id="picker" class="oculto" accept="image/*,application/pdf">
+
+<!-- Visor: el archivo llega por el motor, nunca por enlace público de Drive. -->
+<div id="visor" class="oculto" style="display:none;position:fixed;inset:0;z-index:99;background:rgba(8,7,6,.90);
+     align-items:center;justify-content:center;padding:28px" onclick="cerrarVisor(event)">
+  <div class="zx-tarjeta" style="max-width:860px;width:100%;max-height:90vh;overflow:auto;padding:18px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <span style="font-size:13.5px;color:var(--zx-txt)" id="vi-nombre">—</span>
+      <button class="zx-btn-2" style="margin-left:auto;height:32px;padding:0 14px;font-size:12px"
+              onclick="cerrarVisor()">Cerrar</button>
+    </div>
+    <div id="vi-cuerpo" style="text-align:center;color:var(--zx-txt-3);font-size:12.5px">Abriendo…</div>
+  </div>
+</div>
+
+<script>
+window.__gsi = false;
+function gsiListo() { window.__gsi = true; if (window.arrancar) window.arrancar(); }
+function gsiFallo() {
+  var e = document.getElementById('err');
+  e.textContent = 'No se pudo cargar el acceso de Google. Revise su conexión o desactive el bloqueador de anuncios para este sitio.';
+  e.classList.remove('oculto');
+}
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="gsiListo()" onerror="gsiFallo()"></script>
+<script>
+const CONFIG = {
+  GATEWAY:   '__API_CIRUJANOS__',
+  CLIENT_ID: '672831350436-kgll6i77picf8s8pqeraii4s77jlkgol.apps.googleusercontent.com'
+};
+
+let SESION = null, MEDICO_ACTIVO = null, DOC_PENDIENTE = null, MI_EXPEDIENTE = null, URL_ACTUAL = null;
+
+/* Todo lo que se arma con plantillas y viene de la base pasa por aquí. No es
+   paranoia de seguridad: la nota de rechazo la teclea recepción a mano, y un
+   «<» en ese texto rompe la tarjeta y deja la pantalla a medias sin decir por
+   qué. */
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+async function api(action, datos = {}) {
+  const token = sessionStorage.getItem('zx_token');
+  const r = await fetch(CONFIG.GATEWAY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, token, ...datos })
+  });
+  const res = await r.json();
+  if (!res.ok) {
+    if (/sesión/i.test(res.error)) { sessionStorage.removeItem('zx_token'); ver('v-acceso'); }
+    throw new Error(res.error);
+  }
+  return res.data;
+}
+
+function ver(id) {
+  ['v-acceso','v-medico','v-staff','v-detalle'].forEach(v =>
+    document.getElementById(v).classList.toggle('oculto', v !== id));
+}
+
+let DOM_LISTO = false, YA_ARRANCO = false;
+
+window.arrancar = function () {
+  if (!window.__gsi || !DOM_LISTO || YA_ARRANCO) return;
+  YA_ARRANCO = true;
+
+  google.accounts.id.initialize({
+    client_id: CONFIG.CLIENT_ID,
+    callback: r => { sessionStorage.setItem('zx_token', r.credential); iniciar(); },
+    auto_select: true
+  });
+  google.accounts.id.renderButton(document.getElementById('btn-google'),
+    { theme: 'filled_black', size: 'large', width: 320, text: 'continue_with', locale: 'es' });
+
+  if (sessionStorage.getItem('zx_token')) iniciar();
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { DOM_LISTO = true; window.arrancar(); });
+} else { DOM_LISTO = true; window.arrancar(); }
+
+async function iniciar() {
+  try {
+    SESION = await api('cirujanos.sesion');
+    // Una sola app, dos caras: cada rol ve su propia estética.
+    const raiz = document.documentElement;
+    if (SESION.esStaff) {
+      // Herramienta de trabajo: clara. Quien revisa expedientes ocho horas
+      // no necesita espectáculo, necesita leer sin cansarse.
+      raiz.dataset.tema = 'claro';
+      document.getElementById('yo2').textContent = SESION.nombre || SESION.correo;
+      verLista();
+    } else {
+      // El médico es un cliente y ésta es su primera impresión de Renasté.
+      raiz.dataset.tema = 'oscuro';
+      document.getElementById('yo').textContent = SESION.nombre || SESION.correo;
+      verMio();
+    }
+  } catch (e) {
+    document.getElementById('err').textContent = e.message;
+    document.getElementById('err').classList.remove('oculto');
+    ver('v-acceso');
+  }
+}
+
+/* ---------- Escala de datos ---------- */
+
+/**
+ * La direccion del color no la decide el grafico: la decide la polaridad
+ * declarada de la metrica, en la pestana Metricas del nucleo.
+ *
+ *   alto_bueno -> mas es mejor. El arco crece hacia aqua y cierra en palomita.
+ *   alto_malo  -> mas es peor.  El arco crece hacia magenta.
+ *   neutra     -> no hay extremo deseable. Solo magnitud, sin halo de color.
+ *
+ * Regla de marcas: si el grafico tiene varias marcas comparables, la rampa es
+ * textura identica en todas y el dato lo lleva el tamano. Variar el color por
+ * valor ahi crearia agrupaciones falsas: dos barras que caen en azul se leen
+ * como si fueran del mismo tipo, y no lo son.
+ *
+ * Hoy la polaridad va escrita en cada llamada. Cuando Pulso necesite leerla
+ * del Sheet, este objeto se llena desde el motor y no cambia nada mas.
+ */
+const ZX_ESCALA = {
+  alto_malo:  [[0,'#00D2BE'],[0.26,'#2E9BD8'],[0.55,'#A59281'],[0.80,'#AC9A8B'],[1,'#BDB0A4']],
+  alto_bueno: [[0,'#BDB0A4'],[0.20,'#AC9A8B'],[0.45,'#A59281'],[0.74,'#2E9BD8'],[1,'#00D2BE']],
+  neutra:     [[0,'#00D2BE'],[0.26,'#2E9BD8'],[0.55,'#A59281'],[0.80,'#AC9A8B'],[1,'#BDB0A4']]
+};
+
+function zxMezcla(a, b, t) {
+  const h = s => [parseInt(s.slice(1,3),16), parseInt(s.slice(3,5),16), parseInt(s.slice(5,7),16)];
+  const [r1,g1,b1] = h(a), [r2,g2,b2] = h(b);
+  const v = (x,y) => Math.round(x + (y - x) * t).toString(16).padStart(2,'0');
+  return '#' + v(r1,r2) + v(g1,g2) + v(b1,b2);
+}
+
+/* Color exacto donde termina el arco. Es el que toma el halo. */
+function zxColorEn(frac, pol) {
+  const e = ZX_ESCALA[pol] || ZX_ESCALA.neutra;
+  const f = Math.max(0, Math.min(1, frac));
+  for (let i = 1; i < e.length; i++) {
+    if (f <= e[i][0]) return zxMezcla(e[i-1][1], e[i][1], (f - e[i-1][0]) / (e[i][0] - e[i-1][0]));
+  }
+  return e[e.length - 1][1];
+}
+
+/* Paradas recortadas al tramo que se dibuja y reescaladas a 0-1. Sin esto el
+   arco ensena la rampa completa comprimida y el 20% ya se ve magenta. */
+function zxParadas(frac, pol) {
+  const e = ZX_ESCALA[pol] || ZX_ESCALA.neutra;
+  const f = Math.max(0.001, Math.min(1, frac));
+  const out = [];
+  for (const [p, col] of e) if (p < f) out.push([p / f, col]);
+  out.push([1, zxColorEn(f, pol)]);
+  return out.map(([p, col]) => `<stop offset="${p.toFixed(3)}" stop-color="${col}"/>`).join('');
+}
+
+/* El halo solo existe en oscuro. Sobre el lienzo claro del staff se vuelve
+   una mancha sucia alrededor del trazo. */
+function zxHalo(color, radio) {
+  return document.documentElement.dataset.tema === 'oscuro'
+    ? `filter:drop-shadow(0 0 ${radio}px ${color}b3)`
+    : '';
+}
+
+/* ---------- Anillo de avance ---------- */
+
+/**
+ * Metrica docs_entregados: alto_bueno. Arranca en magenta y termina en aqua.
+ * Al completarse, la palomita blanca carga el estado y el arco deja de opinar
+ * en tono: dos verdes concentricos serian redundancia, no enfasis.
+ */
+function anillo(listos, total, tam) {
+  const grande = tam === 'grande';
+  const r = grande ? 50 : 23;
+  const w = grande ? 10 : 6;
+  const vb = r * 2 + w + 20, c = vb / 2;
+  const largo = 2 * Math.PI * r;
+  const frac = total ? listos / total : 0;
+  const hecho = frac * largo;
+  const uid = 'ar' + Math.random().toString(36).slice(2, 8);
+  const completo = listos === total && total > 0;
+  const fin = zxColorEn(frac, 'alto_bueno');
+  const s = grande ? 1 : 0.56;
+
+  const centro = completo
+    ? `<path d="M ${(c - 13 * s).toFixed(1)} ${(c + 1 * s).toFixed(1)}
+                l ${(9 * s).toFixed(1)} ${(9 * s).toFixed(1)}
+                l ${(20 * s).toFixed(1)} ${(-22 * s).toFixed(1)}"
+             fill="none" stroke="#FFFFFF" stroke-width="${(7 * s).toFixed(1)}"
+             stroke-linecap="round" stroke-linejoin="round"/>`
+    : `<text x="${c}" y="${c + (grande ? -2 : 4)}" text-anchor="middle"
+             font-family="${grande ? 'Space Grotesk, sans-serif' : 'JetBrains Mono, monospace'}"
+             font-size="${grande ? 30 : 12}" fill="var(--zx-txt)">${listos}/${total}</text>
+       ${grande ? `<text x="${c}" y="${c + 18}" text-anchor="middle" font-family="Inter, sans-serif"
+             font-size="9.5" fill="var(--zx-txt-3)">entregados</text>` : ''}`;
+
+  return `
+    <svg viewBox="0 0 ${vb} ${vb}" width="${grande ? 116 : 52}" height="${grande ? 116 : 52}"
+         style="flex-shrink:0;${zxHalo(fin, grande ? 14 : 8)}" role="img">
+      <title>${listos} de ${total} documentos entregados</title>
+      <desc>${completo ? 'Documentación completa.' : 'Anillo de avance.'}</desc>
+      <defs><linearGradient id="${uid}" x1="0" y1="1" x2="1" y2="0">${zxParadas(frac, 'alto_bueno')}</linearGradient></defs>
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="var(--zx-pista)" stroke-width="${w}"/>
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="url(#${uid})" stroke-width="${w}"
+              stroke-linecap="round" stroke-dasharray="${hecho} ${largo}" transform="rotate(-90 ${c} ${c})"/>
+      ${centro}
+    </svg>`;
+}
+
+/* ---------- Médico ---------- */
+
+async function verMio() {
+  ver('v-medico');
+  try {
+    const d = await api('cirujanos.mios');
+    MI_EXPEDIENTE = d;
+    registraDocs(d.documentos);
+    pintarSaludo(d);
+    document.getElementById('m-docs').innerHTML = d.documentos.map(tarjetaDoc).join('');
+  } catch (e) {
+    document.getElementById('m-docs').innerHTML = `<p style="color:var(--zx-error-txt);font-size:12.5px">${e.message}</p>`;
+  }
+}
+
+/**
+ * Tres mensajes, no uno fijo. Este médico es un cliente que paga y ésta es
+ * la primera pantalla de Renasté que ve en su vida.
+ */
+function pintarSaludo(d) {
+  const r = d.resumen, doc = d.medico.corto;
+  const fem = /Dra/i.test(d.medico.tratamiento || '');
+  let titulo, mensaje;
+
+  const vencidos = d.documentos.filter(x => x.estado === 'vencido');
+  const porVencer = d.documentos.filter(x => x.estado === 'por_vencer')
+    .sort((a, b) => a.dias - b.dias)[0];
+
+  if (r.subidos === 0) {
+    titulo = (fem ? 'Bienvenida' : 'Bienvenido') + ', ' + doc;
+    mensaje = `Antes de su primera cirugía en Renasté necesitamos tener su documentación en orden. `
+            + `Son ${r.total} documentos y puede subirlos desde su celular en unos minutos. `
+            + `Después no vuelve a pensar en esto: nosotros le avisamos cuando algo esté por vencer.`;
+  } else if (vencidos.length) {
+    titulo = doc + ', tiene documentación vencida';
+    mensaje = vencidos.length === 1
+      ? `Su ${vencidos[0].nombre.toLowerCase()} venció hace ${Math.abs(vencidos[0].dias)} días. `
+        + `Mientras no esté vigente no podemos programarle cirugías.`
+      : `Tiene ${vencidos.length} documentos vencidos. Mientras no estén vigentes no podemos programarle cirugías.`;
+  } else if (r.bloqueado) {
+    const faltan = d.documentos.filter(x => x.obligatorio && x.estado === 'falta');
+    titulo = doc + ', le falta' + (faltan.length === 1 ? ' un documento' : 'n ' + faltan.length + ' documentos');
+    mensaje = faltan.length === 1
+      ? `Solo falta su ${faltan[0].nombre.toLowerCase()} y su expediente queda completo. `
+        + `Puede subirlo desde su celular en un minuto.`
+      : `Puede subirlos desde su celular en unos minutos. Nosotros le avisamos cuando algo esté por vencer.`;
+  } else if (r.sinNumero && r.sinNumero.length) {
+    /* Documento vigente, folio sin asentar. No bloquea nada, pero el número
+       es lo que se imprime en cada nota clínica, así que no puede quedarse
+       callado en una pantalla que dice «todo en orden». */
+    titulo = 'Casi todo en orden, ' + doc;
+    mensaje = r.sinNumero.length === 1
+      ? `Su documentación está vigente. Falta un detalle: nos hace falta asentar el número de su `
+        + `${r.sinNumero[0].toLowerCase()}. Recepción lo captura del documento que usted ya subió.`
+      : `Su documentación está vigente. Falta asentar el número de ${r.sinNumero.length} documentos: `
+        + `${r.sinNumero.join(', ').toLowerCase()}. Recepción los captura de los archivos que usted ya subió.`;
+  } else {
+    titulo = 'Todo en orden, ' + doc;
+    mensaje = porVencer
+      ? `Su documentación está vigente. Lo próximo que vence es su ${porVencer.nombre.toLowerCase()}, en ${porVencer.dias} días.`
+      : `Su documentación está vigente y completa. Le avisaremos con 60 días de anticipación cuando algo esté por vencer.`;
+  }
+
+  document.getElementById('m-saludo').textContent = titulo;
+  document.getElementById('m-mensaje').textContent = mensaje;
+  document.getElementById('m-anillo').innerHTML = anillo(r.listos, r.total, 'grande');
+}
+
+/* ---------- Documento ---------- */
+
+const ETIQUETAS = {
+  falta:        ['Falta',       'error'],
+  vencido:      ['Vencido',     'error'],
+  por_vencer:   ['Por vencer',  'alerta'],
+  por_verificar:['En revisión', 'alerta'],
+  rechazado:    ['Rechazado',   'error'],
+  vigente:      ['Vigente',     'ok']
+};
+
+// El tinte de la tarjeta separa listo, en proceso y pendiente antes de
+// que el ojo lea una sola palabra.
+const TINTES = {
+  vigente:      'zx-t-ok',
+  por_verificar:'zx-t-espera',
+  por_vencer:   'zx-t-espera',
+  vencido:      'zx-t-mal',
+  rechazado:    'zx-t-mal',
+  falta:        'zx-t-nada'
+};
+
+/**
+ * Los documentos que se están pintando, por id. Así los onclick no tienen
+ * que cargar la etiqueta del folio dentro de una cadena HTML —donde una
+ * comilla o un acento rompen el atributo— y siempre se lee lo que el
+ * servidor mandó.
+ */
+let DOCS_VISTA = {};
+function registraDocs(docs) {
+  DOCS_VISTA = {};
+  (docs || []).forEach(d => DOCS_VISTA[d.id] = d);
+  (docs || []).forEach(d => { if (d.credId) DOCS_VISTA['cred:' + d.credId] = d; });
+}
+
+function sub(d) {
+  const venc = d.estado === 'por_vencer' ? `Vence en ${d.dias} días`
+             : d.estado === 'vencido'    ? `Venció hace ${Math.abs(d.dias)} días`
+             : d.fechaVence              ? `Vence ${String(d.fechaVence).slice(0,10)}`
+             : d.obligatorio             ? 'Obligatorio' : 'Opcional';
+  /* El folio se lee en la tarjeta: es el dato que se imprime después en cada
+     nota clínica, así que tiene que poder revisarse de un vistazo. */
+  if (!d.pideNumero) return venc;
+  return venc + (d.numero ? ' · Nº ' + d.numero : ' · sin folio asentado');
+}
+
+/** Tarjeta de documento. La misma para médico y staff; cambia lo que puede hacer. */
+function tarjetaDoc(d) {
+  const [txt, tono] = ETIQUETAS[d.estado] || ['—',''];
+  const esStaff = SESION && SESION.esStaff;
+  const revisar = esStaff && d.estado === 'por_verificar';
+  return `
+    <div class="zx-widget ${TINTES[d.estado] || ''}">
+      <span class="zx-anillo" style="width:40px;height:40px">
+        <i class="ti ${d.credId ? 'ti-file-check' : 'ti-file-plus'}" style="font-size:19px" aria-hidden="true"></i>
+      </span>
+      <div class="doc-nom">${d.nombre}</div>
+      <div class="doc-sub">${sub(d)}${d.nota ? ' · ' + d.nota : ''}</div>
+      <div class="barra-estado"></div>
+      <div class="pie">
+        <span class="zx-pill ${tono}" style="font-size:10px">${txt}</span>
+        ${revisar ? `
+          <button class="zx-btn val-ok" style="margin-left:auto;height:29px;padding:0 12px;font-size:12px"
+                  onclick="event.stopPropagation();validar('${d.credId}', true)">Aprobar</button>
+          <button class="zx-btn-2 val-no" style="height:29px;padding:0 12px;font-size:12px"
+                  onclick="event.stopPropagation();validar('${d.credId}', false)">Rechazar</button>` : ''}
+        ${d.credId && esStaff && d.pideNumero ? `
+          <button class="zx-btn-2" style="${revisar ? '' : 'margin-left:auto;'}height:29px;padding:0 12px;font-size:12px"
+             onclick="event.stopPropagation();ponerFolio('${d.id}')">${d.numero ? 'Folio' : 'Poner folio'}</button>` : ''}
+        ${d.credId ? `<button class="zx-btn-2" style="${revisar || (esStaff && d.pideNumero) ? '' : 'margin-left:auto;'}height:29px;padding:0 13px;font-size:12px"
+             onclick="abrirDoc('${d.credId}')">Ver</button>` : ''}
+        <button class="${d.credId ? 'zx-btn-2' : 'zx-btn'}" style="${d.credId ? '' : 'margin-left:auto;'}height:29px;padding:0 14px;font-size:12px"
+             onclick="pedirArchivo('${d.id}', ${d.vence})">${d.credId ? 'Cambiar' : 'Subir'}</button>
+      </div>
+    </div>`;
+}
+
+/**
+ * Aprobar o rechazar. Al rechazar se pide el motivo: el médico tiene que
+ * saber qué corregir, si no vuelve a subir lo mismo.
+ */
+async function validar(credId, aprobar) {
+  let nota = '', numero;
+  if (!aprobar) {
+    nota = prompt('¿Por qué se rechaza? El médico va a ver este mensaje.\nPor ejemplo: la foto está ilegible.');
+    if (nota === null) return;
+  } else {
+    /* Aprobar es decir «lo cotejé». Si el documento trae folio, se asienta
+       en el mismo movimiento: cotejar sin anotar el número es lo que dejó a
+       Renasté con cédulas verificadas y sin saber cuáles. */
+    const d = DOCS_VISTA['cred:' + credId];
+    if (d && d.pideNumero) {
+      numero = prompt(d.etiquetaNumero + '\n\nCópielo tal cual del documento que acaba de revisar.',
+                      d.numero || '');
+      if (numero === null) return;
+      if (!String(numero).trim()) { alert('Sin el folio no se puede aprobar.'); return; }
+    }
+  }
+  try {
+    const r = await api('cirujanos.verificar', { credId, aprobar, nota, numero });
+    if (r && r.aviso) alert('Se guardó, con una advertencia: ' + r.aviso);
+    verDetalle(MEDICO_ACTIVO);
+  } catch (e) { alert(e.message); }
+}
+
+/**
+ * Asentar o corregir el folio de un documento que ya está arriba, sin volver
+ * a subirlo. Es para los que se verificaron antes de que el folio se pidiera:
+ * el número está impreso en el archivo que Renasté ya tiene, no hay por qué
+ * pedirle al médico que escanee otra vez.
+ */
+async function ponerFolio(docId) {
+  const d = DOCS_VISTA[docId];
+  if (!d || !d.credId) return;
+  const numero = prompt(d.etiquetaNumero + '\n\n' + d.nombre +
+    '\nCópielo tal cual del documento. Ábralo con «Ver» si necesita consultarlo.',
+    d.numero || '');
+  if (numero === null || !String(numero).trim()) return;
+  try {
+    const r = await api('cirujanos.numero', { credId: d.credId, numero });
+    if (r && r.aviso) alert('Se guardó, con una advertencia: ' + r.aviso);
+    verDetalle(MEDICO_ACTIVO);
+  } catch (e) { alert(e.message); }
+}
+
+/* ---------- Staff ---------- */
+
+function verAlta(mostrar) {
+  document.getElementById('s-alta').classList.toggle('oculto', !mostrar);
+  document.getElementById('a-msg').textContent = '';
+  if (mostrar) document.getElementById('a-nombre').focus();
+}
+
+async function darAlta() {
+  const g = i => document.getElementById(i).value.trim();
+  const titulo = document.getElementById('a-titulo').value;
+  const nombre = g('a-nombre'), apellido = g('a-apellido'), correo = g('a-correo').toLowerCase();
+  const msg = document.getElementById('a-msg');
+  if (!nombre || !apellido) { msg.textContent = 'Faltan nombre y apellido.'; return; }
+  if (!correo) { msg.textContent = 'Falta el correo de Google.'; return; }
+
+  msg.textContent = 'Guardando…';
+  try {
+    await api('cirujanos.alta', {
+      tratamiento: titulo, nombre, apellido, correo,
+      especialidad: g('a-esp'),
+      tipo: document.getElementById('a-tipo').value
+    });
+
+    // El sistema ya lo registró en Roles: nadie tiene que abrir la hoja.
+    const doc = titulo + ' ' + apellido;
+    const enlace = location.origin + location.pathname;
+    document.getElementById('i-quien').textContent =
+      doc + ' ya puede entrar con ' + correo + '. Mándele este mensaje:';
+    document.getElementById('i-texto').value =
+      doc + ', le comparto el acceso al portal de Renasté para su documentación.\n\n' +
+      enlace + '\n\n' +
+      'Entre con su cuenta de Google ' + correo + '. Ahí puede subir sus documentos ' +
+      'desde el celular y nosotros le avisamos cuando algo esté por vencer.';
+    document.getElementById('s-invita').classList.remove('oculto');
+
+    ['a-nombre','a-apellido','a-esp','a-correo'].forEach(i => document.getElementById(i).value = '');
+    verAlta(false);
+    verLista();
+  } catch (e) { msg.textContent = e.message; }
+}
+
+function copiarInvitacion() {
+  const t = document.getElementById('i-texto');
+  navigator.clipboard.writeText(t.value).then(function () {
+    document.getElementById('i-msg').textContent = 'Copiado';
+    setTimeout(function () { document.getElementById('i-msg').textContent = ''; }, 2500);
+  });
+}
+
+function cerrarInvita() {
+  document.getElementById('s-invita').classList.add('oculto');
+}
+
+/** Barras del widget de altas: una por médico, altura por avance. */
+function miniBarras(meds) {
+  const n = Math.min(meds.length, 15);
+  if (!n) return '';
+  const anc = 7, sep = 11;
+  const barras = meds.slice(-n).map((m, i) => {
+    const alto = Math.max(5, Math.round((m.listos / (m.total || 1)) * 30));
+    return `<rect x="${i * sep}" y="${34 - alto}" width="${anc}" height="${alto}" rx="3"/>`;
+  }).join('');
+  return `
+    <svg viewBox="0 0 ${n * sep} 34" width="100%" height="34" style="margin-top:12px;position:relative" role="img">
+      <title>Avance por médico</title><desc>Barras de documentación completada.</desc>
+      <defs><linearGradient id="mb" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" stop-color="var(--zx-d-0)"/><stop offset="0.30" stop-color="var(--zx-d-26)"/>
+        <stop offset="0.62" stop-color="var(--zx-d-55)"/><stop offset="1" stop-color="var(--zx-d-100)"/>
+      </linearGradient></defs>
+      <g fill="url(#mb)">${barras}</g>
+    </svg>`;
+}
+
+/* Metrica docs_por_revisar: alto_malo. Cero pendientes se ve aqua y casi
+   vacio; la cola creciendo empuja el medidor hacia magenta. */
+function medidor(parte, total) {
+  const frac = total ? Math.min(parte / total, 1) : 0;
+  const fin = zxColorEn(frac, 'alto_malo');
+  return `
+    <svg viewBox="0 0 100 58" width="92" height="54" style="position:relative;${zxHalo(fin, 10)}" role="img">
+      <title>${parte} de ${total} por revisar</title><desc>Medidor semicircular.</desc>
+      <defs><linearGradient id="md" x1="0" y1="0" x2="1" y2="0">${zxParadas(frac, 'alto_malo')}</linearGradient></defs>
+      <path d="M10 50 A40 40 0 0 1 90 50" fill="none" stroke="var(--zx-pista)" stroke-width="9" stroke-linecap="round"/>
+      <path d="M10 50 A40 40 0 0 1 90 50" fill="none" stroke="url(#md)" stroke-width="9" stroke-linecap="round"
+            stroke-dasharray="${(frac * 126).toFixed(1)} 126"/>
+    </svg>`;
+}
+
+async function verLista() {
+  ver('v-staff');
+  const met = document.getElementById('s-metricas');
+  const c = document.getElementById('s-lista');
+  try {
+    const meds = await api('cirujanos.listar');
+
+    const porRevisar = meds.reduce((s, m) => s + m.porVerificar, 0);
+    const bloqueados = meds.filter(m => m.bloqueado);
+    const critico = bloqueados[0];
+
+    // El tablero responde primero la pregunta del staff: ¿alguien no puede
+    // operar hoy? Después viene la lista.
+    met.innerHTML = `
+      <div class="zx-widget">
+        <div class="zx-widget-etq">Cirujanos activos</div>
+        <div class="zx-widget-num">${meds.length}</div>
+        ${miniBarras(meds)}
+      </div>
+      <div class="zx-widget">
+        <div class="zx-widget-etq">Por revisar</div>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between">
+          <div class="zx-widget-num" ${porRevisar ? 'style="color:var(--zx-alerta-txt)"' : ''}>${porRevisar}</div>
+          ${medidor(porRevisar, Math.max(meds.length, 1))}
+        </div>
+        <div class="zx-widget-pie">Documentos esperando validación</div>
+      </div>
+      <div class="zx-widget ${bloqueados.length ? 'zx-t-mal' : ''}">
+        <div class="zx-widget-etq">No pueden operar</div>
+        <div class="zx-widget-num" ${bloqueados.length ? 'style="color:var(--zx-error-txt)"' : ''}>${bloqueados.length}</div>
+        ${critico
+          ? `<div style="margin-top:14px;position:relative"><span class="zx-pill error" style="font-size:10px">Documentación incompleta</span></div>
+             <div class="zx-widget-pie">${critico.nombre}${bloqueados.length > 1 ? ' y ' + (bloqueados.length - 1) + ' más' : ''}</div>`
+          : '<div class="zx-widget-pie" style="margin-top:14px">Todos con documentación al día</div>'}
+      </div>`;
+
+    if (!meds.length) {
+      c.innerHTML = '<p style="grid-column:1/-1;color:var(--zx-txt-3);font-size:12.5px">Aún no hay médicos dados de alta.</p>';
+      return;
+    }
+
+    c.innerHTML = meds.map(m => `
+      <div class="zx-widget med ${m.bloqueado ? 'zx-t-mal' : m.porVerificar ? 'zx-t-espera' : 'zx-t-ok'}"
+           onclick="verDetalle('${m.medicoId}')">
+        ${anillo(m.listos, m.total)}
+        <div style="min-width:0;position:relative">
+          <div class="med-nom">${esc(m.nombre)}</div>
+          <div class="med-esp">${esc(m.especialidad || m.tipo)}</div>
+          <span class="zx-pill ${m.bloqueado ? 'error' : m.porVerificar ? 'alerta' : 'ok'}"
+                style="font-size:10px;margin-top:9px">${
+            m.bloqueado ? 'Incompleto' : m.porVerificar ? m.porVerificar + ' por revisar' : 'Vigente'}</span>
+          ${m.bloqueado ? `<div class="med-esp" style="margin-top:7px">${
+            m.invitadoEn ? 'Invitado ' + esc(fechaCorta(m.invitadoEn)) : 'Sin invitar'}</div>` : ''}
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    met.innerHTML = '';
+    c.innerHTML = `<p style="grid-column:1/-1;color:var(--zx-error-txt);font-size:12.5px">${e.message}</p>`;
+  }
+}
+
+async function verDetalle(id) {
+  MEDICO_ACTIVO = id;
+  ver('v-detalle');
+  try {
+    const d = await api('cirujanos.detalle', { medicoId: id });
+    document.getElementById('d-nombre').textContent = d.medico.nombre;
+    document.getElementById('d-esp').textContent = d.medico.especialidad || d.medico.tipo;
+    document.getElementById('d-anillo').innerHTML = anillo(d.resumen.listos, d.resumen.total, 'grande');
+    registraDocs(d.documentos);
+    pintaInvitacion(d);
+    document.getElementById('d-docs').innerHTML = d.documentos.map(tarjetaDoc).join('');
+  } catch (e) {
+    document.getElementById('d-invitar').classList.add('oculto');
+    document.getElementById('d-docs').innerHTML = `<p style="grid-column:1/-1;color:var(--zx-error-txt);font-size:12.5px">${e.message}</p>`;
+  }
+}
+
+/* ---------- Invitación ----------
+
+   Antes esto era mandar la liga por WhatsApp desde el teléfono de quien se
+   acordara. El problema no era la comodidad: era que después nadie podía
+   contestar «¿ya le avisamos y cuándo?», que es justo lo que se pregunta
+   cuando un médico llega a operar sin papeles. */
+
+function fechaCorta(v) {
+  if (!v) return '';
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v).slice(0, 10);
+  const hoy = new Date();
+  const dias = Math.floor((hoy - d) / 86400000);
+  const txt = d.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' });
+  if (dias <= 0) return 'hoy';
+  if (dias === 1) return 'ayer';
+  if (dias < 30) return 'hace ' + dias + ' días (' + txt + ')';
+  return 'el ' + txt;
+}
+
+function pintaInvitacion(d) {
+  const caja = document.getElementById('d-invitar');
+  const faltan = d.faltantes || [];
+  INVITA_DESTINO = d.medico.correo || '';
+  if (!faltan.length) { caja.classList.add('oculto'); caja.innerHTML = ''; return; }
+
+  const inv = d.invitacion;
+  const historia = inv
+    ? `Se le invitó ${fechaCorta(inv.enviadaEn)}, desde ${esc(inv.enviadaPor)}` +
+      (inv.cuantas > 1 ? ` · ${inv.cuantas} invitaciones en total` : '') + '.'
+    : 'Todavía no se le ha invitado a subirlos.';
+
+  caja.classList.remove('oculto');
+  caja.innerHTML = `
+    <div class="zx-widget-etq">Invitación</div>
+    <p style="font-size:13px;color:var(--zx-txt);margin:9px 0 0">
+      Le faltan ${faltan.length} documento${faltan.length > 1 ? 's' : ''}:
+      ${faltan.map(f => esc(f.nombre) + ' <span style="color:var(--zx-txt-3)">(' + esc(f.motivo) + ')</span>').join(' · ')}
+    </p>
+    <p style="font-size:12px;color:var(--zx-txt-2);margin:9px 0 0">${historia}</p>
+    <div class="fila-inv" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:15px">
+      <button class="zx-btn" id="d-btn-invitar" style="height:33px;padding:0 15px;font-size:12.5px"
+              onclick="invitar(false)">${inv ? 'Reenviar invitación' : 'Invitar a subir documentos'}</button>
+      <span style="font-size:11.5px;color:var(--zx-txt-3)">
+        ${d.remitente
+          ? 'Sale de ' + esc(d.remitente.nombre) + ' &lt;' + esc(d.remitente.cuenta) +
+            '&gt;, respuestas a ' + esc(d.remitente.responder) + ', hacia '
+          : 'Hacia '}${esc(d.medico.correo || '— sin correo en el padrón —')}
+      </span>
+    </div>
+    <div id="d-inv-msg" style="font-size:12.5px;margin-top:11px"></div>`;
+}
+
+let INVITA_DESTINO = '';
+
+async function invitar(reenviar) {
+  if (!MEDICO_ACTIVO) return;
+  const btn = document.getElementById('d-btn-invitar');
+  const msg = document.getElementById('d-inv-msg');
+  if (btn) btn.disabled = true;
+  msg.innerHTML = '<span style="color:var(--zx-txt-3)">Mandando…</span>';
+  try {
+    const r = await api('cirujanos.invitar', { medicoId: MEDICO_ACTIVO, reenviar: !!reenviar });
+    msg.innerHTML = `<span style="color:var(--zx-ok-txt)">Invitación enviada a ${esc(r.correo)} desde ${esc(r.de)}.</span>`;
+    /* Se recarga el detalle para que la historia quede al día sin que nadie
+       tenga que recordar cuántas van. */
+    setTimeout(() => verDetalle(MEDICO_ACTIVO), 1400);
+  } catch (e) {
+    if (btn) btn.disabled = false;
+    /* El rechazo por haberla mandado hace un rato no es un error: es el
+       sistema evitando que le insistan dos veces a la misma doctora por un
+       doble clic. Se ofrece la salida en vez de dejarlo atorado. */
+    const reciente = /Ya se le invitó/.test(e.message || '');
+    msg.innerHTML = `<span style="color:var(--zx-${reciente ? 'alerta' : 'error'}-txt)">${esc(e.message)}</span>` +
+      (reciente && !reenviar
+        ? ` <button class="zx-btn-2" style="height:28px;padding:0 12px;font-size:12px;margin-left:8px"
+                   onclick="invitar(true)">Reenviar de todas formas</button>`
+        : '');
+  }
+}
+
+/* ---------- Visor ---------- */
+
+async function abrirDoc(credId) {
+  const v = document.getElementById('visor');
+  const cuerpo = document.getElementById('vi-cuerpo');
+  v.classList.remove('oculto'); v.style.display = 'flex';
+  cuerpo.textContent = 'Abriendo…';
+  document.getElementById('vi-nombre').textContent = '';
+  try {
+    const a = await api('cirujanos.archivo', { credId });
+    document.getElementById('vi-nombre').textContent = a.nombre;
+
+    // Los PDF incrustados como data: los bloquea el navegador por seguridad.
+    // Un blob es un archivo real en memoria y sí se puede mostrar.
+    const bin = atob(a.datos);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    if (URL_ACTUAL) URL.revokeObjectURL(URL_ACTUAL);
+    URL_ACTUAL = URL.createObjectURL(new Blob([bytes], { type: a.mime }));
+
+    cuerpo.innerHTML = a.mime.indexOf('pdf') > -1
+      ? `<iframe src="${URL_ACTUAL}" style="width:100%;height:70vh;border:0;border-radius:10px"></iframe>
+         <p style="margin:11px 0 0"><a href="${URL_ACTUAL}" target="_blank" rel="noopener"
+            class="zx-btn-2" style="display:inline-block;height:32px;line-height:32px;padding:0 14px;
+            font-size:12px;text-decoration:none">Abrir en pestaña nueva</a></p>`
+      : `<img src="${URL_ACTUAL}" alt="${a.nombre}" style="max-width:100%;border-radius:10px">`;
+  } catch (e) {
+    cuerpo.innerHTML = `<p style="color:var(--zx-error-txt)">${e.message}</p>`;
+  }
+}
+
+function cerrarVisor(ev) {
+  if (ev && ev.target.id !== 'visor') return;
+  const v = document.getElementById('visor');
+  v.classList.add('oculto'); v.style.display = 'none';
+  document.getElementById('vi-cuerpo').innerHTML = '';
+  if (URL_ACTUAL) { URL.revokeObjectURL(URL_ACTUAL); URL_ACTUAL = null; }
+}
+
+function pedirArchivo(tipo, vence) {
+  DOC_PENDIENTE = { tipo, vence };
+  document.getElementById('picker').click();
+}
+
+document.getElementById('picker').onchange = async function () {
+  const f = this.files[0];
+  this.value = '';
+  if (!f || !DOC_PENDIENTE) return;
+
+  if (f.size > 8 * 1024 * 1024) {
+    alert('El archivo pesa más de 8 MB. Comprímalo o tome la foto en menor calidad.');
+    return;
+  }
+
+  let vence = '';
+  if (DOC_PENDIENTE.vence) {
+    vence = prompt('¿Cuándo vence este documento? Escríbalo como 2027-05-31');
+    if (!vence) return;
+  }
+
+  /* El folio se pide AQUÍ, con el documento en la mano. Si no se pide en
+     este momento no se pide nunca: así fue como Renasté terminó con cédulas
+     verificadas cuyo número no estaba en ningún campo. */
+  let numero = '';
+  const def = DOCS_VISTA[DOC_PENDIENTE.tipo];
+  if (def && def.pideNumero) {
+    numero = prompt(def.etiquetaNumero + '\n\nCópielo tal cual del documento que va a subir.',
+                    def.numero || '');
+    if (numero === null) return;
+    if (!String(numero).trim()) {
+      alert('Ese documento no se puede registrar sin su folio.');
+      return;
+    }
+  }
+
+  const base64 = await new Promise((ok, mal) => {
+    const r = new FileReader();
+    r.onload = () => ok(r.result.split(',')[1]);
+    r.onerror = () => mal(new Error('No se pudo leer el archivo.'));
+    r.readAsDataURL(f);
+  });
+
+  try {
+    const r = await api('cirujanos.subir', {
+      medicoId: MEDICO_ACTIVO || undefined,
+      tipo: DOC_PENDIENTE.tipo,
+      vence, numero, archivo: base64,
+      nombreArchivo: f.name, mime: f.type
+    });
+    if (r && r.aviso) alert('Se subió, con una advertencia: ' + r.aviso);
+    SESION.esStaff ? verDetalle(MEDICO_ACTIVO) : verMio();
+  } catch (e) {
+    alert(e.message);
+  }
+};
+</script>
+</body>
+</html>

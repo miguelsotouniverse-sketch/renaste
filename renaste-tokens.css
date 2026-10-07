@@ -1,0 +1,503 @@
+/* ============================================================
+   RENASTÉ · Sistema de tokens
+   Version 1.6-r0 · PALETA PROVISIONAL (7 oct 2026)
+
+   Clonado de los tokens de Zorvix. Los violetas de Zorvix se cambiaron por
+   una escala taupe/cálida tomada de la identidad MS Universe (negro #030707,
+   taupe #A19487, crema #F4F2F1) mientras llega la marca oficial de Renasté.
+   Para ponerle la paleta real basta cambiar el bloque MARCA.
+
+   Un solo archivo de marca para todo el ecosistema.
+   Cambia los hex del bloque MARCA y las apps cambian de piel
+   sin tocar una linea de logica.
+
+   Registros visuales:
+     [data-tema="oscuro"]  negro con nubes de luz lavanda  -> cliente
+     [data-tema="claro"]   claro con marca                 -> staff
+     [data-densidad="..."] compacta | amplia               -> modificadores
+
+   La escala de datos vive en :root y no se redefine por tema: un dato
+   no cambia de significado porque el fondo sea negro.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+
+  /* ---------- MARCA · unica fuente de verdad del color ---------- */
+  --zx-violeta-900: #3A322B;
+  --zx-violeta-800: #51463C;
+  --zx-violeta-700: #6B5D50;
+  --zx-violeta-600: #7E6F61;
+  --zx-violeta-500: #8F8072;
+  --zx-violeta-400: #A19487;
+  --zx-violeta-300: #BDB3A8;
+  --zx-violeta-200: #D6CEC5;
+  --zx-violeta-100: #E9E4DE;
+  --zx-violeta-050: #F4F2F1;
+
+  --zx-lavanda:   #E7E2DE;
+  --zx-lavanda-2: #CFC5BC;
+  --zx-lavanda-3: #F4F1EF;
+  --zx-rosa:      #DFD9D3;
+
+  --zx-grafito: #535353;
+  --zx-tinta:   #1C1B22;
+  --zx-noche:   #080706;
+
+  /* ---------- Estado · gana sobre el color de marca ---------- */
+  --zx-ok:      #12876B;
+  --zx-ok-bg:   #E2EFEA;
+  --zx-ok-txt:  #0B6350;
+  --zx-alerta:      #BA7517;
+  --zx-alerta-bg:   #FAEEDA;
+  --zx-alerta-txt:  #854F0B;
+  --zx-error:      #E24B4A;
+  --zx-error-bg:   #FCEBEB;
+  --zx-error-txt:  #A32D2D;
+
+  /* ---------- ESCALA DE DATOS ----------
+     Anillos, barras, medidores y lineas. Nunca en botones, bordes,
+     fondos, pildoras de estado ni marca. El violeta de marca es el
+     punto medio: la escala ancla en Renasté en vez de competirle. */
+  --zx-d-0:   #00D2BE;   /* aqua Petronas       0%  */
+  --zx-d-26:  #2E9BD8;   /* azul puente        26%  */
+  --zx-d-55:  #A59281;   /* violeta de marca   55%  */
+  --zx-d-80:  #AC9A8B;   /* violeta claro      80%  */
+  --zx-d-100: #BDB0A4;   /* magenta           100%  */
+
+  /* Barras y medidores de CSS puro. Los SVG usan las paradas sueltas. */
+  --zx-escala: linear-gradient(90deg,
+    var(--zx-d-0) 0%, var(--zx-d-26) 26%, var(--zx-d-55) 55%,
+    var(--zx-d-80) 80%, var(--zx-d-100) 100%);
+  --zx-escala-v: linear-gradient(0deg,
+    var(--zx-d-0) 0%, var(--zx-d-26) 30%, var(--zx-d-55) 62%,
+    var(--zx-d-100) 100%);
+
+  /* ---------- Tipografia ---------- */
+  --zx-display: 'Space Grotesk', system-ui, sans-serif;
+  --zx-texto:   'Inter', system-ui, sans-serif;
+  --zx-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+  --zx-track-marca: 0.24em;
+  --zx-track-eyebrow: 0.14em;
+
+  /* ---------- Geometria ---------- */
+  --zx-r-control: 8px;
+  --zx-r-tarjeta: 12px;
+  --zx-r-cristal: 20px;
+  --zx-r-widget:  20px;
+  --zx-hairline: 0.5px;
+
+  /* ---------- Densidad · comoda por defecto ---------- */
+  --zx-alto-control: 40px;
+  --zx-alto-fila:    38px;
+  --zx-pad-tarjeta:  20px;
+  --zx-txt-cuerpo:   14px;
+  --zx-txt-dato:     15px;
+  --zx-gap:          14px;
+
+  /* ---------- Movimiento ---------- */
+  --zx-rapido: .18s;
+  --zx-base:   .32s;
+  --zx-suave:  cubic-bezier(.22,.61,.36,1);
+}
+
+/* ============================================================
+   REGISTRO CLARO · staff, documentos, impresion
+   Es el tema por defecto: el unico que sobrevive impreso.
+   ============================================================ */
+:root,
+[data-tema="claro"] {
+  --zx-lienzo:      #F1EFED;
+  --zx-superficie:  #FFFFFF;
+  --zx-superficie-2:#FAF8F7;
+  --zx-hover:       #FBFAF9;
+
+  --zx-borde:        #E6E1DC;
+  --zx-borde-fuerte: #DDD6CF;
+
+  --zx-txt:      #1C1B22;
+  --zx-txt-2:    #6E6980;
+  --zx-txt-3:    #8B849C;
+  --zx-txt-marca:#897462;
+
+  --zx-acento:       #897462;
+  --zx-acento-tenue: #F6F4F2;
+  --zx-sobre-acento: #FFFFFF;
+
+  /* en claro el objeto no emite luz: proyecta sombra de color */
+  --zx-glow-boton: 0 1px 2px rgba(137,116,98,.18), 0 4px 12px rgba(137,116,98,.14);
+  --zx-glow-boton-hover: 0 2px 4px rgba(137,116,98,.22), 0 8px 22px rgba(137,116,98,.22);
+  --zx-glow-icono: drop-shadow(2px 3px 5px rgba(137,116,98,.28));
+
+  --zx-pista:  #F4F1EF;
+  --zx-grad-a: #D9D2CB;
+  --zx-grad-b: #897462;
+
+  --zx-reticula: rgba(137,116,98,.05);
+}
+
+/* ============================================================
+   REGISTRO OSCURO · cliente, login, portada
+   Negro de base; el color lo ponen las nubes de luz.
+   ============================================================ */
+[data-tema="oscuro"] {
+  --zx-lienzo:      #080706;
+  --zx-superficie:  rgba(255,255,255,.07);
+  --zx-superficie-2:rgba(255,255,255,.04);
+  --zx-hover:       rgba(255,255,255,.11);
+
+  --zx-borde:        rgba(237,233,229,.32);
+  --zx-borde-fuerte: rgba(245,243,242,.70);
+
+  --zx-txt:      #FFFFFF;
+  --zx-txt-2:    rgba(244,241,239,.84);
+  --zx-txt-3:    rgba(237,233,229,.72);
+  --zx-txt-marca:#F1EEEC;
+
+  --zx-acento:       #FFFFFF;
+  --zx-acento-tenue: rgba(255,255,255,.10);
+  --zx-sobre-acento: #42372E;
+
+  /* Anillo pegado al borde + halo cerrado + halo abierto. El anillo es lo
+     que hace que se lea como filo encendido y no como mancha borrosa. */
+  --zx-glow-boton: 0 0 0 1px rgba(255,255,255,.50),
+                   0 0 18px rgba(217,210,203,.70),
+                   0 0 44px rgba(189,175,162,.45);
+  --zx-glow-boton-hover: 0 0 0 1px rgba(255,255,255,.85),
+                         0 0 26px rgba(237,233,229,.90),
+                         0 0 62px rgba(197,185,175,.60);
+  --zx-glow-icono: drop-shadow(0 0 10px rgba(217,210,203,.75));
+
+  --zx-pista:  rgba(255,255,255,.13);
+  --zx-grad-a: #B6A799;
+  --zx-grad-b: #F5F2F0;
+
+  --zx-reticula: rgba(255,255,255,.03);
+}
+
+/* ============================================================
+   DENSIDAD · un atributo, cinco variables. No son temas aparte.
+   ============================================================ */
+[data-densidad="compacta"] {
+  --zx-alto-control: 30px;
+  --zx-alto-fila:    33px;
+  --zx-pad-tarjeta:  13px;
+  --zx-txt-cuerpo:   12.5px;
+  --zx-txt-dato:     13px;
+  --zx-gap:          10px;
+}
+
+/* Se toca con guante, de pie, con prisa. 30px no alcanza. */
+[data-densidad="amplia"] {
+  --zx-alto-control: 52px;
+  --zx-alto-fila:    56px;
+  --zx-pad-tarjeta:  18px;
+  --zx-txt-cuerpo:   14px;
+  --zx-txt-dato:     15px;
+  --zx-gap:          14px;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--zx-lienzo);
+  color: var(--zx-txt);
+  font-family: var(--zx-texto);
+  font-size: var(--zx-txt-cuerpo);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.zx-luz { position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+          background: var(--zx-lienzo); }
+
+/* ============================================================
+   NUBES DE LUZ
+   Formas desenfocadas, no degradados radiales. Un degradado radial se ve
+   como halo simetrico; una forma con blur se ve como luz cayendo.
+   ============================================================ */
+.zx-nube { position: absolute; border-radius: 50%; filter: blur(78px); pointer-events: none; }
+/* El staff no lleva nubes: el claro es lienzo de trabajo, no portada. */
+[data-tema="claro"] .zx-nube { display: none; }
+
+.zx-reticula {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--zx-reticula) .5px, transparent .5px),
+    linear-gradient(90deg, var(--zx-reticula) .5px, transparent .5px);
+  background-size: 68px 68px;
+}
+
+/* ============================================================
+   TIPOGRAFIA
+   ============================================================ */
+.zx-wordmark {
+  font-family: var(--zx-display);
+  letter-spacing: var(--zx-track-marca);
+  color: var(--zx-txt);
+  font-weight: 400;
+}
+.zx-titulo { font-family: var(--zx-display); font-size: 22px; font-weight: 400; margin: 0; color: var(--zx-txt); }
+.zx-eyebrow {
+  font-size: 10.5px;
+  letter-spacing: var(--zx-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--zx-txt-3);
+}
+/* Folios y cifras. La mono alineada en columna permite comparar
+   magnitudes sin leer los digitos. */
+.zx-dato  { font-family: var(--zx-mono); font-size: var(--zx-txt-dato); }
+.zx-folio { font-family: var(--zx-mono); font-size: 11.5px; color: var(--zx-txt-marca); }
+.zx-num   { font-family: var(--zx-mono); font-size: 11.5px; text-align: right; }
+
+/* ============================================================
+   SUPERFICIES
+   ============================================================ */
+.zx-tarjeta {
+  background: var(--zx-superficie);
+  border: var(--zx-hairline) solid var(--zx-borde);
+  border-radius: var(--zx-r-tarjeta);
+  padding: var(--zx-pad-tarjeta);
+}
+
+/* Cristal: deja pasar la luz de las nubes que quedan detras. */
+.zx-cristal, .zx-widget {
+  position: relative;
+  border-radius: var(--zx-r-cristal);
+  padding: var(--zx-pad-tarjeta);
+  overflow: hidden;
+  border: var(--zx-hairline) solid var(--zx-borde);
+  transition: all var(--zx-base) var(--zx-suave);
+}
+.zx-widget { padding: 16px 17px; }
+.zx-widget::after { content:''; position:absolute; top:0; left:0; right:0; height:60px; pointer-events:none; }
+
+[data-tema="oscuro"] .zx-cristal,
+[data-tema="oscuro"] .zx-widget {
+  background: linear-gradient(158deg, rgba(217,210,203,.20) 0%, rgba(165,146,129,.13) 52%, rgba(255,255,255,.04) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.34), 0 12px 34px rgba(20,17,14,.60);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+[data-tema="oscuro"] .zx-widget::after {
+  background: radial-gradient(ellipse 140px 56px at 24% 0%, rgba(245,243,242,.22), transparent 70%);
+}
+[data-tema="oscuro"] .zx-cristal:hover,
+[data-tema="oscuro"] .zx-widget:hover {
+  border-color: var(--zx-borde-fuerte);
+  background: linear-gradient(158deg, rgba(230,225,220,.30) 0%, rgba(185,170,157,.20) 52%, rgba(255,255,255,.07) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.52), 0 0 42px rgba(211,201,193,.42), 0 14px 40px rgba(20,17,14,.65);
+}
+
+/* En claro el objeto no emite luz: se eleva y proyecta sombra de color. */
+[data-tema="claro"] .zx-cristal,
+[data-tema="claro"] .zx-widget {
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(137,116,98,.05), 0 8px 24px rgba(137,116,98,.09);
+}
+[data-tema="claro"] .zx-widget::after {
+  background: radial-gradient(ellipse 180px 90px at 82% -10%, rgba(195,183,172,.16), transparent 68%);
+}
+[data-tema="claro"] .zx-cristal:hover,
+[data-tema="claro"] .zx-widget:hover {
+  border-color: var(--zx-violeta-300); transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(137,116,98,.08), 0 12px 30px rgba(137,116,98,.16);
+}
+
+/* Sin backdrop-filter en tactil: obliga a recomponer capas en cada scroll. */
+@media (hover: none) and (pointer: coarse) {
+  [data-tema="oscuro"] .zx-cristal,
+  [data-tema="oscuro"] .zx-widget {
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    background: rgba(217,210,203,.16);
+  }
+}
+
+.zx-widget-etq { position:relative; font-size:10.5px; letter-spacing:.14em;
+  text-transform:uppercase; color: var(--zx-txt-3); }
+/* El dato es el protagonista; el texto explica, no compite. */
+.zx-widget-num { position:relative; font-family: var(--zx-display); font-size:42px; line-height:1;
+  color: var(--zx-txt); margin-top:9px; letter-spacing:-.02em; }
+.zx-widget-pie { position:relative; font-size:11px; color: var(--zx-txt-3); margin-top:8px; }
+
+.zx-widget:hover .zx-anillo { border-color: var(--zx-borde-fuerte); }
+[data-tema="oscuro"] .zx-widget:hover .zx-anillo { box-shadow: 0 0 22px rgba(237,233,229,.7); color:#fff; }
+
+/* ============================================================
+   MOSAICO · tarjeta de modulo y de destino
+   Vive aqui y no en el index de cada app: si cada app lo redefine,
+   a la tercera ya no se parecen.
+   ============================================================ */
+.zx-mosaico {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  font-family: var(--zx-texto);
+  background: var(--zx-superficie);
+  border: var(--zx-hairline) solid var(--zx-borde);
+  border-radius: var(--zx-r-widget);
+  padding: 17px;
+  transition: all var(--zx-base) var(--zx-suave);
+}
+[data-tema="oscuro"] .zx-mosaico {
+  background: linear-gradient(158deg, rgba(217,210,203,.20) 0%, rgba(165,146,129,.13) 52%, rgba(255,255,255,.04) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.34), 0 12px 34px rgba(20,17,14,.6);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.zx-mosaico:hover { border-color: var(--zx-borde-fuerte); }
+[data-tema="oscuro"] .zx-mosaico:hover {
+  background: linear-gradient(158deg, rgba(230,225,220,.30) 0%, rgba(185,170,157,.20) 52%, rgba(255,255,255,.07) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.52), 0 0 42px rgba(211,201,193,.42);
+}
+[data-tema="claro"] .zx-mosaico:hover { box-shadow: 0 6px 22px rgba(137,116,98,.14); transform: translateY(-1px); }
+.zx-mosaico:hover .zx-anillo { border-color: var(--zx-borde-fuerte); }
+[data-tema="oscuro"] .zx-mosaico:hover .zx-anillo { box-shadow: 0 0 22px rgba(237,233,229,.7); color:#fff; }
+.zx-mosaico:focus-visible { outline: 2px solid var(--zx-violeta-300); outline-offset: 3px; }
+
+/* Bloqueado se muestra, atenuado: del lado del staff el usuario sabe que
+   existe y a quien pedirle acceso. NUNCA en la fachada de clientes. */
+.zx-mosaico[disabled] { opacity: .32; cursor: not-allowed; }
+.zx-mosaico[disabled]:hover { border-color: var(--zx-borde); box-shadow: none; transform: none; }
+.zx-mosaico-nombre { display:block; font-size: 14.5px; color: var(--zx-txt); margin-top: 13px; position:relative; }
+.zx-mosaico-desc   { display:block; font-size: 11.5px; color: var(--zx-txt-3); margin-top: 4px; line-height: 1.45; position:relative; }
+
+/* ============================================================
+   CONTROLES
+   ============================================================ */
+.zx-btn {
+  height: var(--zx-alto-control);
+  padding: 0 20px;
+  border: none;
+  border-radius: 11px;
+  background: var(--zx-acento);
+  color: var(--zx-sobre-acento);
+  font-family: var(--zx-texto);
+  font-size: 13.5px;
+  letter-spacing: .03em;
+  cursor: pointer;
+  box-shadow: var(--zx-glow-boton);
+  transition: all var(--zx-base) var(--zx-suave);
+}
+/* Sobre nubes de luz el violeta se pierde; el blanco encendido jala la mirada. */
+[data-tema="oscuro"] .zx-btn { background: linear-gradient(180deg, #FFFFFF, #F1EEEC); }
+.zx-btn:hover { box-shadow: var(--zx-glow-boton-hover); }
+.zx-btn:focus-visible { outline: 2px solid var(--zx-violeta-300); outline-offset: 2px; }
+
+/* Un solo boton brillante por vista. Si dos brillan igual, el glow deja de
+   ser jerarquia y alguien cancela cuando queria confirmar. */
+.zx-btn-2 {
+  height: var(--zx-alto-control);
+  padding: 0 20px;
+  border: var(--zx-hairline) solid var(--zx-borde);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--zx-txt-2);
+  font-family: var(--zx-texto);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--zx-base) var(--zx-suave);
+}
+[data-tema="oscuro"] .zx-btn-2 { background: rgba(255,255,255,.07); color: #F4F1EF; }
+.zx-btn-2:hover { border-color: var(--zx-borde-fuerte); color: var(--zx-txt); }
+.zx-btn-2:focus-visible { outline: 2px solid var(--zx-violeta-300); outline-offset: 2px; }
+
+.zx-campo {
+  width: 100%;
+  height: var(--zx-alto-control);
+  padding: 0 13px;
+  border-radius: 10px;
+  border: var(--zx-hairline) solid var(--zx-borde);
+  background: var(--zx-superficie);
+  color: var(--zx-txt);
+  font-family: var(--zx-texto);
+  font-size: 13px;
+}
+[data-tema="oscuro"] .zx-campo { background: rgba(255,255,255,.08); }
+.zx-campo::placeholder { color: var(--zx-txt-3); }
+.zx-campo:focus { outline: none; border-color: var(--zx-borde-fuerte); box-shadow: 0 0 0 3px var(--zx-acento-tenue); }
+
+.zx-etiqueta { display:block; font-size: 11.5px; letter-spacing:.06em; color: var(--zx-txt-2); margin-bottom: 7px; }
+
+/* ============================================================
+   ICONOS
+   El anillo repite la geometria del simbolo. Contenedor cuando el icono
+   es un destino que se toca; sin contenedor cuando acompana texto.
+   ============================================================ */
+.zx-anillo {
+  width: 40px; height: 40px; flex-shrink: 0; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--zx-acento-tenue);
+  border: var(--zx-hairline) solid var(--zx-borde);
+  color: var(--zx-txt-marca);
+  transition: all var(--zx-base) var(--zx-suave);
+}
+[data-tema="oscuro"] .zx-anillo {
+  background: rgba(255,255,255,.14);
+  border-color: rgba(241,238,236,.46);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.42), 0 0 18px rgba(217,210,203,.35);
+  color: #F7F6F5;
+}
+[data-tema="claro"] .zx-anillo { color: var(--zx-violeta-700); }
+
+/* La extrusion solo existe de 48px para arriba. Abajo de eso el
+   desplazamiento se vuelve borron y estorba. */
+.zx-icono-3d { filter: var(--zx-glow-icono); }
+
+/* ============================================================
+   PILDORAS DE ESTADO
+   ============================================================ */
+.zx-pill {
+  display: inline-block;
+  font-size: 11px; padding: 3px 11px; border-radius: 99px;
+  background: var(--zx-acento-tenue); color: var(--zx-txt-marca);
+}
+.zx-pill.ok     { background: var(--zx-ok-bg);     color: var(--zx-ok-txt); }
+.zx-pill.alerta { background: var(--zx-alerta-bg); color: var(--zx-alerta-txt); }
+.zx-pill.error  { background: var(--zx-error-bg);  color: var(--zx-error-txt); }
+[data-tema="oscuro"] .zx-pill.ok     { background: rgba(150,225,200,.20); color: #B8EED9; }
+[data-tema="oscuro"] .zx-pill.alerta { background: rgba(255,231,184,.22); color: #FFEDC8; }
+[data-tema="oscuro"] .zx-pill.error  { background: rgba(255,170,170,.22); color: #FFD6D6; }
+
+/* ============================================================
+   TABLA · listas que se escanean, no tarjetas que se contemplan
+   ============================================================ */
+.zx-tabla { width:100%; background: var(--zx-superficie); border: var(--zx-hairline) solid var(--zx-borde); border-radius: var(--zx-r-tarjeta); overflow:hidden; }
+.zx-th { display:flex; padding:7px 12px; background: var(--zx-superficie-2); border-bottom: var(--zx-hairline) solid var(--zx-borde); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color: var(--zx-txt-3); }
+.zx-tr { display:flex; align-items:center; min-height: var(--zx-alto-fila); padding:0 12px; border-bottom: var(--zx-hairline) solid var(--zx-borde); font-size: var(--zx-txt-cuerpo); }
+.zx-tr:last-child { border-bottom:none; }
+.zx-tr:hover { background: var(--zx-hover); }
+
+/* ============================================================
+   TINTES DE ESTADO
+   El color del degradado separa listo, en proceso y pendiente antes de
+   que el ojo lea una palabra.
+   ============================================================ */
+[data-tema="oscuro"] .zx-t-ok     { background:linear-gradient(158deg,rgba(150,225,200,.18),rgba(18,135,107,.13) 55%,rgba(255,255,255,.04)); border-color:rgba(150,225,200,.34); }
+[data-tema="oscuro"] .zx-t-espera { background:linear-gradient(158deg,rgba(255,231,184,.18),rgba(201,162,74,.12) 55%,rgba(255,255,255,.04)); border-color:rgba(255,231,184,.34); }
+[data-tema="oscuro"] .zx-t-mal    { background:linear-gradient(158deg,rgba(255,170,170,.18),rgba(180,70,80,.13) 55%,rgba(255,255,255,.04)); border-color:rgba(255,170,170,.38); }
+[data-tema="oscuro"] .zx-t-nada   { background:linear-gradient(158deg,rgba(217,210,203,.10),rgba(165,146,129,.07) 55%,rgba(255,255,255,.02)); border-color:rgba(237,233,229,.20); }
+
+[data-tema="claro"] .zx-t-ok     { background:linear-gradient(158deg,#EFF8F4,#FFFFFF 58%); border-color:#C9E5DA; }
+[data-tema="claro"] .zx-t-espera { background:linear-gradient(158deg,#FFF9EF,#FFFFFF 58%); border-color:#F0DFC0; }
+[data-tema="claro"] .zx-t-mal    { background:linear-gradient(158deg,#FFF5F5,#FFFFFF 55%); border-color:#F0C9C9; }
+[data-tema="claro"] .zx-t-nada   { background:#FFFFFF; }
+
+/* La barra de la tarjeta es una escala de luz en miniatura. */
+.barra-estado { background: var(--zx-pista); }
+.zx-t-ok     .barra-estado { background:linear-gradient(90deg,#12876B,#7ED9BC); }
+.zx-t-espera .barra-estado { background:linear-gradient(90deg,#C9A24A,#FFE7B8); }
+.zx-t-mal    .barra-estado { background:linear-gradient(90deg,#B44650,#FFAAAA); }
+.zx-t-nada   .barra-estado { background: var(--zx-pista); }
+
+/* ============================================================
+   ACCESIBILIDAD
+   ============================================================ */
+.zx-oculto { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

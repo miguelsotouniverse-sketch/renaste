@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Renasté · Cirugías</title>
+<meta name="description" content="Agenda quirúrgica de Clínicas Renasté">
+<meta name="theme-color" content="#A28E7D" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1D1915" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="../assets/renaste-favicon.png">
+<link rel="apple-touch-icon" href="../assets/renaste-iso.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://accounts.google.com">
+<link rel="stylesheet" href="../renaste-tokens.css">
+<script>
+/* Se fija el tema ANTES de pintar: si se hace abajo, se alcanza a ver el
+   destello blanco antes de entrar en oscuro. */
+(function(){
+  var t=null; try{ t=localStorage.getItem('renaste-tema'); }catch(e){}
+  if(!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
+  document.documentElement.setAttribute('data-tema', t);
+})();
+</script>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   RENASTÉ · Sistema de diseño
+   Los colores salen del logotipo, medidos pixel a pixel:
+   morado #A28E7D, carbón #4C4C4C. Todo lo demás se deriva de esos dos.
+   ═══════════════════════════════════════════════════════════════════════ */
+/* Los colores, tipos, radios y tiempos NO se definen aquí: vienen de
+   ../renaste-tokens.css, que es la única fuente de verdad de la marca para
+   todo el ecosistema (portal, cirujanos, cirugías, expediente). Lo que sigue
+   son sólo alias con los nombres que usa esta pantalla. */
+:root{
+  color-scheme: light;
+
+  --morado-900:var(--zx-violeta-900); --morado-800:var(--zx-violeta-800);
+  --morado-700:var(--zx-violeta-700); --morado-600:var(--zx-violeta-600);
+  --morado-500:var(--zx-violeta-500); --morado-400:var(--zx-violeta-400);
+  --morado-300:var(--zx-violeta-300); --morado-200:var(--zx-violeta-200);
+  --morado-100:var(--zx-violeta-100); --morado-50:var(--zx-violeta-050);
+
+  --tinta:var(--zx-txt); --tinta2:var(--zx-txt-2); --tinta3:var(--zx-txt-3);
+  --papel:var(--zx-superficie); --papel-2:var(--zx-superficie-2); --fondo:var(--zx-lienzo);
+  --linea:var(--zx-borde); --linea-2:var(--zx-superficie-2);
+
+  --ok:var(--zx-ok-txt);      --ok-bg:var(--zx-ok-bg);      --ok-linea:var(--zx-ok);
+  --alerta:var(--zx-alerta-txt); --alerta-bg:var(--zx-alerta-bg); --alerta-linea:var(--zx-alerta);
+  --malo:var(--zx-error-txt); --malo-bg:var(--zx-error-bg);  --malo-linea:var(--zx-error);
+
+  --r:var(--zx-r-tarjeta); --r-sm:var(--zx-r-control); --r-lg:var(--zx-r-cristal); --r-full:999px;
+  --sombra-1:0 1px 2px rgba(28,27,34,.05);
+  --sombra-2:0 1px 2px rgba(28,27,34,.05), 0 10px 26px -14px rgba(137,116,98,.26);
+  --sombra-3:0 2px 4px rgba(28,27,34,.05), 0 24px 48px -20px rgba(137,116,98,.34);
+  --anillo:0 0 0 3px rgba(165,146,129,.22);
+  --transicion:var(--zx-rapido) var(--zx-suave);
+}
+
+/* El registro oscuro de la marca es negro con superficies traslúcidas; lo único
+   que hay que traducir aquí son los estados, que en tokens sólo existen en claro. */
+html[data-tema="oscuro"]{
+  color-scheme: dark;
+  --linea-2:rgba(255,255,255,.08);
+  --ok:#B8EED9;     --ok-bg:rgba(150,225,200,.18);  --ok-linea:rgba(150,225,200,.34);
+  --alerta:#FFEDC8; --alerta-bg:rgba(255,231,184,.18); --alerta-linea:rgba(255,231,184,.34);
+  --malo:#FFD6D6;   --malo-bg:rgba(255,170,170,.18);  --malo-linea:rgba(255,170,170,.38);
+  --sombra-1:0 1px 2px rgba(0,0,0,.5);
+  --sombra-2:0 1px 2px rgba(0,0,0,.5), 0 10px 26px -14px rgba(0,0,0,.9);
+  --sombra-3:0 2px 4px rgba(0,0,0,.5), 0 24px 48px -20px rgba(0,0,0,1);
+  --anillo:0 0 0 3px rgba(217,210,203,.35);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  font:400 15px/1.55 var(--zx-texto);
+  color:var(--tinta); background:var(--fondo);
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  font-variant-numeric:tabular-nums;
+  transition:background var(--transicion), color var(--transicion);
+}
+h1,h2,h3{margin:0;font-family:var(--zx-display);font-weight:500;letter-spacing:-.015em;color:var(--tinta)}
+button{font:inherit}
+a{color:var(--zx-txt-marca)}
+::selection{background:var(--morado-200);color:var(--morado-900)}
+
+/* ── Barra superior ──────────────────────────────────────────────────── */
+#barra{
+  position:sticky;top:0;z-index:30;
+  background:var(--fondo);
+  background:color-mix(in srgb, var(--fondo) 86%, transparent);
+  backdrop-filter:saturate(180%) blur(14px); -webkit-backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid var(--linea);
+  padding:0 20px; height:64px; display:flex; align-items:center; gap:14px;
+}
+#barra.oculto{display:none !important}
+#marca{display:flex;align-items:center;gap:11px;min-width:0}
+#marca img{height:26px;width:auto;display:block}
+#marca .div{width:1px;height:20px;background:var(--linea);flex:none}
+#marca .mod{
+  font-family:var(--zx-display);font-size:12.5px;font-weight:400;letter-spacing:var(--zx-track-eyebrow);
+  text-transform:uppercase;color:var(--tinta3);white-space:nowrap;
+}
+#quien{margin-left:auto;display:flex;align-items:center;gap:10px}
+#quien-chip{
+  display:flex;align-items:center;gap:9px;padding:5px 12px 5px 5px;
+  border:1px solid var(--linea);border-radius:var(--r-full);background:var(--papel-2);
+}
+#quien-ini{
+  width:28px;height:28px;border-radius:50%;flex:none;
+  background:linear-gradient(140deg,var(--zx-violeta-500),var(--zx-violeta-800));
+  color:#fff;font-size:12px;font-weight:600;display:grid;place-items:center;letter-spacing:.02em;
+}
+#quien-nom{font-size:13px;font-weight:600;line-height:1.1;white-space:nowrap}
+#quien-rol{font-size:10.5px;line-height:1.1;color:var(--tinta3);text-transform:uppercase;letter-spacing:.08em}
+#tema{
+  width:36px;height:36px;flex:none;border-radius:var(--r-full);cursor:pointer;
+  border:1px solid var(--linea);background:var(--papel-2);color:var(--tinta2);
+  display:grid;place-items:center;transition:var(--transicion);
+}
+#tema:hover{border-color:var(--zx-borde-fuerte);color:var(--zx-txt-marca)}
+#tema svg{width:17px;height:17px}
+html[data-tema="oscuro"] #tema .sol{display:none}
+html:not([data-tema="oscuro"]) #tema .luna{display:none}
+
+/* ── Navegación por pestañas ─────────────────────────────────────────── */
+#tabs{
+  display:flex;gap:2px;margin:0 auto;padding:6px;
+  background:var(--zx-acento-tenue);border:1px solid var(--linea-2);border-radius:var(--r-full);
+  width:max-content;max-width:calc(100% - 40px);overflow-x:auto;scrollbar-width:none;
+}
+#tabs::-webkit-scrollbar{display:none}
+.tab{
+  padding:9px 20px;border-radius:var(--r-full);border:none;background:none;cursor:pointer;
+  color:var(--tinta2);font-size:14px;font-weight:500;white-space:nowrap;
+  transition:var(--transicion);
+}
+.tab:hover{color:var(--zx-txt-marca)}
+.tab[aria-selected=true]{
+  background:var(--papel);color:var(--zx-txt-marca);font-weight:600;box-shadow:var(--sombra-1);
+}
+#tabs-env{display:flex;justify-content:center;padding:20px 20px 4px}
+
+main{max-width:1120px;margin:0 auto;padding:20px}
+
+/* ── Tarjetas ────────────────────────────────────────────────────────── */
+.tarjeta{
+  position:relative;background:var(--papel);border:1px solid var(--linea);
+  border-radius:var(--r-lg);box-shadow:var(--sombra-2);
+  padding:26px 28px;margin-bottom:20px;
+}
+.tarjeta h2{font-size:19px;margin-bottom:6px;position:relative;padding-left:15px}
+.tarjeta h2::before{
+  content:"";position:absolute;left:0;top:.16em;bottom:.16em;width:3px;border-radius:2px;
+  background:linear-gradient(180deg,var(--zx-grad-a),var(--zx-grad-b));
+}
+.sub{color:var(--tinta2);font-size:13.5px;margin:0 0 20px;padding-left:15px;max-width:64ch}
+h3.grupo{
+  font-size:11.5px;font-family:var(--zx-texto);font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--tinta3);margin:26px 0 12px;display:flex;align-items:center;gap:10px;
+}
+h3.grupo::after{content:"";flex:1;height:1px;background:var(--linea)}
+
+/* ── Indicadores ─────────────────────────────────────────────────────── */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:12px;margin:0 0 22px;padding-left:15px}
+.kpi{
+  border:1px solid var(--linea);border-radius:var(--r);padding:14px 16px;background:var(--papel-2);
+}
+.kpi b{display:block;font-family:var(--zx-display);font-size:30px;font-weight:500;line-height:1.1;letter-spacing:-.02em}
+.kpi span{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--tinta3);font-weight:600}
+.kpi.ac b{color:var(--zx-txt-marca)} .kpi.ok b{color:var(--ok)} .kpi.wa b{color:var(--alerta)}
+
+/* ── Controles ───────────────────────────────────────────────────────── */
+.rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px}
+label{
+  display:block;font-size:11.5px;font-weight:600;color:var(--tinta2);
+  margin-bottom:7px;letter-spacing:.02em;
+}
+input,select,textarea{
+  width:100%;padding:11px 13px;border:1px solid var(--linea);border-radius:var(--r-sm);
+  font:inherit;font-size:14.5px;background:var(--papel);color:var(--tinta);
+  transition:border-color var(--transicion), box-shadow var(--transicion);
+}
+input::placeholder{color:var(--tinta3)}
+input:hover,select:hover,textarea:hover{border-color:var(--zx-borde-fuerte)}
+input:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--morado-500);box-shadow:var(--anillo);
+}
+input[readonly]{background:var(--fondo);color:var(--tinta2);cursor:default}
+select{
+  appearance:none;-webkit-appearance:none;padding-right:38px;cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%238E8799' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 14px center;
+}
+textarea{min-height:80px;resize:vertical}
+
+.btn{
+  padding:11px 20px;border:1px solid transparent;border-radius:var(--r-sm);cursor:pointer;
+  font-size:14px;font-weight:600;letter-spacing:.005em;color:#fff;
+  background:linear-gradient(140deg,var(--zx-violeta-500),var(--zx-violeta-800));
+  box-shadow:var(--zx-glow-boton);
+  transition:var(--transicion);
+}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--zx-glow-boton-hover)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.sec{
+  background:var(--papel);color:var(--zx-txt-marca);border-color:var(--linea);box-shadow:var(--sombra-1);
+}
+.btn.sec:hover{border-color:var(--zx-borde-fuerte);background:var(--zx-hover)}
+.btn.txt{background:none;border:none;color:var(--zx-txt-marca);text-decoration:underline;padding:4px;box-shadow:none}
+.btn.oculto{display:none !important}
+.fila{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:22px}
+
+/* ── Avisos y pastillas ──────────────────────────────────────────────── */
+.aviso{
+  display:flex;gap:10px;align-items:flex-start;
+  padding:12px 15px;border-radius:var(--r-sm);font-size:13.5px;margin:12px 0;border:1px solid;
+}
+.aviso::before{
+  content:"";width:16px;height:16px;flex:none;margin-top:1px;border-radius:50%;
+  background:currentColor;opacity:.9;
+  -webkit-mask:var(--ico) center/contain no-repeat; mask:var(--ico) center/contain no-repeat;
+}
+.aviso.ok{background:var(--ok-bg);border-color:var(--ok-linea);color:var(--ok);
+  --ico:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M8 0a8 8 0 100 16A8 8 0 008 0zm3.7 6.1-4.4 4.4a.8.8 0 01-1.1 0L4.3 8.6a.8.8 0 111.1-1.1l1.3 1.3 3.9-3.8a.8.8 0 111.1 1.1z'/></svg>")}
+.aviso.warn{background:var(--alerta-bg);border-color:var(--alerta-linea);color:var(--alerta);
+  --ico:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M8 0a8 8 0 100 16A8 8 0 008 0zm.9 11.6a.9.9 0 11-1.8 0 .9.9 0 011.8 0zM8.8 4v4.2a.8.8 0 01-1.6 0V4a.8.8 0 011.6 0z'/></svg>")}
+.aviso.malo{background:var(--malo-bg);border-color:var(--malo-linea);color:var(--malo);
+  --ico:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M8 0a8 8 0 100 16A8 8 0 008 0zm3 10a.8.8 0 01-1.1 1.1L8 9.1l-1.9 2A.8.8 0 015 10l1.9-2L5 6.1A.8.8 0 116.1 5L8 6.9 9.9 5A.8.8 0 0111 6.1L9.1 8z'/></svg>")}
+.pastilla{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:var(--r-full);
+  font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  background:var(--zx-acento-tenue);color:var(--zx-txt-marca);border:1px solid transparent;
+}
+.pastilla::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.pastilla.warn{background:var(--alerta-bg);color:var(--alerta);border-color:var(--alerta-linea)}
+.pastilla.ok{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-linea)}
+
+/* ── Listas de casos ─────────────────────────────────────────────────── */
+.caso{
+  position:relative;border:1px solid var(--linea);border-radius:var(--r);
+  padding:15px 17px 15px 20px;margin-bottom:10px;cursor:pointer;background:var(--papel);
+  transition:var(--transicion);overflow:hidden;
+}
+.caso::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--zx-grad-a),var(--zx-grad-b));
+  transform:scaleY(0);transform-origin:center;transition:transform var(--transicion);
+}
+.caso:hover{border-color:var(--zx-borde-fuerte);box-shadow:var(--sombra-2);transform:translateX(2px)}
+.caso:hover::before{transform:scaleY(1)}
+.caso .top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.caso .folio{
+  font-family:var(--zx-mono);font-weight:500;color:var(--zx-txt-marca);
+  font-size:12px;letter-spacing:.04em;
+}
+.caso .nom{font-weight:600;margin-top:5px;font-size:15px}
+.caso .meta{color:var(--tinta2);font-size:13px;margin-top:3px}
+.vacio{
+  color:var(--tinta3);text-align:center;padding:44px 16px 40px;font-size:14px;
+  background:url("../assets/renaste-iso.png") center 16px/44px no-repeat;
+  padding-top:76px;opacity:.9;
+}
+html[data-tema="oscuro"] .vacio{background-image:url("../assets/renaste-iso-blanco.png");opacity:.55}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--linea-2)}
+tr:last-child th,tr:last-child td{border-bottom:none}
+th{font-size:11px;color:var(--tinta3);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+td{color:var(--tinta)}
+.tabla-scroll{overflow-x:auto;border:1px solid var(--linea);border-radius:var(--r);background:var(--papel-2)}
+
+/* ── Pantalla de entrada ─────────────────────────────────────────────── */
+#pantalla-entrada{
+  position:fixed;inset:0;z-index:40;display:grid;grid-template-columns:1.05fr .95fr;
+  max-width:none;margin:0;padding:0;
+}
+#pantalla-entrada.oculto{display:none !important}
+#lienzo{
+  position:relative;overflow:hidden;display:flex;flex-direction:column;
+  justify-content:center;padding:clamp(32px,6vw,80px);color:#fff;
+  background:
+    radial-gradient(70% 55% at 8% 6%,  rgba(194,181,169,.55) 0%, transparent 62%),
+    radial-gradient(85% 70% at 96% 96%, rgba(111,94,79,.75)  0%, transparent 60%),
+    radial-gradient(55% 45% at 78% 2%,  rgba(178,161,147,.40) 0%, transparent 60%),
+    linear-gradient(152deg,#584A3D 0%,#332B24 46%,#231D18 100%);
+}
+#lienzo::after{  /* grano finísimo: quita el aspecto plástico del degradado */
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.16;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='120' height='120' filter='url(%23n)' opacity='.5'/></svg>");
+}
+#aureola{
+  position:absolute;width:min(46vh,360px);aspect-ratio:1;right:-7%;bottom:-9%;
+  background:url("../assets/renaste-iso-blanco.png") center/contain no-repeat;
+  opacity:.055;animation:gira 110s linear infinite;pointer-events:none;
+}
+@keyframes gira{to{transform:rotate(360deg)}}
+#lienzo .contenido{position:relative;z-index:1;max-width:520px}
+#lienzo img{width:min(340px,72%);height:auto;display:block;margin-bottom:34px}
+#lienzo h1{
+  font-family:var(--zx-display);font-size:clamp(28px,3.4vw,42px);font-weight:300;
+  line-height:1.18;letter-spacing:-.02em;color:#fff;margin-bottom:16px;
+}
+#lienzo h1 b{font-weight:600}
+#lienzo p{color:rgba(255,255,255,.72);font-size:15.5px;line-height:1.6;margin:0}
+#lienzo ul{list-style:none;padding:0;margin:34px 0 0;display:grid;gap:12px}
+#lienzo li{
+  display:flex;gap:11px;align-items:center;color:rgba(255,255,255,.80);font-size:14px;
+}
+#lienzo li::before{
+  content:"";width:19px;height:19px;flex:none;border-radius:50%;
+  background:rgba(255,255,255,.13);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.26);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M5.6 10.2l2.9 2.9 5.9-6' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;background-position:center;background-size:19px;
+}
+#acceso{
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:clamp(28px,5vw,64px);background:var(--papel);
+}
+#acceso .caja{width:100%;max-width:352px;text-align:center}
+#acceso .iso{width:52px;height:52px;margin:0 auto 24px;display:block}
+html[data-tema="oscuro"] #acceso .iso{content:url("../assets/renaste-iso-blanco.png")}
+#acceso h2{font-size:25px;font-weight:500;margin-bottom:9px}
+#acceso p.sub{margin:0 auto 24px;color:var(--tinta2);font-size:14px;max-width:30ch}
+#boton-google{display:flex;justify-content:center;min-height:44px}
+#acceso .pie{
+  margin-top:28px;padding-top:20px;border-top:1px solid var(--linea);
+  font-size:12px;color:var(--tinta3);line-height:1.65;
+}
+#acceso .pie b{color:var(--tinta2);font-weight:600}
+
+/* ── Capa de carga ───────────────────────────────────────────────────── */
+#cargando{
+  position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+  background:rgba(241,239,237,.72);
+  background:color-mix(in srgb, var(--fondo) 72%, transparent);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+}
+#cargando.on{display:flex}
+#cargando .anillo{
+  width:46px;height:46px;border-radius:50%;
+  border:3px solid var(--zx-pista);border-top-color:var(--zx-txt-marca);
+  animation:vuelta .75s linear infinite;
+}
+@keyframes vuelta{to{transform:rotate(360deg)}}
+
+.oculto{display:none !important}
+
+/* ── Adaptación ──────────────────────────────────────────────────────── */
+@media (max-width:900px){
+  #pantalla-entrada{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow-y:auto}
+  #lienzo{padding:36px 28px 40px;min-height:auto}
+  #lienzo img{width:200px;margin-bottom:22px}
+  #lienzo ul{display:none}
+  #lienzo h1{font-size:26px}
+  #aureola{width:300px;right:-90px;bottom:-110px}
+}
+@media (max-width:620px){
+  #barra{padding:0 14px;height:58px;gap:10px}
+  #marca img{height:22px}
+  #marca .div,#marca .mod{display:none}
+  #quien-chip{padding:4px;border:none;background:none}
+  #quien-nom,#quien-rol{display:none}
+  #tabs-env{padding:14px 14px 0}
+  #tabs{width:100%;max-width:none;justify-content:flex-start}
+  main{padding:14px}
+  .tarjeta{padding:20px 18px;border-radius:var(--r)}
+    .fila .btn{flex:1;min-width:140px;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important}
+  .caso:hover{transform:none}
+  .btn:hover{transform:none}
+}
+/* ── COMPUTADORA COMPARTIDA ────────────────────────────────────
+   Sólo se enciende en la computadora del quirófano. */
+#cinta-compartida{display:none;align-items:center;gap:10px;padding:7px 16px;
+  background:#685748;color:#fff;font-size:13px}
+#cinta-compartida.on{display:flex}
+#cinta-compartida b{font-weight:700}
+#cinta-compartida .crece{flex:1}
+#cinta-compartida button{background:#fff;color:#685748;border:0;border-radius:6px;
+  padding:4px 11px;font:inherit;font-weight:700;cursor:pointer}
+#cinta-inactividad{position:fixed;left:0;right:0;bottom:0;z-index:2147483000;display:none;
+  align-items:center;gap:14px;padding:13px 18px;background:#8a1c1c;color:#fff;font-size:14px;
+  box-shadow:0 -4px 18px rgba(0,0,0,.25)}
+#cinta-inactividad.on{display:flex}
+#cinta-inactividad .crece{flex:1}
+#cinta-inactividad button{background:#fff;color:#8a1c1c;border:0;border-radius:6px;
+  padding:7px 16px;font:inherit;font-weight:700;cursor:pointer}
+.opcion-compartida{margin-top:16px;font-size:12.5px;opacity:.85;
+  display:flex;gap:8px;align-items:flex-start;text-align:left;line-height:1.45}
+.opcion-compartida input{margin-top:2px;flex:none}
+</style>
+</head>
+<body>
+
+<div id="cargando" role="status" aria-live="polite" aria-label="Cargando"><div class="anillo"></div></div>
+
+<!-- ── Barra ──────────────────────────────────────────────────────────── -->
+<div id="barra" class="oculto">
+  <div id="marca">
+    <img src="../assets/renaste-marca.png" alt="Clínicas Renasté" id="marca-img">
+    <span class="div"></span>
+    <span class="mod">Cirugías</span>
+  </div>
+  <div id="quien">
+    <button id="tema" type="button" title="Cambiar entre claro y oscuro" aria-label="Cambiar tema">
+      <svg class="sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/>
+      </svg>
+      <svg class="luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.5 14.3A8.6 8.6 0 019.7 3.5a8.6 8.6 0 1010.8 10.8z"/>
+      </svg>
+    </button>
+    <div id="quien-chip">
+      <span id="quien-ini"></span>
+      <span>
+        <span id="quien-nom"><span id="quien-txt"></span></span>
+        <span id="quien-rol"></span>
+      </span>
+    </div>
+    <button class="btn sec oculto" id="salir" type="button">Salir</button>
+  </div>
+</div>
+
+<!-- Sólo en la computadora compartida: quién está dentro, a la vista. -->
+<div id="cinta-compartida">
+  <span>Trabajando como <b id="cinta-quien">—</b></span>
+  <span class="crece"></span>
+  <span>¿No es usted?</span>
+  <button type="button" id="cinta-salir">Salir</button>
+</div>
+
+<!-- ── Entrada ────────────────────────────────────────────────────────── -->
+<div id="pantalla-entrada">
+  <div id="lienzo">
+    <div id="aureola"></div>
+    <div class="contenido">
+      <img src="../assets/renaste-logo-blanco.png" alt="Clínicas Renasté">
+      <h1>La agenda quirúrgica,<br><b>en un solo lugar.</b></h1>
+      <p>Apartar quirófano, registrar al paciente y dejar el caso listo para el día
+         de la cirugía. Cada médico ve lo suyo; enfermería ve la casa completa.</p>
+      <ul>
+        <li>Quirófano apartado en el momento, sin llamadas ni libretas</li>
+        <li>Ficha del paciente conforme a la NOM-004</li>
+        <li>Cada quien ve únicamente los casos que le tocan</li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="acceso">
+    <div class="caja">
+      <img class="iso" src="../assets/renaste-iso.png" alt="">
+      <h2>Entrar</h2>
+      <p class="sub">Use la cuenta de Google que Renasté dio de alta a su nombre.</p>
+      <div id="boton-google"></div>
+      <div id="entrada-error"></div>
+      <label class="opcion-compartida">
+        <input type="checkbox" id="chk-compartida">
+        <span>Esta computadora es compartida (la del quirófano). Al salir se cierra
+        también la sesión de Google, y la sesión se cierra sola a los
+        <span id="min-inactividad">10</span> minutos sin uso.</span>
+      </label>
+      <div class="pie">
+        Si su correo no está dado de alta, el sistema no lo va a dejar pasar.
+        Pídalo en <b>dirección de Renasté</b>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Aplicación ─────────────────────────────────────────────────────── -->
+<div id="app" class="oculto">
+  <div id="tabs-env"><div id="tabs" role="tablist"></div></div>
+  <main>
+    <div id="aviso-credenciales"></div>
+
+    <!-- Mi agenda -->
+    <section id="vista-agenda" class="vista">
+      <div class="tarjeta">
+        <h2>Casos</h2>
+        <p class="sub" id="agenda-sub"></p>
+        <div id="agenda-kpis" class="kpis"></div>
+        <div id="lista-casos"></div>
+      </div>
+    </section>
+
+    <!-- Reservar -->
+    <section id="vista-reservar" class="vista oculto">
+      <div class="tarjeta">
+        <h2>Reservar tiempo quirúrgico</h2>
+        <p class="sub">El espacio queda apartado en cuanto se guarda. Se libera solo si nadie lo confirma.</p>
+        <div class="rejilla">
+          <div><label>Paquete</label><select id="r-paquete"></select></div>
+          <div><label>Quirófano</label><select id="r-quirofano"></select></div>
+          <div><label>Fecha</label><input type="date" id="r-fecha"></div>
+          <div><label>Hora de inicio</label><input type="time" id="r-hora" step="900"></div>
+          <div><label>Duración estimada (min)</label><input type="number" id="r-duracion" min="30" step="15" value="120"></div>
+          <div><label>Tipo de anestesia</label>
+            <select id="r-anestesia">
+              <option value="">—</option><option>General</option><option>Regional</option>
+              <option>Sedación</option><option>Local</option>
+            </select></div>
+          <div><label>Cirujano *</label><input id="r-cirujano" placeholder="correo@gmail.com"></div>
+          <div><label>Anestesiólogo</label><input id="r-anestesiologo" placeholder="correo@gmail.com"></div>
+        </div>
+        <div id="r-aviso-medicos"></div>
+        <div id="r-aviso-papeles"></div>
+        <div class="fila"><button class="btn sec" id="r-ver" type="button">Ver qué está ocupado</button></div>
+        <div id="r-ocupado"></div>
+      </div>
+
+      <div class="tarjeta">
+        <h2>Paciente</h2>
+        <p class="sub">Con estos cuatro datos basta para cerrar el compromiso. La ficha completa la termina Renasté.</p>
+        <div class="fila" style="margin:0 0 16px">
+          <input id="r-buscar" placeholder="Buscar paciente ya registrado (nombre o teléfono)" style="flex:1;min-width:220px">
+          <button class="btn sec" id="r-buscar-btn" type="button">Buscar</button>
+        </div>
+        <div id="r-resultados"></div>
+        <div class="rejilla" id="r-nuevo">
+          <div><label>Nombre completo</label><input id="p-nombre"></div>
+          <div><label>Fecha de nacimiento</label><input type="date" id="p-nacimiento"></div>
+          <div><label>Teléfono</label><input id="p-telefono" inputmode="tel"></div>
+          <div><label>Correo</label><input id="p-correo" type="email"></div>
+        </div>
+        <div id="r-elegido"></div>
+        <div class="fila">
+          <button class="btn" id="r-guardar" type="button">Apartar el espacio</button>
+          <span id="r-msg"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pendientes -->
+    <section id="vista-pendientes" class="vista oculto">
+      <div class="tarjeta">
+        <h2>Credenciales pendientes</h2>
+        <p class="sub">Casos apartados a nombre de un médico al que le faltan documentos. El espacio
+          está apartado, pero el caso no se puede confirmar hasta que su expediente esté completo;
+          si no llegan, el apartado vence y el quirófano se libera solo.</p>
+        <div id="p-credenciales"></div>
+      </div>
+      <div class="tarjeta">
+        <h2>Fichas incompletas</h2>
+        <p class="sub">Pacientes con cirugía apartada a los que les falta la ficha de identificación.</p>
+        <div id="p-ficha"></div>
+      </div>
+      <div class="tarjeta">
+        <h2>Apartados vencidos</h2>
+        <p class="sub">Nadie los confirmó y están ocupando quirófano.</p>
+        <div id="p-preaparto"></div>
+      </div>
+      <div class="tarjeta">
+        <h2>Sin valoración preanestésica</h2>
+        <p class="sub">Casos que todavía no tienen la valoración que pide la NOM-006.</p>
+        <div id="p-preanestesica"></div>
+      </div>
+    </section>
+
+    <!-- Ficha del paciente -->
+    <section id="vista-ficha" class="vista oculto">
+      <div class="tarjeta">
+        <h2 id="f-titulo">Ficha de identificación</h2>
+        <p class="sub">Los campos marcados son los que la NOM-004 pide en la hoja frontal. La ficha se marca
+          completa sola cuando ya no falta ninguno.</p>
+        <div id="f-estado"></div>
+        <div class="rejilla">
+          <div><label>Nombre completo *</label><input id="f-Nombre_Completo"></div>
+          <div><label>Fecha de nacimiento *</label><input type="date" id="f-Fecha_Nacimiento"></div>
+          <div><label>Sexo *</label><select id="f-Sexo"><option value=""></option><option>Femenino</option><option>Masculino</option></select></div>
+          <div><label>CURP *</label><input id="f-CURP" maxlength="18" style="text-transform:uppercase"></div>
+          <div><label>Teléfono *</label><input id="f-Telefono" inputmode="tel"></div>
+          <div><label>Correo</label><input id="f-Correo" type="email"></div>
+          <div><label>Calle y número *</label><input id="f-Calle_Numero"></div>
+          <div><label>Colonia *</label><input id="f-Colonia"></div>
+          <div><label>Alcaldía o municipio</label><input id="f-Alcaldia_Municipio"></div>
+          <div><label>CP *</label><input id="f-CP" inputmode="numeric"></div>
+          <div><label>Estado civil</label><input id="f-Estado_Civil"></div>
+          <div><label>Ocupación</label><input id="f-Ocupacion"></div>
+        </div>
+        <h3 class="grupo">Contacto de urgencia</h3>
+        <div class="rejilla">
+          <div><label>Nombre *</label><input id="f-Contacto_Urgencia_Nombre"></div>
+          <div><label>Parentesco</label><input id="f-Contacto_Urgencia_Parentesco"></div>
+          <div><label>Teléfono *</label><input id="f-Contacto_Urgencia_Telefono" inputmode="tel"></div>
+        </div>
+        <h3 class="grupo">Datos que se usan en quirófano</h3>
+        <div class="rejilla">
+          <div><label>Grupo sanguíneo</label>
+            <select id="f-Grupo_Sanguineo"><option value=""></option>
+              <option>O+</option><option>O-</option><option>A+</option><option>A-</option>
+              <option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
+              <option>Se desconoce</option></select></div>
+          <div><label>¿Tiene alergias?</label>
+            <select id="f-Alergias_Tiene"><option value=""></option><option>No</option>
+              <option>Si</option><option>Se desconoce</option></select></div>
+          <div style="grid-column:1/-1"><label>¿Cuáles?</label><input id="f-Alergias_Cuales"
+            placeholder="Si no se interrogó, déjelo vacío. Nunca escriba «ninguna» por omisión."></div>
+        </div>
+        <div class="fila">
+          <button class="btn" id="f-guardar" type="button">Guardar ficha</button>
+          <button class="btn sec" id="f-volver" type="button">Volver</button>
+          <span id="f-msg"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detalle del caso -->
+    <section id="vista-caso" class="vista oculto">
+      <div class="tarjeta">
+        <h2 id="c-titulo">Caso</h2>
+        <p class="sub" id="c-sub"></p>
+        <div id="c-detalle"></div>
+
+        <!-- Valoración prequirúrgica.
+
+             Estas columnas existían en la hoja Casos desde el principio y el
+             expediente ya sabía heredarlas: la nota preoperatoria, la lista de
+             verificación y la preanestésica las leen de aquí. Lo que faltaba era
+             la pantalla que las escribiera, así que salían en blanco en cada
+             nota y el médico las recapturaba a mano en cada documento. Se
+             asientan una vez, aquí, y de aquí las jala todo el expediente. -->
+        <div id="c-preq" class="oculto">
+          <h3 class="grupo">Sitio quirúrgico · lo asienta el cirujano</h3>
+          <div class="rejilla">
+            <div><label>Lateralidad</label>
+              <select id="q-Lateralidad"><option value=""></option>
+                <option>Derecha</option><option>Izquierda</option><option>Bilateral</option>
+                <option>Línea media</option><option>No aplica</option></select></div>
+            <div><label>¿Requiere marcaje de sitio?</label>
+              <select id="q-Marcaje_Sitio_Requerido"><option value=""></option>
+                <option>Si</option><option>No</option></select></div>
+          </div>
+
+          <h3 class="grupo">Valoración preanestésica · la asienta anestesiología</h3>
+          <div class="rejilla">
+            <div><label>Peso (kg)</label><input type="number" step="0.1" min="0" id="q-Peso_Kg" inputmode="decimal"></div>
+            <div><label>Talla (cm)</label><input type="number" step="0.1" min="0" id="q-Talla_Cm" inputmode="decimal"></div>
+            <div><label>IMC</label><input id="q-IMC" readonly placeholder="se calcula"></div>
+            <div><label>ASA</label>
+              <select id="q-ASA"><option value=""></option>
+                <option>I</option><option>II</option><option>III</option>
+                <option>IV</option><option>V</option><option>VI</option></select></div>
+            <div><label>Tabaquismo</label>
+              <select id="q-Tabaquismo"><option value=""></option>
+                <option>No</option><option>Si</option><option>Ex-fumador</option></select></div>
+            <div><label>Anticoagulantes</label>
+              <select id="q-Anticoagulantes"><option value=""></option>
+                <option>No</option><option>Si</option></select></div>
+            <div><label>Suspenderlos desde</label><input type="date" id="q-Suspension_Indicada_Desde"></div>
+            <div><label>¿Embarazo descartado?</label>
+              <select id="q-Embarazo_Descartado"><option value=""></option>
+                <option>Si</option><option>No</option><option>No aplica</option></select></div>
+            <div><label>Puntaje Caprini</label><input type="number" min="0" step="1" id="q-Caprini_Puntaje" inputmode="numeric"></div>
+            <div><label>Riesgo tromboembólico</label><input id="q-Riesgo_TVP" readonly placeholder="se calcula del puntaje"></div>
+            <div style="grid-column:1/-1"><label>Comorbilidades</label>
+              <input id="q-Comorbilidades"
+                placeholder="Si no se interrogó, déjelo vacío. Nunca escriba «ninguna» por omisión."></div>
+            <div style="grid-column:1/-1"><label>Tromboprofilaxis indicada</label>
+              <input id="q-Profilaxis_Indicada" placeholder="Qué, a qué dosis y desde cuándo."></div>
+          </div>
+
+          <h3 class="grupo">Internamiento</h3>
+          <div class="rejilla">
+            <div><label>Cama asignada</label><input id="q-Cama_Asignada"></div>
+            <div><label>Noches estimadas</label><input type="number" min="0" step="1" id="q-Noches_Estimadas"></div>
+          </div>
+          <p class="sub" style="margin:12px 0 0">Cambiar la cama revalida que esté libre en ese horario; si ya está
+            ocupada, el guardado se rechaza y nada se escribe.</p>
+
+          <div class="fila">
+            <button class="btn" id="q-guardar" type="button">Guardar la valoración</button>
+            <label style="display:flex;align-items:center;gap:7px;margin:0;font-weight:400;
+                          font-size:13.5px;text-transform:none;letter-spacing:0">
+              <input type="checkbox" id="q-realizada" style="width:auto;padding:0">
+              Dar por realizada la valoración preanestésica</label>
+            <span id="q-msg"></span>
+          </div>
+        </div>
+
+        <div class="fila">
+          <button class="btn sec" id="c-ficha" type="button">Abrir ficha del paciente</button>
+          <button class="btn sec" id="c-expediente" type="button">Abrir expediente</button>
+          <button class="btn sec" id="c-confirmar" type="button">Confirmar el caso</button>
+          <button class="btn sec" id="c-cancelar" type="button">Cancelar la cirugía</button>
+          <button class="btn sec" id="c-volver" type="button">Volver</button>
+          <span id="c-msg"></span>
+        </div>
+
+        <!-- La cancelación pide motivo antes de tocar nada: es lo único que va
+             a quedar explicando el hueco en la agenda. -->
+        <div class="fila oculto" id="c-cancelar-caja" style="flex-direction:column;align-items:stretch;gap:8px">
+          <label for="c-cancelar-motivo">Por qué se cancela — mínimo 10 caracteres</label>
+          <textarea id="c-cancelar-motivo" rows="2"
+            placeholder="El paciente la pospuso, no llegaron los estudios, se dio de baja…"></textarea>
+          <div class="fila">
+            <button class="btn sec" id="c-cancelar-ok" type="button">Sí, cancelar la cirugía</button>
+            <button class="btn sec" id="c-cancelar-no" type="button">Mejor no</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="cinta-inactividad">
+  <span class="crece">Nadie ha usado esta pantalla en un rato. La sesión se cierra en
+    <b id="cuenta-inactividad">60</b> s. <b>Guarde lo que lleve escrito.</b></span>
+  <button type="button" id="sigo-aqui">Sigo aquí</button>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+/* ===========================================================================
+   AltaRenaste — frontend del módulo `cirugias`
+
+   DOS COSAS QUE NO SE PUEDEN CAMBIAR SIN ROMPER LA APP:
+
+   1. credentials:'omit' en TODA llamada al backend. Con varias cuentas de
+      Google abiertas, Google redirige /macros/s/.../exec a /macros/u/<N>/s/…
+      y devuelve 404. Verificado: con omit responde 200, sin omit da 404.
+
+   2. Content-Type 'text/plain'. Con application/json el navegador manda un
+      preflight OPTIONS que Apps Script no contesta, y la llamada muere en CORS.
+      Apps Script recibe el cuerpo igual en e.postData.contents.
+   =========================================================================== */
+
+const API = '__API_CIRUGIAS__';
+const CLIENTE = '672831350436-kgll6i77picf8s8pqeraii4s77jlkgol.apps.googleusercontent.com';
+
+let TOKEN = null, YO = null, PAQUETES = [], CASOS = [], PACIENTE_SEL = null, CASO_SEL = null;
+
+const $ = (id) => document.getElementById(id);
+/* El estatus se guarda con su nombre interno. En pantalla se lee lo que
+   significa: "Preaparto" es un apartado de quirofano que nadie ha confirmado
+   y que se libera solo al vencer. Escrito asi se confunde con un termino
+   obstetrico, que en un centro quirurgico no viene a cuento. */
+const ETIQUETA_AGENDA = {
+  'Preaparto': 'Sin confirmar',
+  'Confirmado': 'Confirmado',
+  'Liberado': 'Liberado',
+  'En curso': 'En curso',
+  'Realizado': 'Realizado',
+  'Cancelado': 'Cancelado'
+};
+const etiquetaAgenda = (v) => ETIQUETA_AGENDA[String(v || '')] || String(v || '\u2014');
+
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function cargando(on){ $('cargando').classList.toggle('on', !!on); }
+
+async function api(accion, datos){
+  cargando(true);
+  try{
+    const r = await fetch(API, {
+      method: 'POST',
+      credentials: 'omit',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(Object.assign({accion: accion, id_token: TOKEN}, datos || {}))
+    });
+    const txt = await r.text();
+    let j;
+    try { j = JSON.parse(txt); }
+    catch(e){ throw new Error('El servidor respondió algo que no es JSON. ¿Está publicada la versión correcta?'); }
+    if (!j.ok) throw new Error(j.mensaje || j.error || 'Error desconocido');
+    return j;
+  } finally { cargando(false); }
+}
+
+function aviso(destino, clase, texto){
+  $(destino).innerHTML = texto ? '<div class="aviso ' + clase + '">' + esc(texto) + '</div>' : '';
+}
+
+/* ── Tema claro / oscuro ──────────────────────────────────────
+   Se recuerda por navegador. Sin elección guardada manda el sistema
+   operativo, que es lo que uno espera en un quirófano a media luz. */
+(function(){
+  let t = null;
+  try { t = localStorage.getItem('renaste-tema'); } catch(e){}
+  if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
+  document.documentElement.setAttribute('data-tema', t);
+  document.addEventListener('DOMContentLoaded', function(){
+    $('tema').onclick = function(){
+      const n = document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'claro' : 'oscuro';
+      document.documentElement.setAttribute('data-tema', n);
+      try { localStorage.setItem('renaste-tema', n); } catch(e){}
+      logotipos();
+    };
+    logotipos();
+  });
+})();
+
+/* En oscuro el logotipo a color se pierde: se cambia por el blanco. */
+function logotipos(){
+  const oscuro = document.documentElement.getAttribute('data-tema') === 'oscuro';
+  const m = $('marca-img');
+  if (m) m.src = oscuro ? '../assets/renaste-marca-blanco.png' : '../assets/renaste-marca.png';
+}
+
+/* ── La sesión se comparte entre las tres apps ────────────────
+   Portal, Cirugías y Expediente viven en el mismo origen
+   (app.renaste.com), así que pueden pasarse la credencial de Google por
+   sessionStorage. Quien entra por el Portal ya no se vuelve a
+   identificar al brincar de un ala a la otra, y quien entra directo
+   aquí le deja la sesión puesta a la otra.
+
+   sessionStorage y no localStorage a propósito: muere al cerrar la
+   pestaña, no se queda en el disco. La credencial dura una hora y el
+   backend la verifica en cada llamada, así que una vencida no abre
+   nada — por eso, si falla, se borra y se enseña el botón en vez de
+   dejar la pantalla colgada esperando. */
+const LLAVE_SESION = 'zx_token';
+function guardaSesion(c){ try{ sessionStorage.setItem(LLAVE_SESION, c); }catch(e){} }
+function olvidaSesion(){ try{ sessionStorage.removeItem(LLAVE_SESION); }catch(e){} }
+function sesionHeredada(){ try{ return sessionStorage.getItem(LLAVE_SESION); }catch(e){ return null; } }
+
+/* ── COMPUTADORA COMPARTIDA ────────────────────────────────────
+   Mismo bloque que en Expediente, y a propósito idéntico: la marca vive en
+   localStorage del mismo origen, así que encenderla en un ala la enciende en
+   las tres. En la computadora del quirófano «Salir» tiene que cerrar también
+   la sesión de Google: si sólo se borra la de Renasté, el siguiente que se
+   siente entra como el anterior de un clic y sin contraseña, y el alcance de
+   cada médico se decide justamente por su correo.
+
+   Se puede dejar puesta de una vez abriendo la app con ?quirofano=1. */
+const LLAVE_COMPARTIDA = 'renaste-computadora-compartida';
+const MINUTOS_INACTIVIDAD = 10;
+const SEGUNDOS_DE_GRACIA = 60;
+
+function esCompartida(){
+  try{ return localStorage.getItem(LLAVE_COMPARTIDA) === '1'; }catch(e){ return false; }
+}
+function marcaCompartida(si){
+  try{
+    if (si) localStorage.setItem(LLAVE_COMPARTIDA, '1');
+    else localStorage.removeItem(LLAVE_COMPARTIDA);
+  }catch(e){}
+}
+(function(){
+  try{
+    const q = new URLSearchParams(location.search).get('quirofano');
+    if (q === '1') marcaCompartida(true);
+    if (q === '0') marcaCompartida(false);
+  }catch(e){}
+})();
+
+function salirDeRenasté(){
+  paraInactividad();
+  olvidaSesion();
+  try{ google.accounts.id.disableAutoSelect(); }catch(e){}
+  if (esCompartida()){
+    location.replace('https://accounts.google.com/Logout');
+    return;
+  }
+  location.reload();
+}
+
+let RELOJ_QUIETO = null, RELOJ_CUENTA = null, QUEDAN = 0;
+
+function paraInactividad(){
+  clearTimeout(RELOJ_QUIETO); clearInterval(RELOJ_CUENTA);
+  RELOJ_QUIETO = null; RELOJ_CUENTA = null;
+  const c = $('cinta-inactividad'); if (c) c.classList.remove('on');
+}
+
+function reiniciaInactividad(){
+  if (!esCompartida() || !TOKEN) return;
+  paraInactividad();
+  RELOJ_QUIETO = setTimeout(avisaInactividad, MINUTOS_INACTIVIDAD * 60000);
+}
+
+function avisaInactividad(){
+  const c = $('cinta-inactividad'); if (!c) return;
+  QUEDAN = SEGUNDOS_DE_GRACIA;
+  $('cuenta-inactividad').textContent = QUEDAN;
+  c.classList.add('on');
+  RELOJ_CUENTA = setInterval(function(){
+    QUEDAN--;
+    $('cuenta-inactividad').textContent = QUEDAN;
+    if (QUEDAN <= 0){ paraInactividad(); salirDeRenasté(); }
+  }, 1000);
+}
+
+/* Mientras el aviso está puesto, el movimiento del ratón NO cuenta: un roce
+   accidental no debe cancelar el cierre de una computadora que quedó sola.
+   Para quedarse hay que apretar el botón. */
+['mousedown','keydown','touchstart','wheel'].forEach(function(ev){
+  document.addEventListener(ev, function(){
+    const c = $('cinta-inactividad');
+    if (c && c.classList.contains('on')) return;
+    reiniciaInactividad();
+  }, true);
+});
+
+function pintaCompartida(){
+  const cinta = $('cinta-compartida');
+  if (cinta) cinta.classList.toggle('on', esCompartida() && !!TOKEN);
+  const chk = $('chk-compartida');
+  if (chk) chk.checked = esCompartida();
+  const min = $('min-inactividad');
+  if (min) min.textContent = MINUTOS_INACTIVIDAD;
+}
+
+/* ── Entrada ──────────────────────────────────────────────── */
+window.onload = function(){
+  /* Si venimos del Portal o de la otra ala, la credencial ya está puesta:
+     se intenta en silencio y, si sirve, nadie llega a ver esta pantalla.
+     Si no sirve, se cae al botón de siempre sin decir nada. */
+  const heredada = sesionHeredada();
+  if (heredada) entro({ credential: heredada }, true);
+  const esperar = setInterval(function(){
+    if (!(window.google && google.accounts && google.accounts.id)) return;
+    clearInterval(esperar);
+    /* auto_select + prompt(): Google reemite un token fresco sin pedir clic,
+       aprovechando la sesión de Google que la persona ya tiene abierta. El
+       botón se queda para quien no tenga sesión o la haya cerrado.
+
+       Lo que a propósito NO se hace aquí es guardar el token. Sigue viviendo
+       nada más en memoria y se va al recargar, así que no queda una credencial
+       legible para cualquier script del dominio. Se puede tener las dos cosas:
+       sin clic y sin guardar nada. */
+    /* En la computadora compartida auto_select va apagado a propósito. Con él
+       encendido, Google reemite la credencial del médico anterior sin un solo
+       clic: el siguiente que se sienta entra como él, y la nota se captura a
+       nombre de quien no la escribió. En la computadora propia de cada quien
+       se queda encendido, que es lo que evita estar entrando todo el día. */
+    google.accounts.id.initialize({
+      client_id: CLIENTE, callback: entro, auto_select: !esCompartida()
+    });
+    google.accounts.id.renderButton($('boton-google'),
+      {theme:'outline', size:'large', text:'signin_with', locale:'es', width:300});
+    google.accounts.id.prompt();
+  }, 150);
+};
+
+async function entro(resp, silencioso){
+  TOKEN = resp.credential;
+  try{
+    const s = await api('sesion');
+    YO = s;
+    guardaSesion(TOKEN);
+    $('pantalla-entrada').classList.add('oculto');
+    $('barra').classList.remove('oculto');
+    $('app').classList.remove('oculto');
+    $('salir').classList.remove('oculto');
+    $('quien-txt').textContent = s.nombre;
+    $('quien-rol').textContent = s.rol;
+    $('quien-ini').textContent = String(s.nombre || '?').trim().charAt(0).toUpperCase();
+    $('cinta-quien').textContent = s.nombre;
+    pintaCompartida();
+    reiniciaInactividad();
+    if (s.rol === 'medico' && !s.credenciales_vigentes){
+      aviso('aviso-credenciales','warn',
+        'No va a poder reservar hasta que sus documentos estén al día. ' + (s.credenciales_motivo||''));
+    }
+    fijaCirujano();
+    pintaTabs();
+    await Promise.all([cargaPaquetes(), cargaCasos(), cargaMedicos()]);
+  }catch(e){
+    TOKEN = null;
+    olvidaSesion();
+    paraInactividad();
+    const cinta = $('cinta-compartida'); if (cinta) cinta.classList.remove('on');
+    /* Silencioso quiere decir que veníamos con una credencial heredada que ya
+       no sirve. Eso no es un error que la persona deba leer: se cae al botón. */
+    if (!silencioso) aviso('entrada-error','malo', e.message);
+  }
+}
+
+$('salir').onclick = salirDeRenasté;
+$('cinta-salir').onclick = salirDeRenasté;
+$('sigo-aqui').onclick = function(){ paraInactividad(); reiniciaInactividad(); };
+$('chk-compartida').onchange = function(){ marcaCompartida(this.checked); pintaCompartida(); };
+pintaCompartida();
+
+/* Del caso al expediente de ese mismo paciente, sin volver a buscarlo. El
+   Paciente_ID viaja por sessionStorage y no por la URL: mismo origen, así que
+   llega igual, pero no queda escrito en la barra de direcciones ni en el
+   historial del navegador ni en un referer. */
+$('c-expediente').onclick = function(){
+  if (!CASO_SEL || !CASO_SEL.Paciente_ID) return;
+  try{ sessionStorage.setItem('zx_abrir_paciente', CASO_SEL.Paciente_ID); }catch(e){}
+  location.href = '../expediente/';
+};
+
+/* ── Padrón de médicos ─────────────────────────────────────
+   Los dos campos nacen como texto en el HTML y se convierten en lista en
+   cuanto el backend contesta la acción `medicos`. Si el backend desplegado
+   todavía no la conoce, el catch deja el texto y la app sigue sirviendo: así
+   este archivo se puede publicar antes que el backend sin romper nada. */
+let MEDICOS = null;
+
+function listaDeMedicos(id, lista, vacia){
+  const viejo = $(id);
+  if (!viejo || viejo.tagName === 'SELECT') return;
+  const sel = document.createElement('select');
+  sel.id = id;
+  sel.innerHTML = '<option value="">' + esc(vacia) + '</option>' + lista.map(function(m){
+    /* Un médico sin papeles SÍ aparece y SÍ se puede elegir: apartar no
+       requiere credenciales, confirmar sí. Sólo se bloquea a quien no podría
+       ni entrar a ver su caso. */
+    const nota = !m.disponible ? '  [' + (m.motivo || 'sin acceso') + ']'
+               : (m.credenciales_ok === false ? '  \u00b7 papeles pendientes' : '');
+    const texto = m.nombre + (m.especialidad ? ' \u00b7 ' + m.especialidad : '') + nota;
+    return '<option value="' + esc(m.correo) + '"' + (m.disponible ? '' : ' disabled') +
+           '>' + esc(texto) + '</option>';
+  }).join('');
+  viejo.parentNode.replaceChild(sel, viejo);
+  sel.onchange = avisaPapeles;
+}
+
+/* Se avisa al elegirlo, no al guardar: el quirófano se aparta igual, pero
+   quien captura tiene que saber desde ya que ese caso no se va a poder
+   confirmar hasta que lleguen los documentos. */
+function avisaPapeles(){
+  if (!MEDICOS) return;
+  const pendientes = [];
+  [['r-cirujano', MEDICOS.cirujanos], ['r-anestesiologo', MEDICOS.anestesiologos]]
+    .forEach(function(par){
+      const el = $(par[0]); if (!el || !el.value) return;
+      const m = (par[1] || []).filter(function(x){ return x.correo === el.value; })[0];
+      if (m && m.credenciales_ok === false) pendientes.push(m.nombre + ': ' + (m.motivo || 'faltan documentos'));
+    });
+  if (pendientes.length){
+    aviso('r-aviso-papeles','warn','Se puede apartar el quirófano, pero el caso no se va a poder ' +
+      'confirmar hasta que el expediente del médico esté completo. ' + pendientes.join(' · ') +
+      ' Si los documentos no llegan, el apartado vence y el espacio se libera solo.');
+  } else {
+    aviso('r-aviso-papeles','', '');
+  }
+}
+
+/* Un cirujano siempre reserva a su propio nombre: el backend se lo impone de
+   todos modos, aquí sólo se refleja para que no parezca que puede elegir. */
+function fijaCirujano(){
+  const el = $('r-cirujano');
+  if (!el || !YO || YO.rol !== 'medico') return;
+  el.value = YO.correo;
+  if (el.tagName === 'SELECT') el.disabled = true; else el.readOnly = true;
+}
+
+async function cargaMedicos(){
+  try { MEDICOS = await api('medicos'); }
+  catch(e){ MEDICOS = null; return; }
+  listaDeMedicos('r-cirujano', MEDICOS.cirujanos || [], '\u2014 elija al cirujano \u2014');
+  listaDeMedicos('r-anestesiologo', MEDICOS.anestesiologos || [], '\u2014 por definir \u2014');
+  fijaCirujano();
+
+  if (!(MEDICOS.anestesiologos || []).length){
+    aviso('r-aviso-medicos','warn','Todavía no hay ningún anestesiólogo en el padrón de Renasté. ' +
+      'Los casos se van a apartar sin anestesiólogo asignado, y mientras no lo tengan él no puede ' +
+      'entrar a escribir su valoración preanestésica.');
+  } else if (MEDICOS.papel_deducido){
+    aviso('r-aviso-medicos','warn','La hoja Medicos no dice quién es cirujano y quién anestesiólogo: ' +
+      'se está deduciendo de la especialidad. Agregue la columna Papel para que deje de adivinarse.');
+  }
+}
+
+/* ── Navegación ───────────────────────────────────────────── */
+const VISTAS = {
+  agenda:      {tab:'Casos',      el:'vista-agenda'},
+  reservar:    {tab:'Reservar',   el:'vista-reservar'},
+  pendientes:  {tab:'Pendientes', el:'vista-pendientes'}
+};
+
+function pintaTabs(){
+  const cont = $('tabs'); cont.innerHTML = '';
+  Object.keys(VISTAS).forEach(function(k){
+    if (k === 'pendientes' && !YO.ve_todo) return;
+    if (k === 'reservar' && YO.nivel !== 'escritura') return;
+    const b = document.createElement('button');
+    b.className = 'tab'; b.type = 'button'; b.textContent = VISTAS[k].tab;
+    b.setAttribute('role','tab'); b.dataset.vista = k;
+    b.onclick = function(){ muestra(k); };
+    cont.appendChild(b);
+  });
+  muestra('agenda');
+}
+
+function muestra(k){
+  document.querySelectorAll('.vista').forEach(v => v.classList.add('oculto'));
+  const destino = VISTAS[k] ? VISTAS[k].el : k;
+  $(destino).classList.remove('oculto');
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.setAttribute('aria-selected', String(t.dataset.vista === k));
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+  if (k === 'pendientes') cargaPendientes();
+}
+
+/* ── Casos ────────────────────────────────────────────────── */
+async function cargaCasos(){
+  const r = await api('misCasos', {});
+  CASOS = r.casos || [];
+  $('agenda-sub').textContent = YO.ve_todo
+    ? 'Todos los casos del centro.'
+    : 'Sólo los casos en los que usted participa.';
+
+  /* Tres números que se leen de un vistazo antes de bajar a la lista. */
+  const cuenta = (est) => CASOS.filter(x => String(x.Estatus_Agenda) === est).length;
+  $('agenda-kpis').innerHTML = CASOS.length ? [
+    ['ac', CASOS.length,            'Casos'],
+    ['ok', cuenta('Confirmado'),    'Confirmados'],
+    ['wa', cuenta('Preaparto'),     'Por confirmar']
+  ].map(k => '<div class="kpi '+k[0]+'"><b>'+k[1]+'</b><span>'+k[2]+'</span></div>').join('') : '';
+
+  const c = $('lista-casos');
+  if (!CASOS.length){ c.innerHTML = '<div class="vacio">Todavía no hay casos.</div>'; return; }
+  CASOS.sort((a,b) => String(a.Fecha_Cirugia).localeCompare(String(b.Fecha_Cirugia)));
+  c.innerHTML = CASOS.map(function(x){
+    const est = String(x.Estatus_Agenda||'');
+    const clase = est === 'Confirmado' ? 'ok' : (est === 'Preaparto' ? 'warn' : '');
+    return '<div class="caso" data-id="'+esc(x.Caso_ID)+'">' +
+      '<div class="top"><span class="folio">'+esc(x.Folio_Caso)+'</span>' +
+      '<span class="pastilla '+clase+'">'+esc(etiquetaAgenda(est))+'</span></div>' +
+      '<div class="nom">'+esc(x.Procedimiento_Principal || 'Procedimiento por definir')+'</div>' +
+      '<div class="meta">'+esc(x.Fecha_Cirugia||'sin fecha')+' · '+esc(x.Hora_Inicio||'')+
+        ' · '+esc(x.Quirofano||'')+'</div></div>';
+  }).join('');
+  c.querySelectorAll('.caso').forEach(function(el){
+    el.onclick = function(){ abreCaso(el.dataset.id); };
+  });
+}
+
+async function abreCaso(id){
+  const r = await api('obtenerCaso', {caso_id:id});
+  CASO_SEL = r.caso; PACIENTE_SEL = r.paciente;
+  $('c-titulo').textContent = r.caso.Folio_Caso;
+  $('c-sub').textContent = (r.paciente ? r.paciente.Nombre_Completo : 'Paciente sin ficha') +
+    ' · ' + (r.caso.Estatus_Agenda||'');
+  const campos = [
+    ['Procedimiento', r.caso.Procedimiento_Principal], ['Fecha', r.caso.Fecha_Cirugia],
+    ['Hora', (r.caso.Hora_Inicio||'') + ' – ' + (r.caso.Hora_Fin||'')],
+    ['Quirófano', r.caso.Quirofano], ['Cama', r.caso.Cama_Asignada],
+    ['Cirujano', r.caso.Cirujano_Email], ['Anestesiólogo', r.caso.Anestesiologo_Email],
+    ['Tipo de anestesia', r.caso.Tipo_Anestesia], ['Paquete', r.caso.Paquete_ID]
+  ];
+  $('c-detalle').innerHTML = '<div class="tabla-scroll"><table>' + campos.map(function(f){
+    return '<tr><th style="width:180px">'+esc(f[0])+'</th><td>'+esc(f[1]||'—')+'</td></tr>';
+  }).join('') + '</table></div>';
+  $('c-confirmar').classList.toggle('oculto',
+    !(r.puedo_editar && String(r.caso.Estatus_Agenda) === 'Preaparto'));
+
+  /* Cancelar se ofrece mientras la cirugía siga por delante. Una que ya está
+     en curso o realizada no se cancela: eso se corrige por otro lado. */
+  const est = String(r.caso.Estatus_Agenda || '').toLowerCase().trim();
+  $('c-cancelar').classList.toggle('oculto',
+    !(r.puedo_editar && ['en curso', 'realizado', 'cancelado'].indexOf(est) < 0));
+  $('c-cancelar-caja').classList.add('oculto');
+  $('c-cancelar-motivo').value = '';
+  $('c-ficha').classList.toggle('oculto', !r.paciente);
+  pintaPrequirurgica(r.caso, !!r.puedo_editar);
+  $('c-msg').textContent = '';
+  muestra('vista-caso');
+}
+
+$('c-volver').onclick = function(){ muestra('agenda'); };
+
+/* ── Cancelar la cirugía ───────────────────────────────────────
+   No se borra el caso: se marca cancelado, con motivo y con quién lo hizo. El
+   folio, la fecha y el paciente se quedan, porque hubo un quirófano apartado y
+   una fecha que alguien le dio al paciente. El horario se libera solo: para la
+   disponibilidad, un caso cancelado ya no aparta nada. */
+$('c-cancelar').onclick = function(){
+  $('c-cancelar-caja').classList.remove('oculto');
+  $('c-cancelar-motivo').focus();
+};
+$('c-cancelar-no').onclick = function(){
+  $('c-cancelar-caja').classList.add('oculto');
+  $('c-cancelar-motivo').value = '';
+};
+$('c-cancelar-ok').onclick = async function(){
+  const motivo = String($('c-cancelar-motivo').value || '').trim();
+  if (motivo.length < 10){
+    $('c-msg').innerHTML = '<span class="pastilla warn">Diga por qué se cancela: ' +
+      'mínimo 10 caracteres.</span>';
+    $('c-cancelar-motivo').focus();
+    return;
+  }
+  const boton = $('c-cancelar-ok');
+  boton.disabled = true;
+  try{
+    await api('cancelarCaso', { caso_id: CASO_SEL.Caso_ID, motivo: motivo });
+    $('c-cancelar-caja').classList.add('oculto');
+    $('c-cancelar-motivo').value = '';
+    await cargaCasos();
+    await abreCaso(CASO_SEL.Caso_ID);
+    /* El aviso va al final: abreCaso limpia el renglón de mensajes. */
+    $('c-msg').innerHTML = '<span class="pastilla warn">Cancelada. El quirófano quedó libre.</span>';
+  }catch(e){ $('c-msg').innerHTML = '<span class="pastilla warn">'+esc(e.message)+'</span>'; }
+  finally { boton.disabled = false; }
+};
+$('c-ficha').onclick  = function(){ abreFicha(PACIENTE_SEL); };
+$('c-confirmar').onclick = async function(){
+  try{
+    await api('actualizarCaso', {caso_id: CASO_SEL.Caso_ID,
+      cambios: {Estatus_Agenda:'Confirmado', Timestamp_Confirmacion: new Date().toISOString()}});
+    $('c-msg').innerHTML = '<span class="pastilla ok">Confirmado</span>';
+    await cargaCasos();
+  }catch(e){ $('c-msg').innerHTML = '<span class="pastilla warn">'+esc(e.message)+'</span>'; }
+};
+
+/* ── Valoración prequirúrgica ──────────────────────────────────
+
+   Estas columnas ya existían en la hoja Casos y el expediente ya sabía
+   heredarlas; lo que no existía era la pantalla que las escribiera. El efecto
+   era que la nota preoperatoria, la preanestésica y la lista de verificación
+   pedían los mismos diez datos cada una, en blanco, y nadie sabía por qué.
+
+   La lista es la única fuente de verdad: de aquí se pinta y de aquí se guarda,
+   para que agregar un campo no obligue a acordarse de tocar dos lugares. Eso
+   de acordarse es justo lo que ya falló una vez en este sistema. */
+const PREQ = ['Lateralidad','Marcaje_Sitio_Requerido','Peso_Kg','Talla_Cm','IMC','ASA',
+              'Tabaquismo','Anticoagulantes','Suspension_Indicada_Desde','Embarazo_Descartado',
+              'Caprini_Puntaje','Riesgo_TVP','Comorbilidades','Profilaxis_Indicada',
+              'Cama_Asignada','Noches_Estimadas'];
+let PREQ_ORIGINAL = {};
+
+const qv = (col) => $('q-' + col);
+const hoyISO = () => {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') +
+         '-' + String(d.getDate()).padStart(2,'0');
+};
+
+/* Las cinco bandas son las del catálogo caprini_riesgo del diccionario. El
+   riesgo se deriva del puntaje en vez de capturarse aparte: teclear los dos
+   por separado es teclear una contradicción tarde o temprano, y la que manda
+   en la profilaxis es la banda. */
+function riesgoCaprini(puntos){
+  const n = parseInt(puntos, 10);
+  if (isNaN(n) || n < 0) return '';
+  if (n === 0) return 'Muy bajo (0)';
+  if (n <= 2)  return 'Bajo (1-2)';
+  if (n <= 4)  return 'Moderado (3-4)';
+  if (n <= 6)  return 'Alto (5-6)';
+  return 'Muy alto (≥7)';
+}
+
+/* La talla se pide en centímetros, pero si alguien escribe 1.70 se entiende
+   igual. Un IMC imposible no se escribe: más vale el hueco que un número que
+   después nadie va a cuestionar. */
+function imcDe(peso, talla){
+  const p = parseFloat(peso), bruta = parseFloat(talla);
+  if (!p || !bruta) return '';
+  const t = bruta > 3 ? bruta / 100 : bruta;
+  const imc = p / (t * t);
+  if (!isFinite(imc) || imc < 5 || imc > 200) return '';
+  return imc.toFixed(1);
+}
+
+function recalculaPreq(){
+  qv('IMC').value = imcDe(qv('Peso_Kg').value, qv('Talla_Cm').value);
+  qv('Riesgo_TVP').value = riesgoCaprini(qv('Caprini_Puntaje').value);
+}
+
+function pintaPrequirurgica(caso, puedoEditar){
+  PREQ_ORIGINAL = {};
+  PREQ.forEach(function(col){
+    const el = qv(col);
+    if (!el) return;
+    const v = (caso[col] === undefined || caso[col] === null) ? '' : String(caso[col]);
+    el.value = (col === 'Suspension_Indicada_Desde') ? v.slice(0,10) : v;
+    PREQ_ORIGINAL[col] = el.value;
+    el.disabled = !puedoEditar;
+  });
+  recalculaPreq();
+  /* El IMC y el riesgo se recalculan al pintar, así que un caso viejo con un
+     IMC mal guardado se corrige solo en cuanto alguien lo abra y guarde. */
+  PREQ_ORIGINAL.IMC = qv('IMC').value;
+  PREQ_ORIGINAL.Riesgo_TVP = qv('Riesgo_TVP').value;
+
+  const yaHecha = String(caso.Valoracion_Preanestesica_Estatus || '').toLowerCase() === 'realizada';
+  const casilla = $('q-realizada');
+  casilla.checked = false;
+  casilla.disabled = !puedoEditar || yaHecha;
+  casilla.parentElement.style.opacity = casilla.disabled ? '.5' : '1';
+  $('q-guardar').disabled = !puedoEditar;
+  $('q-msg').innerHTML = !puedoEditar
+    ? '<span class="pastilla">Sólo lectura</span>'
+    : (yaHecha ? '<span class="pastilla ok">Valoración preanestésica realizada</span>' : '');
+  $('c-preq').classList.remove('oculto');
+}
+
+['Peso_Kg','Talla_Cm','Caprini_Puntaje'].forEach(function(col){
+  const el = qv(col);
+  if (el) el.addEventListener('input', recalculaPreq);
+});
+
+$('q-guardar').onclick = async function(){
+  if (!CASO_SEL) return;
+  recalculaPreq();
+  /* Sólo viaja lo que cambió. Mandar el renglón entero haría que dos personas
+     capturando al mismo tiempo se pisaran los campos que ni tocaron. */
+  const cambios = {};
+  PREQ.forEach(function(col){
+    const el = qv(col);
+    if (el && el.value !== PREQ_ORIGINAL[col]) cambios[col] = el.value;
+  });
+  if ($('q-realizada').checked){
+    cambios.Valoracion_Preanestesica_Estatus = 'Realizada';
+    cambios.Valoracion_Preanestesica_Fecha = hoyISO();
+  }
+  if (!Object.keys(cambios).length){
+    $('q-msg').innerHTML = '<span class="pastilla">No hubo cambios</span>';
+    return;
+  }
+  $('q-guardar').disabled = true;
+  $('q-msg').innerHTML = '<span class="pastilla">Guardando…</span>';
+  try{
+    await api('actualizarCaso', {caso_id: CASO_SEL.Caso_ID, cambios: cambios});
+    await abreCaso(CASO_SEL.Caso_ID);
+    $('q-msg').innerHTML = '<span class="pastilla ok">Guardado · ' +
+      Object.keys(cambios).length + ' campos</span>';
+    cargaPendientes();
+  }catch(e){
+    $('q-guardar').disabled = false;
+    $('q-msg').innerHTML = '<span class="pastilla warn">'+esc(e.message)+'</span>';
+  }
+};
+
+/* ── Reservar ─────────────────────────────────────────────── */
+async function cargaPaquetes(){
+  try{
+    const r = await api('paquetes');
+    PAQUETES = r.paquetes || [];
+  }catch(e){ PAQUETES = []; }
+  const s = $('r-paquete');
+  s.innerHTML = '<option value="">— elija el procedimiento —</option>' + PAQUETES.map(function(p){
+    return '<option value="'+esc(p.Paquete_ID)+'" data-min="'+esc(p.Minutos_Quirofano_Incluidos||'')+
+           '" data-q="'+esc(p.Quirofano_Elegible||'')+'">'+esc(p.Nombre||p.Paquete_ID)+'</option>';
+  }).join('');
+  s.onchange = function(){
+    const o = s.selectedOptions[0];
+    if (o && o.dataset.min) $('r-duracion').value = o.dataset.min;
+  };
+  try{
+    const d = await api('disponibilidad', {dias: 30});
+    $('r-quirofano').innerHTML = '<option value="">— quirófano —</option>' +
+      (d.quirofanos||[]).map(function(q){
+        return '<option value="'+esc(q.id)+'">'+esc(q.nombre)+
+               (q.minutos_max ? ' (hasta '+esc(q.minutos_max)+' min)' : '')+'</option>';
+      }).join('');
+  }catch(e){ /* el backend ya avisó */ }
+}
+
+$('r-ver').onclick = async function(){
+  try{
+    const d = await api('disponibilidad', {dias: 30});
+    const q = $('r-quirofano').value;
+    const items = (d.ocupado||[]).filter(o => !q || o.quirofano === q);
+    $('r-ocupado').innerHTML = items.length
+      ? '<div class="tabla-scroll" style="margin-top:16px"><table><tr><th>Quirófano</th><th>Desde</th><th>Hasta</th><th>Qué</th></tr>' +
+        items.map(o => '<tr><td>'+esc(o.quirofano)+'</td><td>'+esc(o.inicio.replace('T',' '))+
+          '</td><td>'+esc(o.fin.replace('T',' '))+'</td><td>'+esc(o.motivo)+'</td></tr>').join('') +
+        '</table></div>'
+      : '<div class="aviso ok">Sin nada ocupado en los próximos 30 días.</div>';
+  }catch(e){ aviso('r-ocupado','malo', e.message); }
+};
+
+$('r-buscar-btn').onclick = async function(){
+  const q = $('r-buscar').value.trim();
+  if (q.length < 3){ aviso('r-resultados','warn','Escriba al menos tres letras.'); return; }
+  try{
+    const r = await api('buscarPaciente', {q:q});
+    if (!r.pacientes.length){ aviso('r-resultados','warn','Sin coincidencias. Capture los datos abajo.'); return; }
+    $('r-resultados').innerHTML = r.pacientes.map(function(p){
+      return '<div class="caso" data-pid="'+esc(p.Paciente_ID)+'"><div class="nom">'+
+        esc(p.Nombre_Completo)+'</div><div class="meta">'+esc(p.Paciente_ID)+' · '+
+        esc(p.Telefono||'')+'</div></div>';
+    }).join('');
+    $('r-resultados').querySelectorAll('[data-pid]').forEach(function(el){
+      el.onclick = function(){
+        PACIENTE_SEL = {Paciente_ID: el.dataset.pid};
+        $('r-elegido').innerHTML = '<div class="aviso ok">Paciente seleccionado: ' +
+          esc(el.querySelector('.nom').textContent) + '</div>';
+        $('r-nuevo').classList.add('oculto');
+        $('r-resultados').innerHTML = '';
+      };
+    });
+  }catch(e){ aviso('r-resultados','malo', e.message); }
+};
+
+$('r-guardar').onclick = async function(){
+  const datos = {
+    Quirofano: $('r-quirofano').value,
+    Fecha_Cirugia: $('r-fecha').value,
+    Hora_Inicio: $('r-hora').value,
+    Duracion_Estimada_Min: $('r-duracion').value,
+    Tiempo_Bloqueado_Min: $('r-duracion').value,
+    Paquete_ID: $('r-paquete').value,
+    Procedimiento_Principal: ($('r-paquete').selectedOptions[0]||{}).textContent || '',
+    Tipo_Anestesia: $('r-anestesia').value,
+    Cirujano_Email: $('r-cirujano').value.trim().toLowerCase(),
+    Anestesiologo_Email: $('r-anestesiologo').value.trim().toLowerCase()
+  };
+  if (PACIENTE_SEL && PACIENTE_SEL.Paciente_ID){
+    datos.Paciente_ID = PACIENTE_SEL.Paciente_ID;
+  } else {
+    datos.Nombre_Completo = $('p-nombre').value.trim();
+    datos.Fecha_Nacimiento = $('p-nacimiento').value;
+    datos.Telefono = $('p-telefono').value.trim();
+    datos.Correo = $('p-correo').value.trim();
+  }
+  if (!datos.Quirofano || !datos.Fecha_Cirugia || !datos.Hora_Inicio){
+    aviso('r-msg','warn','Faltan quirófano, fecha u hora.'); return;
+  }
+  if (!datos.Cirujano_Email){
+    aviso('r-msg','warn','Falta el cirujano: es quien va a poder abrir el caso.'); return;
+  }
+  /* El anestesiólogo no bloquea la reserva —no siempre se sabe quién va a
+     estar—, pero mientras el caso no lo traiga, él no puede abrirlo para
+     escribir su preanestésica. Por eso se dice en el acuse, no se calla. */
+  try{
+    const r = await api('crearCaso', datos);
+    $('r-msg').innerHTML = '<span class="pastilla ok">Apartado: ' + esc(r.folio) + '</span>' +
+      (datos.Anestesiologo_Email ? ''
+        : ' <span class="pastilla warn">falta asignar anestesiólogo</span>');
+    PACIENTE_SEL = null;
+    ['p-nombre','p-nacimiento','p-telefono','p-correo','r-buscar'].forEach(i => $(i).value = '');
+    $('r-elegido').innerHTML = ''; $('r-nuevo').classList.remove('oculto');
+    await cargaCasos();
+  }catch(e){ $('r-msg').innerHTML = '<span class="pastilla warn">'+esc(e.message)+'</span>'; }
+};
+
+/* ── Pendientes ───────────────────────────────────────────── */
+async function cargaPendientes(){
+  try{
+    const r = await api('pendientes');
+    pinta('p-credenciales', r.credenciales_pendientes, function(x){
+      return '<div class="caso" data-id="'+esc(x.Caso_ID)+'"><div class="top">'+
+        '<span class="folio">'+esc(x.Folio_Caso)+'</span>'+
+        '<span class="pastilla warn">no se puede confirmar</span></div>'+
+        '<div class="nom">'+esc(x.quien)+'</div>'+
+        '<div class="meta">'+esc(x.motivo)+' \u00b7 cirugía '+esc(x.Fecha_Cirugia||'sin fecha')+'</div></div>';
+    });
+    pinta('p-ficha', r.ficha_incompleta, function(x){
+      return '<div class="caso" data-id="'+esc(x.Caso_ID)+'"><div class="nom">'+esc(x.paciente)+
+        '</div><div class="meta">'+esc(x.Folio_Caso)+' · cirugía '+esc(x.Fecha_Cirugia||'sin fecha')+'</div>'+
+        '<button type="button" class="btn sec" style="margin-top:10px"'+
+          ' data-liga="'+esc(x.Caso_ID)+'"'+
+          ' data-pac="'+esc(x.Paciente_ID||'')+'"'+
+          ' data-tel="'+esc(x.telefono||'')+'"'+
+          ' data-nom="'+esc(x.paciente||'')+'">Mandar liga al paciente</button></div>';
+    });
+    /* Los botones se cablean después de pintar, no en el HTML: así no hay
+       onclick con datos interpolados, que es por donde se cuela una comilla. */
+    Array.prototype.forEach.call(document.querySelectorAll('#p-ficha [data-liga]'),
+      function(b){ b.onclick = function(ev){ mandarLiga(b, ev); }; });
+    pinta('p-preaparto', r.preaparto_vencido, function(x){
+      return '<div class="caso" data-id="'+esc(x.Caso_ID)+'"><div class="nom">'+esc(x.Folio_Caso)+
+        '</div><div class="meta">venció '+esc(x.vencio)+'</div></div>';
+    });
+    pinta('p-preanestesica', r.sin_preanestesica, function(x){
+      return '<div class="caso" data-id="'+esc(x.Caso_ID)+'"><div class="nom">'+esc(x.Folio_Caso)+
+        '</div><div class="meta">cirugía '+esc(x.Fecha_Cirugia||'sin fecha')+'</div></div>';
+    });
+  }catch(e){ aviso('p-ficha','malo', e.message); }
+}
+
+/* Genera la liga de la ficha y abre WhatsApp con el mensaje listo. NO manda
+   nada solo: deja el texto escrito y quien aprieta enviar es la persona.
+
+   El Paciente_ID viene en el renglón cuando el backend es v2.4 o más. Si el
+   backend todavía es el viejo, se pide el caso para sacarlo: así el botón
+   funciona hoy y nada más se vuelve más rápido cuando se actualice. */
+/* El botón vive DENTRO del renglón, y el renglón trae su propio onclick que
+   abre el caso (lo pone pinta(), para todos los pendientes). Sin
+   stopPropagation, apretarlo generaba la liga y acto seguido te mandaba a la
+   pantalla del caso: el mensaje se pintaba donde ya nadie estaba viendo. */
+const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio',
+                  'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+/* "2026-09-25" -> "25 de septiembre de 2026". Se arma a mediodía a propósito:
+   con T00:00 un huso negativo recorre la fecha al día anterior. */
+function fechaLarga(iso){
+  const s = String(iso || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = new Date(s + 'T12:00:00');
+  if (isNaN(d.getTime())) return s;
+  return d.getDate() + ' de ' + MESES_ES[d.getMonth()] + ' de ' + d.getFullYear();
+}
+
+/* El mensaje que lee el paciente. Dos cosas que parecen detalle y no lo son:
+
+   1. Cirujano_Nombre YA trae el tratamiento desde el padrón ("Dra. María del
+      Carmen Damián Tovar"). Anteponerle un "Dr." aquí escribiría "Dr. Dra." en
+      el WhatsApp de un paciente.
+   2. De ese mismo tratamiento sale el género del oficio: a la Dra. Damián no se
+      le presenta como "su cirujano".
+
+   Si falta el cirujano o el procedimiento, la frase se acomoda sola en vez de
+   mandar un corchete vacío. */
+function mensajeAlPaciente(nombre, caso, url, vence){
+  const medico = String((caso && caso.Cirujano_Nombre) || '').trim();
+  const proc   = String((caso && caso.Procedimiento_Principal) || '').trim();
+  const oficio = /^dra\.?\s/i.test(medico) ? 'cirujana' : 'cirujano';
+  const suCx   = proc ? '*' + proc + '*' : 'cirugía';
+
+  const presenta = medico
+    ? 'Somos *RENASTÉ, Clínicas Renasté*, el centro que su ' + oficio +
+      ', *' + medico + '*, ha elegido para realizar su ' + suCx + '.'
+    : 'Somos *RENASTÉ, Clínicas Renasté*, el centro donde se realizará su ' +
+      suCx + '.';
+
+  const caduca = vence ? '\n\nEstará disponible hasta el *' + fechaLarga(vence) + '*.' : '';
+
+  return 'Hola, ' + nombre + '.\n\n' +
+    presenta + '\n\n' +
+    'Para continuar con la preparación de su cirugía, necesitamos completar algunos ' +
+    'datos de su expediente.\n\n' +
+    'Hemos preparado para usted un proceso sencillo que puede realizar desde su celular ' +
+    'en solo unos minutos. Únicamente necesitará tener a la mano su INE para tomarle ' +
+    'una fotografía:\n\n' +
+    url + '\n\n' +
+    '*Su liga es personal y confidencial. Por favor, no la comparta.*' + caduca + '\n\n' +
+    'Agradecemos su confianza. En *RENASTÉ* cuidamos cada detalle desde antes de su llegada.';
+}
+
+async function mandarLiga(boton, ev){
+  if (ev) ev.stopPropagation();
+  const original = boton.textContent;
+  boton.disabled = true; boton.textContent = 'Generando…';
+  try{
+    /* El caso se pide SIEMPRE, ya no solo cuando falta el Paciente_ID: el
+       mensaje nombra al cirujano y al procedimiento, y ninguno de los dos viaja
+       en el renglón de pendientes. Es una vuelta más por clic en un botón que
+       se aprieta un puñado de veces al día. */
+    const c    = await api('obtenerCaso', { caso_id: boton.dataset.liga });
+    const caso = (c && c.caso) || {};
+    const pacienteId = boton.dataset.pac || caso.Paciente_ID;
+    const telefono   = (c && c.paciente && c.paciente.Telefono) || boton.dataset.tel;
+    if (!pacienteId) throw new Error('Ese caso no trae paciente.');
+
+    const r = await api('generarLigaFicha', { paciente_id: pacienteId });
+
+    const nombre = String(r.paciente || boton.dataset.nom || '').trim().split(/\s+/)[0];
+    const vence  = String(r.vence || '').slice(0, 10);
+    const texto  = mensajeAlPaciente(nombre, caso, r.url, vence);
+
+    try { await navigator.clipboard.writeText(r.url); } catch(e){ /* sin portapapeles, ni modo */ }
+
+    /* WhatsApp NO se abre solo. Un window.open después de un await ya no cuenta
+       como consecuencia del clic y Chrome lo bloquea como popup — por eso antes
+       no pasaba nada. Se deja un enlace que la persona aprieta: no hay bloqueo
+       y, de paso, queda claro que quien manda el mensaje es alguien, no el
+       sistema.
+
+       El resultado reemplaza al botón EN SU LUGAR y no se usa aviso(), que hace
+       innerHTML sobre el contenedor y borraría la lista de pendientes entera. */
+    const tel = String(r.telefono || telefono || '').replace(/\D/g, '').slice(-10);
+    const caja = document.createElement('div');
+    caja.style.marginTop = '10px';
+
+    if (tel) {
+      const a = document.createElement('a');
+      a.className = 'btn sec';
+      a.style.display = 'inline-block';
+      a.style.textDecoration = 'none';
+      a.href = 'https://wa.me/52' + tel + '?text=' + encodeURIComponent(texto);
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = 'Abrir WhatsApp con el mensaje listo';
+      a.onclick = function(e){ e.stopPropagation(); };
+      caja.appendChild(a);
+    }
+
+    const nota = document.createElement('div');
+    nota.className = 'meta';
+    nota.style.marginTop = '6px';
+    nota.textContent = 'Liga generada y copiada al portapapeles. Vence el ' + fechaLarga(vence) +
+      (tel ? '. Si generas otra, ésta deja de servir.'
+           : '. Este paciente no tiene teléfono: pégala tú donde corresponda.');
+    caja.appendChild(nota);
+
+    boton.replaceWith(caja);
+    return;
+  }catch(e){
+    const err = document.createElement('div');
+    err.className = 'aviso malo';
+    err.style.marginTop = '10px';
+    err.textContent = e.message;
+    boton.insertAdjacentElement('afterend', err);
+  }
+  boton.disabled = false; boton.textContent = original;
+}
+
+function pinta(destino, lista, fn){
+  const c = $(destino);
+  c.innerHTML = (lista && lista.length) ? lista.map(fn).join('')
+    : '<div class="vacio">Nada pendiente.</div>';
+  c.querySelectorAll('[data-id]').forEach(function(el){
+    el.onclick = function(){ abreCaso(el.dataset.id); };
+  });
+}
+
+/* ── Ficha ────────────────────────────────────────────────── */
+const CAMPOS_FICHA = ['Nombre_Completo','Fecha_Nacimiento','Sexo','CURP','Telefono','Correo',
+  'Calle_Numero','Colonia','Alcaldia_Municipio','CP','Estado_Civil','Ocupacion',
+  'Contacto_Urgencia_Nombre','Contacto_Urgencia_Parentesco','Contacto_Urgencia_Telefono',
+  'Grupo_Sanguineo','Alergias_Tiene','Alergias_Cuales'];
+
+async function abreFicha(pac){
+  if (!pac) return;
+  const r = await api('obtenerPaciente', {paciente_id: pac.Paciente_ID});
+  PACIENTE_SEL = r.paciente;
+  $('f-titulo').textContent = 'Ficha · ' + (r.paciente.Nombre_Completo || r.paciente.Paciente_ID);
+  CAMPOS_FICHA.forEach(function(k){
+    const el = $('f-' + k);
+    if (el) el.value = r.paciente[k] == null ? '' : r.paciente[k];
+  });
+  $('f-estado').innerHTML = String(r.paciente.Ficha_Completa).toLowerCase() === 'si'
+    ? '<div class="aviso ok">Ficha completa.</div>'
+    : '<div class="aviso warn">Ficha incompleta.</div>';
+  $('f-msg').textContent = '';
+  muestra('vista-ficha');
+}
+
+$('f-volver').onclick = function(){ muestra('agenda'); };
+$('f-guardar').onclick = async function(){
+  const cambios = {};
+  CAMPOS_FICHA.forEach(function(k){
+    const el = $('f-' + k);
+    if (el && el.value !== '') cambios[k] = k === 'CURP' ? el.value.toUpperCase() : el.value;
+  });
+  try{
+    const r = await api('completarFicha', {paciente_id: PACIENTE_SEL.Paciente_ID, cambios: cambios});
+    $('f-estado').innerHTML = r.ficha_completa
+      ? '<div class="aviso ok">Ficha completa.</div>'
+      : '<div class="aviso warn">Todavía falta: ' + esc(r.faltan.join(', ')) + '</div>';
+    $('f-msg').innerHTML = '<span class="pastilla ok">Guardado</span>';
+  }catch(e){ $('f-msg').innerHTML = '<span class="pastilla warn">'+esc(e.message)+'</span>'; }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Renasté · Aviso de Privacidad</title>
+<meta name="description" content="Aviso de Privacidad Integral para pacientes y usuarios del centro quirúrgico Renasté.">
+<meta name="theme-color" content="#A28E7D" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1D1915" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="../assets/renaste-favicon.png">
+<link rel="apple-touch-icon" href="../assets/renaste-iso.png">
+<link rel="stylesheet" href="../renaste-tokens.css">
+<script>
+/* El tema antes de pintar, para no enseñar el destello blanco. */
+(function(){
+  var t=null; try{ t=localStorage.getItem('renaste-tema'); }catch(e){}
+  if(!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
+  document.documentElement.setAttribute('data-tema', t);
+})();
+</script>
+<style>
+/* Los colores y tipos vienen de ../renaste-tokens.css, que es la fuente de
+   verdad de la marca. Aquí sólo van alias con los nombres de esta pantalla.
+
+   Esta página la abre una paciente desde el celular, a media captura de su
+   ficha, para leer aquello que está a punto de aceptar. Se publica en HTML y
+   no como PDF a propósito: seis páginas de PDF en un teléfono no se leen, se
+   cierran. Quien necesite papel lo saca del botón de imprimir, que usa el
+   bloque @media print del final: un solo documento, no dos que se separan. */
+:root{
+  color-scheme: light;
+  --morado-700:var(--zx-violeta-700); --morado-600:var(--zx-violeta-600);
+  --morado-500:var(--zx-violeta-500); --morado-300:var(--zx-violeta-300);
+  --morado-50:var(--zx-violeta-050);
+  --tinta:var(--zx-txt); --tinta2:var(--zx-txt-2); --tinta3:var(--zx-txt-3);
+  --papel:var(--zx-superficie); --papel-2:var(--zx-superficie-2); --fondo:var(--zx-lienzo);
+  --linea:var(--zx-borde);
+  --ok:var(--zx-ok-txt); --ok-bg:var(--zx-ok-bg); --ok-linea:var(--zx-ok);
+  --alerta:var(--zx-alerta-txt); --alerta-bg:var(--zx-alerta-bg); --alerta-linea:var(--zx-alerta);
+  --r:var(--zx-r-tarjeta); --r-sm:var(--zx-r-control); --r-full:999px;
+  --sombra:0 1px 2px rgba(28,27,34,.05);
+}
+html[data-tema="oscuro"]{ color-scheme: dark; }
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--fondo); color:var(--tinta);
+  font-family:var(--zx-cuerpo, "Inter", system-ui, -apple-system, sans-serif);
+  font-size:16px; line-height:1.62; -webkit-font-smoothing:antialiased;
+  padding:0 0 env(safe-area-inset-bottom,0px);
+}
+h1,h2,h3{font-family:var(--zx-titulo, "Space Grotesk", system-ui, sans-serif);letter-spacing:-.01em}
+
+.envoltura{max-width:720px;margin:0 auto;padding:0 18px 56px}
+
+header{text-align:center;padding:34px 18px 10px}
+header img{height:50px;width:auto}
+header .kicker{margin:14px 0 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tinta3)}
+header h1{margin:8px 0 6px;font-size:25px;line-height:1.25}
+header .sub{margin:0;color:var(--tinta2);font-size:14.5px}
+
+.sello{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:18px 0 6px}
+.sello span{font-size:12px;padding:4px 11px;border-radius:var(--r-full);
+  border:1px solid var(--linea);background:var(--papel);color:var(--tinta2)}
+.sello .vigente{background:var(--ok-bg);border-color:var(--ok-linea);color:var(--ok);font-weight:600}
+
+/* Índice: en un documento de quince apartados, poder saltar al que a uno le
+   importa es la diferencia entre leerlo y no leerlo. */
+nav.indice{background:var(--papel);border:1px solid var(--linea);border-radius:var(--r);
+  padding:16px 18px;margin:22px 0 26px;box-shadow:var(--sombra)}
+nav.indice h2{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--tinta3)}
+nav.indice ol{margin:0;padding-left:20px;columns:2;column-gap:26px}
+nav.indice li{margin:0 0 5px;font-size:14px;break-inside:avoid}
+nav.indice a{color:var(--morado-700);text-decoration:none}
+nav.indice a:hover{text-decoration:underline}
+@media (max-width:560px){ nav.indice ol{columns:1} }
+
+section{margin:0 0 30px;scroll-margin-top:16px}
+section h2{margin:0 0 10px;font-size:18px}
+section h3{margin:20px 0 6px;font-size:14.5px;color:var(--tinta2)}
+p{margin:0 0 12px}
+ul{margin:0 0 12px;padding-left:20px}
+li{margin:0 0 6px}
+strong{font-weight:600}
+
+/* La nota al margen: lo que en el documento impreso va en recuadro gris.
+   Suele ser la letra que más importa, así que aquí no se encoge. */
+.nota{border-left:3px solid var(--morado-300);background:var(--papel-2);
+  border-radius:0 var(--r-sm) var(--r-sm) 0;padding:12px 15px;margin:0 0 14px;
+  font-size:14.5px;color:var(--tinta2)}
+
+.tabla{width:100%;border-collapse:collapse;margin:0 0 14px;font-size:14.5px}
+.tabla th,.tabla td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--linea);
+  vertical-align:top}
+.tabla th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--tinta3);
+  font-weight:600}
+.tabla td.si{color:var(--alerta);font-weight:600}
+.tabla td.no{color:var(--tinta2)}
+@media (max-width:560px){
+  .tabla, .tabla tbody, .tabla tr, .tabla td{display:block;width:100%}
+  .tabla thead{display:none}
+  .tabla tr{border:1px solid var(--linea);border-radius:var(--r-sm);margin-bottom:10px;padding:4px 0}
+  .tabla td{border:0;padding:6px 13px}
+  .tabla td:first-child{font-weight:600;color:var(--tinta)}
+}
+
+.casillas{background:var(--papel);border:1px solid var(--linea);border-radius:var(--r);
+  padding:18px;box-shadow:var(--sombra)}
+.casillas .item{display:flex;gap:11px;align-items:flex-start;margin:0 0 13px}
+.casillas .caja{flex:0 0 auto;width:17px;height:17px;border:1.5px solid var(--tinta3);
+  border-radius:4px;margin-top:3px}
+.casillas .item p{margin:0;font-size:14.5px;color:var(--tinta2)}
+.firma{margin-top:20px;padding-top:16px;border-top:1px solid var(--linea)}
+.firma .raya{border-bottom:1px solid var(--linea);height:34px;margin:0 0 6px}
+.firma .pie-raya{font-size:12px;color:var(--tinta3);margin:0 0 18px}
+
+.descarga{display:inline-block;border:1px solid var(--linea);background:var(--papel);
+  color:var(--tinta);border-radius:var(--r-sm);padding:12px 18px;text-decoration:none;
+  font-size:15px;font-weight:500}
+.descarga:hover{background:var(--papel-2);border-color:var(--morado-300)}
+
+footer{text-align:center;font-size:12.5px;color:var(--tinta3);padding:28px 18px 0;
+  border-top:1px solid var(--linea);margin-top:34px;line-height:1.7}
+a{color:var(--morado-700)}
+
+/* Impresion. No se publica un PDF aparte a proposito: dos documentos con el
+   mismo texto se separan tarde o temprano, y el dia que eso pase nadie sabria
+   cual firmo la paciente. Esta pagina es el documento, y de aqui sale la
+   copia en papel. */
+@media print{
+  body{background:#fff;color:#000;font-size:11.5pt;line-height:1.5}
+  .sin-imprimir, nav.indice{display:none !important}
+  header{padding-top:0}
+  header img{height:38px}
+  .envoltura{max-width:none;padding:0}
+  section{page-break-inside:auto;margin-bottom:16pt}
+  section h2{page-break-after:avoid}
+  .casillas,.nota{break-inside:avoid}
+  .casillas{box-shadow:none}
+  .firma{page-break-inside:avoid}
+  .tabla th,.tabla td{border-bottom:1px solid #999}
+  a{color:#000;text-decoration:none}
+  /* La direccion completa de los enlaces, porque en papel un "aqui" no sirve. */
+  a[href^="mailto:"]::after{content:""}
+  footer{border-top:1px solid #999}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="../assets/renaste-iso.png" alt="Renasté">
+  <p class="kicker">Clínicas Renasté</p>
+  <h1>Aviso de Privacidad Integral</h1>
+  <p class="sub">Pacientes y usuarios del establecimiento</p>
+  <div class="sello">
+    <span class="vigente" style="background:#8a1c1c;color:#fff">BORRADOR · en revisión legal · NO VIGENTE</span>
+    <span>Borrador del 7 de octubre de 2026 · adaptado del aviso de Zorvix; faltan razón social, domicilio, licencia y teléfono de Renasté</span>
+  </div>
+</header>
+
+<div class="envoltura">
+
+  <nav class="indice">
+    <h2>Contenido</h2>
+    <ol>
+      <li><a href="#s1">Identidad del responsable</a></li>
+      <li><a href="#s2">Alcance de este aviso</a></li>
+      <li><a href="#s3">Datos que se recaban</a></li>
+      <li><a href="#s4">Finalidades primarias</a></li>
+      <li><a href="#s5">Imágenes clínicas</a></li>
+      <li><a href="#s6">Grabación de audio</a></li>
+      <li><a href="#s7">Finalidades secundarias</a></li>
+      <li><a href="#s8">Transferencias y proveedores</a></li>
+      <li><a href="#s9">Plazo de conservación</a></li>
+      <li><a href="#s10">Derechos ARCO</a></li>
+      <li><a href="#s11">Revocación del consentimiento</a></li>
+      <li><a href="#s12">Seguridad de su información</a></li>
+      <li><a href="#s13">Menores de edad</a></li>
+      <li><a href="#s14">Cambios a este aviso</a></li>
+      <li><a href="#s15">Autoridad competente</a></li>
+      <li><a href="#consentimiento">Consentimiento expreso</a></li>
+    </ol>
+  </nav>
+
+  <section id="s1">
+    <h2>1. Identidad y domicilio del responsable</h2>
+    <p><strong>Razón social POR DEFINIR</strong> (en adelante «Renasté»), con domicilio en
+      Domicilio POR DEFINIR, y licencia
+      sanitaria número POR DEFINIR es responsable del tratamiento de sus datos personales
+      conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares,
+      su normativa secundaria, la Ley General de Salud y la Norma Oficial Mexicana
+      NOM-004-SSA3-2012 del expediente clínico.</p>
+    <p>Contacto para asuntos de datos personales:
+      <a href="mailto:clinicasrenastere@gmail.com">clinicasrenastere@gmail.com</a> ·
+      Teléfono POR DEFINIR</p>
+  </section>
+
+  <section id="s2">
+    <h2>2. Alcance de este aviso</h2>
+    <p>Este aviso aplica a las personas que reciben atención médica, quirúrgica o anestésica en
+      las instalaciones de Renasté, así como a sus acompañantes y representantes legales en lo que
+      corresponda.</p>
+    <p>Renasté es un centro quirúrgico. El médico tratante que lo atiende es un profesional
+      independiente que ejerce en estas instalaciones y es responsable por separado del expediente
+      de su consulta. Renasté es responsable únicamente de los registros que genera dentro del
+      establecimiento: la hoja quirúrgica, el registro anestésico, las notas de enfermería, el
+      consentimiento informado y los estudios realizados aquí.</p>
+    <div class="nota">Consulte con su médico tratante el aviso de privacidad que rige los datos de
+      su consulta y seguimiento fuera de estas instalaciones.</div>
+  </section>
+
+  <section id="s3">
+    <h2>3. Datos personales que se recaban</h2>
+
+    <h3>Datos de identificación y contacto</h3>
+    <ul>
+      <li>Nombre completo, fecha de nacimiento, sexo y edad.</li>
+      <li>Domicilio, teléfono y correo electrónico.</li>
+      <li>Identificación oficial y, en su caso, CURP y RFC.</li>
+      <li>Nombre y teléfono de un contacto en caso de emergencia.</li>
+    </ul>
+
+    <h3>Datos patrimoniales y de facturación</h3>
+    <ul>
+      <li>Información fiscal y medio de pago utilizado.</li>
+      <li>Datos de su aseguradora y número de póliza, cuando aplique.</li>
+    </ul>
+
+    <h3>Datos personales sensibles</h3>
+    <p>Los siguientes son datos sensibles conforme a la Ley y requieren su consentimiento expreso
+      y por escrito:</p>
+    <ul>
+      <li>Historia clínica, antecedentes personales y heredofamiliares.</li>
+      <li>Padecimientos actuales, diagnósticos y tratamientos previos.</li>
+      <li>Alergias, medicamentos en uso, adicciones y antecedentes quirúrgicos.</li>
+      <li>Resultados de estudios de laboratorio, gabinete y anatomía patológica.</li>
+      <li>Registros de signos vitales, anestesia y evolución postoperatoria.</li>
+      <li>Imágenes clínicas y fotografías del área a intervenir.</li>
+      <li>La grabación de voz de su valoración, de su interrogatorio y del dictado de sus notas
+        clínicas, cuando usted la autorice, en los términos del apartado 6.</li>
+    </ul>
+  </section>
+
+  <section id="s4">
+    <h2>4. Finalidades primarias</h2>
+    <p>Estas finalidades son necesarias para brindarle atención. Sin ellas no es posible realizar
+      el procedimiento.</p>
+    <ul>
+      <li>Integrar y conservar su expediente clínico conforme a la NOM-004-SSA3-2012.</li>
+      <li>Valorar su estado de salud y determinar si es candidato al procedimiento.</li>
+      <li>Planear y ejecutar el acto quirúrgico y anestésico con seguridad.</li>
+      <li>Vigilar su evolución durante la recuperación y el postoperatorio.</li>
+      <li>Contactarle para indicaciones, resultados, citas de seguimiento o urgencias.</li>
+      <li>Facturar los servicios prestados y gestionar el cobro ante usted o su aseguradora.</li>
+      <li>Cumplir obligaciones sanitarias, fiscales y de farmacovigilancia.</li>
+      <li>Atender requerimientos de autoridades competentes y defender los intereses de Renasté
+        ante reclamaciones.</li>
+    </ul>
+  </section>
+
+  <section id="s5">
+    <h2>5. Uso de imágenes clínicas y fotografías</h2>
+    <p>La fotografía clínica forma parte del acto médico: documenta su condición antes del
+      procedimiento, permite planearlo y sirve para valorar el resultado. Esa finalidad es primaria
+      y la imagen se resguarda dentro de su expediente con las mismas protecciones que el resto de
+      su información.</p>
+    <p>Cualquier otro uso es distinto y requiere su autorización por separado. Renasté no publicará,
+      difundirá ni utilizará sus imágenes con fines académicos, científicos, promocionales o de
+      difusión en medios digitales sin que usted lo haya consentido expresamente en la hoja final
+      de este documento.</p>
+    <div class="nota">Su autorización para usos distintos al clínico es voluntaria, independiente
+      del tratamiento y revocable en cualquier momento. Negarla no afecta de ninguna manera la
+      atención que reciba, el trato del personal ni el costo del procedimiento.</div>
+    <p>Si usted autoriza el uso académico o promocional, podrá elegir si la imagen puede mostrarse
+      con su rostro visible o únicamente de forma que no permita identificarle. La revocación
+      surtirá efectos hacia el futuro; el material ya publicado en medios fuera del control de
+      Renasté podría permanecer accesible, y así se le informa desde ahora.</p>
+  </section>
+
+  <section id="s6">
+    <h2>6. Grabación de audio con fines de documentación clínica</h2>
+    <p>Para integrar su expediente con mayor exactitud, y para que su médico pueda mirarle a usted
+      en vez de a una pantalla, Renasté puede grabar el audio de la valoración, del interrogatorio y
+      del dictado de las notas clínicas. La grabación es un instrumento de trabajo: su única
+      finalidad es convertirse en texto dentro de su expediente.</p>
+
+    <h3>Qué se graba</h3>
+    <p>La voz de quien dicta y, cuando la valoración se realiza conversando con usted, también la
+      suya. Dentro de quirófano puede quedar registrada la voz del personal que participa en el
+      procedimiento.</p>
+
+    <h3>Quién la procesa</h3>
+    <p>El archivo se resguarda en el repositorio de Renasté, con acceso limitado a cuentas
+      nominativas autenticadas. La conversión del audio a texto la realiza un proveedor de
+      servicios de transcripción que trata sus datos únicamente por cuenta de Renasté, bajo contrato
+      y siguiendo sus instrucciones, sin disponer de ellos para fines propios. Ese proveedor no
+      utiliza el audio ni la transcripción para entrenar modelos de inteligencia artificial, y
+      puede conservar una copia hasta por treinta días en registros de control de uso indebido,
+      tras lo cual la elimina.</p>
+
+    <h3>Dónde se procesa</h3>
+    <p>Los servidores del repositorio y del proveedor de transcripción pueden encontrarse fuera del
+      territorio nacional.</p>
+
+    <h3>Cuánto tiempo se conserva</h3>
+    <p>El audio se elimina cuando la nota correspondiente queda firmada y, en todo caso, a más
+      tardar a los treinta días naturales de su creación. Lo que permanece en su expediente es el
+      texto, no la grabación.</p>
+
+    <h3>Su decisión</h3>
+    <p>La grabación de audio es voluntaria. Puede negarse, y negarse no afecta de ninguna manera la
+      atención que reciba: en ese caso la nota se captura escribiendo. Puede revocar esta
+      autorización en cualquier momento, con efectos hacia el futuro.</p>
+    <div class="nota">Si usted no autoriza la grabación, dígalo antes de iniciar la valoración y no
+      se grabará. El personal de Renasté tiene instrucción de no habilitar la grabación sin este
+      consentimiento firmado.</div>
+  </section>
+
+  <section id="s7">
+    <h2>7. Finalidades secundarias</h2>
+    <p>Las siguientes finalidades no son necesarias para su atención. Puede oponerse a ellas sin
+      consecuencia alguna:</p>
+    <ul>
+      <li>Envío de recordatorios de citas y encuestas de satisfacción.</li>
+      <li>Información sobre servicios, promociones y eventos de Renasté.</li>
+      <li>Uso de sus datos de forma disociada, sin posibilidad de identificarle, para estadística y
+        mejora de procesos.</li>
+    </ul>
+  </section>
+
+  <section id="s8">
+    <h2>8. Transferencias de datos y proveedores</h2>
+    <p>Renasté no vende ni comercializa sus datos personales. Podrán transferirse, únicamente en lo
+      necesario, a los siguientes destinatarios:</p>
+    <table class="tabla">
+      <thead>
+        <tr><th>Destinatario</th><th>¿Requiere su consentimiento?</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Su médico tratante y el equipo quirúrgico</td><td class="no">No — necesaria para la atención</td></tr>
+        <tr><td>Laboratorios y anatomía patológica</td><td class="no">No — necesaria para la atención</td></tr>
+        <tr><td>Instituciones a las que sea referido o trasladado</td><td class="no">No — necesaria para la atención</td></tr>
+        <tr><td>Su aseguradora, cuando usted lo solicite</td><td class="no">No — a petición suya</td></tr>
+        <tr><td>Autoridades sanitarias y judiciales competentes</td><td class="no">No — obligación legal</td></tr>
+        <tr><td>Proveedor de servicios de transcripción de audio</td><td class="si">Sí — con la autorización de grabación del apartado 6</td></tr>
+        <tr><td>Cualquier otro destinatario</td><td class="si">Sí — consentimiento expreso</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Proveedores que tratan datos por cuenta de Renasté</h3>
+    <p>Renasté se apoya en proveedores de cómputo en la nube, almacenamiento y transcripción que
+      tratan sus datos exclusivamente por cuenta y bajo instrucciones de Renasté, sin decidir sobre
+      ellos ni utilizarlos para fines propios. Renasté les exige medidas de seguridad equivalentes a
+      las propias y responde por su actuación. El proveedor de transcripción se enlista además en
+      la tabla anterior y su autorización se recaba expresamente, de modo que usted conserva el
+      control con independencia de la calificación jurídica que corresponda a esa relación.</p>
+  </section>
+
+  <section id="s9">
+    <h2>9. Plazo de conservación</h2>
+    <p>Su expediente clínico se conserva por un plazo mínimo de cinco años contados a partir de la
+      fecha del último acto médico, conforme a la NOM-004-SSA3-2012. Renasté podrá conservarlo por
+      un periodo mayor cuando resulte necesario para atender reclamaciones o cumplir obligaciones
+      legales. Concluido el plazo aplicable, la información se suprime de forma segura.</p>
+    <div class="nota">El audio no sigue esta regla: se elimina a los treinta días naturales como
+      máximo, según el apartado 6. Lo que se conserva cinco años es el expediente, no la
+      grabación.</div>
+  </section>
+
+  <section id="s10">
+    <h2>10. Derechos ARCO</h2>
+    <p>Usted tiene derecho a acceder a sus datos personales, a solicitar la rectificación de
+      aquellos que sean inexactos o incompletos, a pedir su cancelación cuando considere que no se
+      están tratando conforme a este aviso, y a oponerse a usos específicos.</p>
+    <p>Para ejercerlos, presente su solicitud en el domicilio del establecimiento o al correo
+      <a href="mailto:clinicasrenastere@gmail.com">clinicasrenastere@gmail.com</a>, acompañada de su identificación
+      oficial, la descripción clara de los datos de que se trate y un medio para comunicarle la
+      respuesta. Renasté responderá en un plazo máximo de veinte días hábiles.</p>
+    <div class="nota">La cancelación de datos que forman parte del expediente clínico no siempre
+      procede: la normativa sanitaria obliga a conservarlo durante el plazo mínimo señalado. En
+      esos casos se le explicará el fundamento de la negativa.</div>
+  </section>
+
+  <section id="s11">
+    <h2>11. Revocación del consentimiento</h2>
+    <p>Puede revocar en cualquier momento el consentimiento otorgado, en particular el relativo al
+      uso de imágenes, a la grabación de audio y a las finalidades secundarias, mediante solicitud
+      presentada por los mismos medios. La revocación no tiene efectos retroactivos y no aplica a
+      los datos cuya conservación exige la normativa sanitaria.</p>
+  </section>
+
+  <section id="s12">
+    <h2>12. Seguridad de su información</h2>
+    <p>Renasté aplica medidas administrativas, técnicas y físicas para proteger sus datos contra
+      pérdida, alteración, destrucción, acceso o uso no autorizado. El personal con acceso al
+      expediente está sujeto a deber de confidencialidad y secreto profesional, que subsiste aun
+      después de terminada su relación con el establecimiento.</p>
+    <p>En caso de una vulneración de seguridad que afecte de forma significativa sus derechos, se
+      le notificará sin demora para que pueda tomar las medidas correspondientes.</p>
+  </section>
+
+  <section id="s13">
+    <h2>13. Menores de edad y personas en estado de interdicción</h2>
+    <p>Cuando el paciente sea menor de edad o no se encuentre en condiciones de otorgar su
+      consentimiento, éste será proporcionado por quien ejerza la patria potestad, la tutela o la
+      representación legal, quien deberá acreditar tal carácter. Tratándose de adolescentes, se
+      procurará recabar además su asentimiento en la medida de su madurez.</p>
+  </section>
+
+  <section id="s14">
+    <h2>14. Cambios al presente aviso</h2>
+    <p>Este aviso podrá modificarse. Los cambios se publicarán en renaste.com y estarán disponibles
+      impresos en la recepción del establecimiento. Cuando el cambio sea sustancial, se le
+      informará por el medio de contacto que haya registrado.</p>
+  </section>
+
+  <section id="s15">
+    <h2>15. Autoridad en materia de protección de datos</h2>
+    <p>Si considera vulnerado su derecho a la protección de datos personales, puede acudir ante la
+      Secretaría de Anticorrupción y Buen Gobierno, autoridad competente en la materia conforme a
+      la Ley Federal de Protección de Datos Personales en Posesión de los Particulares publicada el
+      20 de marzo de 2025, para presentar la denuncia correspondiente.</p>
+  </section>
+
+  <section id="consentimiento">
+    <h2>Consentimiento expreso</h2>
+    <p class="sub" style="color:var(--tinta3);font-size:14px;margin-top:-4px">
+      Debe firmarse antes del procedimiento</p>
+    <div class="nota">Éstas son las autorizaciones que se le pedirán por escrito. Se reproducen
+      aquí para que pueda leerlas con calma antes de firmarlas; la hoja que se firma se integra a
+      su expediente y se le entrega una copia.</div>
+
+    <div class="casillas">
+      <p>Declaro que se me puso a disposición el Aviso de Privacidad de Renasté, que lo leí, que
+        comprendí su contenido y que se resolvieron mis dudas antes de firmar.</p>
+
+      <h3>Tratamiento de datos sensibles de salud</h3>
+      <div class="item"><span class="caja"></span>
+        <p>Otorgo mi consentimiento expreso para el tratamiento de mis datos personales sensibles
+          de salud con las finalidades primarias descritas en este aviso.
+          <em>(Necesario para recibir atención.)</em></p></div>
+
+      <h3>Grabación de audio</h3>
+      <p style="font-size:14px;color:var(--tinta3);margin:-2px 0 10px">Marque únicamente si lo
+        autoriza. Dejar la casilla en blanco significa que no autoriza la grabación, y su nota se
+        capturará escribiendo.</p>
+      <div class="item"><span class="caja"></span>
+        <p>Autorizo que se grabe el audio de mi valoración, mi interrogatorio y el dictado de mis
+          notas clínicas, con la finalidad y en los términos del apartado 6, incluida su
+          transcripción por el proveedor ahí descrito y su eliminación en un plazo máximo de
+          treinta días naturales.</p></div>
+
+      <h3>Uso de imágenes clínicas más allá del expediente</h3>
+      <p style="font-size:14px;color:var(--tinta3);margin:-2px 0 10px">Marque únicamente lo que
+        autorice. Dejar las casillas en blanco significa que no autoriza ningún uso distinto al
+        clínico.</p>
+      <div class="item"><span class="caja"></span>
+        <p>Autorizo el uso de mis imágenes con fines académicos y científicos, ante colegas y en
+          foros médicos.</p></div>
+      <div class="item"><span class="caja"></span>
+        <p>Autorizo el uso de mis imágenes con fines de difusión y promoción, incluidos sitios web
+          y redes sociales.</p></div>
+      <div class="item"><span class="caja"></span>
+        <p>En caso de haber autorizado alguno de los usos anteriores, autorizo que mi rostro sea
+          visible.</p></div>
+
+      <h3>Finalidades secundarias</h3>
+      <div class="item"><span class="caja"></span>
+        <p>Acepto recibir recordatorios, encuestas de satisfacción e información sobre servicios de
+          Renasté.</p></div>
+
+      <div class="firma">
+        <div class="raya"></div>
+        <p class="pie-raya">Nombre completo del paciente</p>
+        <div class="raya"></div>
+        <p class="pie-raya">Firma del paciente o de su representante legal</p>
+        <div class="raya"></div>
+        <p class="pie-raya">Nombre, firma y parentesco del representante legal, en su caso</p>
+        <div class="raya"></div>
+        <p class="pie-raya">Lugar y fecha</p>
+      </div>
+    </div>
+
+    <p style="margin-top:16px;font-size:14px;color:var(--tinta3)">Este documento se integra al
+      expediente clínico. Se entrega copia al titular.</p>
+  </section>
+
+  <section style="text-align:center" class="sin-imprimir">
+    <button class="descarga" type="button" onclick="window.print()">
+      Descargar o imprimir este aviso</button>
+    <p style="font-size:13px;color:var(--tinta3);margin:10px 0 0">
+      Se genera desde esta misma página, así que siempre coincide con lo que acabas de leer.</p>
+  </section>
+
+  <footer>
+    <strong>Razón social POR DEFINIR</strong><br>
+    Domicilio POR DEFINIR<br>
+    Licencia sanitaria POR DEFINIR<br>
+    <a href="mailto:clinicasrenastere@gmail.com">clinicasrenastere@gmail.com</a> ·
+    Teléfono POR DEFINIR<br>
+    <span style="color:var(--tinta3)">Aviso de Privacidad Integral · Versión 2.0 · 15 de septiembre de 2026</span>
+  </footer>
+
+</div>
+</body>
+</html>
