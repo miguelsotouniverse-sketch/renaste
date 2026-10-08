@@ -3058,8 +3058,12 @@ function pintaCampo(c){
                    '. Se escribe encima: aquí manda lo que usted deje.'] : null)
     : c.constante ? ['constante','Constante del establecimiento. No se recaptura.']
     : (c.hereda ? ['heredado','Viene de AltaRenasteDB · '+c.hereda.origen+'.'+c.hereda.columna+'. No se recaptura.']
+    : (c.sugiere && /^Cons_/.test(c.sugiere.columna)
+        ? (sugerido(c) ? ['del consultorio','Se propone de la historia clínica del consultorio del Dr. Soto' +
+                          ((EXP.paciente && EXP.paciente.Consultorio_Traido) ? ' (' + EXP.paciente.Consultorio_Traido + ')' : '') +
+                          '. Confírmelo con la paciente: queda guardado lo que usted deje.'] : null)
     : (c.sugiere ? ['sugerido','Se propone del internamiento · '+c.sugiere.origen+'.'+c.sugiere.columna+
-                    '. Puede cambiarse: queda guardado lo que usted deje.'] : null));
+                    '. Puede cambiarse: queda guardado lo que usted deje.'] : null)));
 
   return '<div class="campo'+(ancho?' ancho':'')+'" data-campo="'+esc(c.id)+'" data-control="'+esc(control)+'">'+
     '<label for="'+id+'">'+esc(c.etiqueta)+(c.obligatorio?' <span class="req">*</span>':'')+

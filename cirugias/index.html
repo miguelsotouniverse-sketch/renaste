@@ -521,6 +521,8 @@ html[data-tema="oscuro"] #acceso .iso{content:url("../assets/renaste-iso-blanco.
         <div class="fila" style="margin:0 0 16px">
           <input id="r-buscar" placeholder="Buscar paciente ya registrado (nombre o teléfono)" style="flex:1;min-width:220px">
           <button class="btn sec" id="r-buscar-btn" type="button">Buscar</button>
+          <button class="btn sec oculto" id="r-consultorio-btn" type="button"
+                  title="Busca en el consultorio del Dr. Soto y trae sus datos generales y antecedentes">Traer del consultorio</button>
         </div>
         <div id="r-resultados"></div>
         <div class="rejilla" id="r-nuevo">
@@ -945,6 +947,7 @@ async function entro(resp, silencioso){
   try{
     const s = await api('sesion');
     YO = s;
+    $('r-consultorio-btn').classList.toggle('oculto', !puedeConsultorio());
     guardaSesion(TOKEN);
     $('pantalla-entrada').classList.add('oculto');
     $('barra').classList.remove('oculto');
@@ -1383,6 +1386,50 @@ $('r-buscar-btn').onclick = async function(){
           esc(el.querySelector('.nom').textContent) + '</div>';
         $('r-nuevo').classList.add('oculto');
         $('r-resultados').innerHTML = '';
+      };
+    });
+  }catch(e){ aviso('r-resultados','malo', e.message); }
+};
+
+/* ── Traer del consultorio ────────────────────────────────────
+   Una paciente a la vez, en el momento de reservar. Renasté le pide al
+   servidor del consultorio SÓLO a esa persona: datos generales y antecedentes
+   estables. Lo del día se registra aquí. Sólo para dirección, recepción y el
+   Dr. Soto: son pacientes de su consultorio. */
+function puedeConsultorio(){
+  return !!(YO && (YO.ve_todo || YO.medico_id === 'RNS-MED-0001'));
+}
+$('r-consultorio-btn').onclick = async function(){
+  const q = $('r-buscar').value.trim();
+  if (q.length < 3){ aviso('r-resultados','warn','Escriba en el buscador al menos tres letras o dígitos del nombre o teléfono.'); return; }
+  aviso('r-resultados','warn','Buscando en el consultorio…');
+  try{
+    const r = await api('consultorioBuscar', {q:q});
+    if (!r.resultados.length){ aviso('r-resultados','warn','El consultorio no tiene a nadie con «'+q+'».'); return; }
+    $('r-resultados').innerHTML =
+      '<p class="sub" style="margin:0 0 8px">En el consultorio del Dr. Soto:</p>' +
+      r.resultados.map(function(x){
+        return '<div class="caso" data-cid="'+esc(x.paciente_id)+'"><div class="nom">'+esc(x.nombre)+'</div>'+
+          '<div class="meta">'+(x.nacimiento ? 'Nac. '+esc(x.nacimiento)+' · ' : '')+
+          (x.telefono_fin ? 'tel. …'+esc(x.telefono_fin)+' · ' : '')+
+          (x.tiene_hc ? 'con historia clínica' : 'sin historia clínica')+
+          (x.ya_en_renaste ? ' · ya en Renasté ('+esc(x.ya_en_renaste)+')' : '')+'</div></div>';
+      }).join('');
+    $('r-resultados').querySelectorAll('[data-cid]').forEach(function(el){
+      el.onclick = async function(){
+        const nombre = el.querySelector('.nom').textContent;
+        aviso('r-resultados','warn','Trayendo a '+nombre+' del consultorio…');
+        try{
+          const t = await api('consultorioTraer', {consultorio_id: el.dataset.cid});
+          PACIENTE_SEL = {Paciente_ID: t.paciente_id};
+          $('r-elegido').innerHTML = '<div class="aviso ok">Paciente seleccionado: ' + esc(t.nombre) +
+            ' · ' + esc(t.paciente_id) + (t.nueva ? ' (nueva en Renasté)' : ' (ya existía; se completaron sus huecos)') +
+            '<br>Del consultorio: datos generales' +
+            (t.antecedentes ? ' y '+t.antecedentes+' antecedentes de la historia clínica'+(t.hc_fecha?' del '+esc(t.hc_fecha):'') : '') +
+            '. El expediente los propone; se confirman con la paciente.</div>';
+          $('r-nuevo').classList.add('oculto');
+          $('r-resultados').innerHTML = '';
+        }catch(e){ aviso('r-resultados','malo', e.message); }
       };
     });
   }catch(e){ aviso('r-resultados','malo', e.message); }
