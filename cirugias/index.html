@@ -706,6 +706,15 @@ html[data-tema="oscuro"] #acceso .iso{content:url("../assets/renaste-iso-blanco.
             <button class="btn sec" id="c-cancelar-no" type="button">Mejor no</button>
           </div>
         </div>
+
+        <!-- Quién dio la anestesia. Se corrige aquí, no rehaciendo el caso: el
+             anestesiólogo del caso es quien puede escribir la preanestésica y el
+             registro anestésico en el expediente. -->
+        <div class="fila oculto" id="c-anest-caja" style="align-items:flex-end;gap:8px;margin-top:12px">
+          <div style="flex:1;min-width:220px"><label for="c-anest-sel">Anestesiólogo del caso</label>
+            <select id="c-anest-sel"></select></div>
+          <button class="btn sec" id="c-anest-ok" type="button">Cambiar anestesiólogo</button>
+        </div>
       </div>
     </section>
   </main>
@@ -1149,7 +1158,7 @@ async function abreCaso(id){
     ['Procedimiento', r.caso.Procedimiento_Principal], ['Fecha', r.caso.Fecha_Cirugia],
     ['Hora', (r.caso.Hora_Inicio||'') + ' – ' + (r.caso.Hora_Fin||'')],
     ['Quirófano', r.caso.Quirofano], ['Cama', r.caso.Cama_Asignada],
-    ['Cirujano', r.caso.Cirujano_Email], ['Anestesiólogo', r.caso.Anestesiologo_Email],
+    ['Cirujano', r.caso.Cirujano_Email], ['Anestesiólogo', r.caso.Anestesiologo_Nombre ? r.caso.Anestesiologo_Nombre + ' · ' + r.caso.Anestesiologo_Email : r.caso.Anestesiologo_Email],
     ['Tipo de anestesia', r.caso.Tipo_Anestesia], ['Paquete', r.caso.Paquete_ID]
   ];
   $('c-detalle').innerHTML = '<div class="tabla-scroll"><table>' + campos.map(function(f){
@@ -1165,6 +1174,7 @@ async function abreCaso(id){
     !(r.puedo_editar && ['en curso', 'realizado', 'cancelado'].indexOf(est) < 0));
   $('c-cancelar-caja').classList.add('oculto');
   $('c-cancelar-motivo').value = '';
+  pintaAnestesiologo(r.caso, !!r.puedo_editar && est !== 'cancelado');
   $('c-ficha').classList.toggle('oculto', !r.paciente);
   pintaPrequirurgica(r.caso, !!r.puedo_editar);
   $('c-msg').textContent = '';
@@ -1208,6 +1218,32 @@ $('c-cancelar-ok').onclick = async function(){
   finally { boton.disabled = false; }
 };
 $('c-ficha').onclick  = function(){ abreFicha(PACIENTE_SEL); };
+function pintaAnestesiologo(caso, puede){
+  const caja = $('c-anest-caja');
+  const lista = (MEDICOS && MEDICOS.anestesiologos) || [];
+  if (!puede || !lista.length){ caja.classList.add('oculto'); return; }
+  const actual = String(caso.Anestesiologo_Email || '').toLowerCase();
+  $('c-anest-sel').innerHTML = '<option value="">\u2014 elija \u2014</option>' + lista.map(function(m){
+    return '<option value="'+esc(m.correo)+'"'+(m.correo === actual ? ' selected' : '')+
+      (m.disponible ? '' : ' disabled')+'>'+esc(m.nombre + (m.especialidad ? ' \u00b7 '+m.especialidad : ''))+'</option>';
+  }).join('');
+  caja.classList.remove('oculto');
+}
+$('c-anest-ok').onclick = async function(){
+  const correo = $('c-anest-sel').value;
+  if (!correo){ $('c-msg').innerHTML = '<span class="pastilla warn">Elija al anestesiólogo.</span>'; return; }
+  if (correo === String(CASO_SEL.Anestesiologo_Email || '').toLowerCase()){
+    $('c-msg').innerHTML = '<span class="pastilla warn">Ese ya es el anestesiólogo del caso.</span>'; return;
+  }
+  const boton = this; boton.disabled = true;
+  try{
+    await api('actualizarCaso', {caso_id: CASO_SEL.Caso_ID, cambios: {Anestesiologo_Email: correo}});
+    await abreCaso(CASO_SEL.Caso_ID);
+    await cargaCasos();
+    $('c-msg').innerHTML = '<span class="pastilla ok">Anestesiólogo cambiado.</span>';
+  }catch(e){ $('c-msg').innerHTML = '<span class="pastilla warn">'+esc(e.message)+'</span>'; }
+  finally { boton.disabled = false; }
+};
 $('c-confirmar').onclick = async function(){
   try{
     await api('actualizarCaso', {caso_id: CASO_SEL.Caso_ID,
