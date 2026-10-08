@@ -1380,7 +1380,11 @@ $('r-buscar-btn').onclick = async function(){
   if (q.length < 3){ aviso('r-resultados','warn','Escriba al menos tres letras.'); return; }
   try{
     const r = await api('buscarPaciente', {q:q});
-    if (!r.pacientes.length){ aviso('r-resultados','warn','Sin coincidencias. Capture los datos abajo.'); return; }
+    if (!r.pacientes.length){
+      // No está aún en Renasté: si el usuario puede, se busca sola en el consultorio.
+      if (puedeConsultorio()) return $('r-consultorio-btn').onclick();
+      aviso('r-resultados','warn','Sin coincidencias. Capture los datos abajo.'); return;
+    }
     $('r-resultados').innerHTML = r.pacientes.map(function(p){
       return '<div class="caso" data-pid="'+esc(p.Paciente_ID)+'"><div class="nom">'+
         esc(p.Nombre_Completo)+'</div><div class="meta">'+esc(p.Paciente_ID)+' · '+
@@ -1412,7 +1416,7 @@ $('r-consultorio-btn').onclick = async function(){
   aviso('r-resultados','warn','Buscando en el consultorio…');
   try{
     const r = await api('consultorioBuscar', {q:q});
-    if (!r.resultados.length){ aviso('r-resultados','warn','El consultorio no tiene a nadie con «'+q+'».'); return; }
+    if (!r.resultados.length){ aviso('r-resultados','warn','No está en Renasté ni en el consultorio con «'+q+'». Capture los datos abajo.'); return; }
     $('r-resultados').innerHTML =
       '<p class="sub" style="margin:0 0 8px">En el consultorio del Dr. Soto (más recientes primero):</p>' +
       r.resultados.map(function(x){
