@@ -1414,14 +1414,15 @@ $('r-consultorio-btn').onclick = async function(){
     const r = await api('consultorioBuscar', {q:q});
     if (!r.resultados.length){ aviso('r-resultados','warn','El consultorio no tiene a nadie con «'+q+'».'); return; }
     $('r-resultados').innerHTML =
-      '<p class="sub" style="margin:0 0 8px">En el consultorio del Dr. Soto:</p>' +
+      '<p class="sub" style="margin:0 0 8px">En el consultorio del Dr. Soto (más recientes primero):</p>' +
       r.resultados.map(function(x){
         return '<div class="caso" data-cid="'+esc(x.paciente_id)+'"><div class="nom">'+esc(x.nombre)+'</div>'+
           '<div class="meta">'+(x.nacimiento ? 'Nac. '+esc(x.nacimiento)+' · ' : '')+
           (x.telefono_fin ? 'tel. …'+esc(x.telefono_fin)+' · ' : '')+
           (x.tiene_hc ? 'con historia clínica' : 'sin historia clínica')+
           (x.ya_en_renaste ? ' · ya en Renasté ('+esc(x.ya_en_renaste)+')' : '')+'</div></div>';
-      }).join('');
+      }).join('') +
+      (r.mas ? '<div class="aviso warn">Hay más de 25 coincidencias. Agregue el apellido o el teléfono para afinar.</div>' : '');
     $('r-resultados').querySelectorAll('[data-cid]').forEach(function(el){
       el.onclick = async function(){
         const nombre = el.querySelector('.nom').textContent;
