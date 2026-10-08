@@ -230,8 +230,11 @@ const esc = (s) => String(s == null ? '' : s)
 
 async function api(action, datos = {}) {
   const token = sessionStorage.getItem('zx_token');
+  // credentials:'omit': con varias cuentas de Google abiertas, Google redirige
+  // /macros/s/…/exec a /macros/u/<N>/… y devuelve HTML en vez de JSON.
   const r = await fetch(CONFIG.GATEWAY, {
     method: 'POST',
+    credentials: 'omit',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ action, token, ...datos })
   });
