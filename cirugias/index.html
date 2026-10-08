@@ -776,7 +776,12 @@ async function api(accion, datos){
        después, salió bien). Se reintenta una vez antes de dar el error. */
     const cuerpo = JSON.stringify(Object.assign({accion: accion, id_token: TOKEN}, datos || {}));
     let j = null;
-    for (let intento = 0; intento < 2 && !j; intento++){
+    /* Ojo: a veces Google entrega la llamada SIN el cuerpo (como un GET) y el
+       servidor, al no ver acción, contesta el «ping» {ok:true, servicio:…}.
+       Eso parecía éxito y no lo era: el cambio no se guardaba y la pantalla
+       tronaba después con «reading 'Folio_Caso'» (8 oct 2026). Una respuesta
+       de ping a algo que no es ping se trata como fallida y se reintenta. */
+    for (let intento = 0; intento < 3 && !j; intento++){
       const r = await fetch(API, {
         method: 'POST',
         credentials: 'omit',
@@ -785,8 +790,9 @@ async function api(accion, datos){
       });
       const txt = await r.text();
       try { j = JSON.parse(txt); } catch(e){ j = null; }
+      if (j && j.servicio !== undefined && accion !== 'ping') j = null;
     }
-    if (!j) throw new Error('El servidor no contestó bien dos veces seguidas. Espere un minuto y vuelva a intentar.');
+    if (!j) throw new Error('El servidor no contestó bien tres veces seguidas. Espere un minuto y vuelva a intentar.');
     if (!j.ok) throw new Error(j.mensaje || j.error || 'Error desconocido');
     return j;
   } finally { cargando(false); }
@@ -1150,6 +1156,7 @@ async function cargaCasos(){
 
 async function abreCaso(id){
   const r = await api('obtenerCaso', {caso_id:id});
+  if (!r.caso) throw new Error('El servidor no devolvió el caso. Recargue la página e intente de nuevo.');
   CASO_SEL = r.caso; PACIENTE_SEL = r.paciente;
   $('c-titulo').textContent = r.caso.Folio_Caso;
   $('c-sub').textContent = (r.paciente ? r.paciente.Nombre_Completo : 'Paciente sin ficha') +
