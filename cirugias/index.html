@@ -496,7 +496,32 @@ html[data-tema="oscuro"] #acceso .iso{content:url("../assets/renaste-iso-blanco.
         <h2>Reservar tiempo quirúrgico</h2>
         <p class="sub">El espacio queda apartado en cuanto se guarda. Se libera solo si nadie lo confirma.</p>
         <div class="rejilla">
-          <div><label>Paquete</label><select id="r-paquete"></select></div>
+          <!-- UNA SOLA LISTA, NO DOS.
+               Aquí había un desplegable de UN procedimiento, y abajo, en
+               «Cotización», una lista donde sí se podían marcar varios. El
+               resultado: se cotizaba una lipo + una mastopexia, pero el CASO
+               se quedaba con una sola, y ésa era la que acababa impresa en la
+               hoja frontal, en la preoperatoria y en la lista de
+               verificación. Una cirugía de dos tiempos quedaba asentada como
+               si hubiera sido una.
+
+               Ahora se marcan abajo, una sola vez, y esa misma selección es
+               la del caso Y la de la cotización. Aquí sólo se ve qué lleva. -->
+          <div style="grid-column:1/-1">
+            <label>Procedimientos del caso</label>
+            <div id="r-proc-elegidos"></div>
+          </div>
+           <!-- Zorvix no opera solo cirugia plastica. El catalogo de paquetes
+                es de precios, no de lo que cabe en el quirofano: amarrarle la
+                agenda dejaba fuera todo lo demas. Aqui se escribe. -->
+           <div id="r-otro-caja">
+             <label for="r-proc-otro">Procedimiento fuera del catálogo</label>
+             <input id="r-proc-otro" maxlength="120"
+                    placeholder="Histeroscopia diagnóstica"></div>
+           <div id="r-precio-caja">
+             <label for="r-proc-precio">Precio de ese procedimiento</label>
+             <input type="number" id="r-proc-precio" min="0" step="100"
+                    inputmode="numeric" placeholder="18500"></div>
           <div><label>Quirófano</label><select id="r-quirofano"></select></div>
           <div><label>Fecha</label><input type="date" id="r-fecha"></div>
           <div><label>Hora de inicio</label><input type="time" id="r-hora" step="900"></div>
@@ -513,6 +538,20 @@ html[data-tema="oscuro"] #acceso .iso{content:url("../assets/renaste-iso-blanco.
         <div id="r-aviso-papeles"></div>
         <div class="fila"><button class="btn sec" id="r-ver" type="button">Ver qué está ocupado</button></div>
         <div id="r-ocupado"></div>
+      </div>
+
+      <div class="tarjeta">
+        <h2>Procedimientos y cotización</h2>
+        <p class="sub">Marque aquí todo lo que se va a hacer: esta lista es la del caso y la del precio. El procedimiento más caro va al 100% de lista; del segundo en adelante, 50%. La noche de cama se cobra una sola vez.</p>
+        <div class="fila" style="margin:0 0 12px">
+          <input id="r-filtro-proc" placeholder="Filtrar procedimientos" style="flex:1;min-width:220px">
+          <label style="display:flex;align-items:center;gap:8px;white-space:nowrap">Noches
+            <input type="number" id="r-noches" min="0" max="14" step="1" style="width:84px">
+          </label>
+          <button class="btn sec" id="r-limpiar-proc" type="button">Limpiar</button>
+        </div>
+        <div id="r-procs" class="tabla-scroll" style="max-height:250px;overflow:auto"></div>
+        <div id="r-cotiza"></div>
       </div>
 
       <div class="tarjeta">
@@ -562,6 +601,69 @@ html[data-tema="oscuro"] #acceso .iso{content:url("../assets/renaste-iso-blanco.
         <h2>Sin valoración preanestésica</h2>
         <p class="sub">Casos que todavía no tienen la valoración que pide la NOM-006.</p>
         <div id="p-preanestesica"></div>
+      </div>
+    </section>
+
+    <!-- Cotizar para mandarle el precio al paciente.
+
+         Esto NO aparta quirófano ni crea paciente: es la cotización que se
+         manda para que la persona decida. Cuando dice que sí, se aparta por
+         «Reservar» como siempre. Por eso aquí no hay fecha ni quirófano:
+         pedirlos obligaría a decidir la agenda antes de saber si hay venta. -->
+    <section id="vista-cotizar" class="vista oculto">
+      <div class="tarjeta">
+        <h2>Cotizar para mandar</h2>
+        <p class="sub">Arma el precio y sale una liga que el paciente abre desde su celular,
+          más la hoja para imprimir. No aparta quirófano ni da de alta al paciente.</p>
+
+        <div class="rejilla">
+          <div><label for="q-paciente">A nombre de *</label>
+            <input id="q-paciente" maxlength="120" placeholder="Nombre completo del paciente"></div>
+          <div><label for="q-tel">Celular (para mandarla por WhatsApp)</label>
+            <input id="q-tel" inputmode="tel" maxlength="20" placeholder="55 1234 5678"></div>
+          <!-- La primera cirugía de un invitado se cotiza ANTES de darlo de
+               alta: el precio va antes que el papeleo. Por eso el nombre se
+               puede escribir a mano. Si el correo ya está en el padrón, manda
+               el padrón y lo que se teclee aquí se ignora. -->
+          <div id="q-cirujano-caja"><label for="q-cirujano">Correo del cirujano</label>
+            <input id="q-cirujano" placeholder="correo@gmail.com"></div>
+          <div><label for="q-cirujano-nombre">Nombre del cirujano</label>
+            <input id="q-cirujano-nombre" maxlength="120"
+                   placeholder="Sólo si todavía no está en el padrón"></div>
+          <div><label for="q-noches">Noches de hospitalización</label>
+            <input type="number" id="q-noches" min="0" max="14" step="1" placeholder="0"></div>
+        </div>
+
+        <h3 class="grupo">Del catálogo</h3>
+        <div class="fila" style="margin:0 0 12px">
+          <input id="q-filtro" placeholder="Filtrar procedimientos" style="flex:1;min-width:220px">
+        </div>
+        <div id="q-procs" class="tabla-scroll" style="max-height:230px;overflow:auto"></div>
+
+        <h3 class="grupo">Fuera del catálogo</h3>
+        <p class="sub">El tarifario es de cirugía plástica. Lo que traiga un cirujano de otra
+          especialidad se escribe aquí con su precio, y se cobra tal cual: la regla del 50%
+          corre sólo entre los del catálogo.</p>
+        <div id="q-libres"></div>
+        <div class="fila">
+          <button class="btn sec" id="q-mas" type="button">Agregar otro procedimiento</button>
+        </div>
+
+        <div id="q-previa"></div>
+
+        <div class="fila">
+          <button class="btn" id="q-emitir" type="button">Emitir la cotización</button>
+          <button class="btn sec" id="q-limpiar" type="button">Limpiar</button>
+          <span id="q-msg"></span>
+        </div>
+
+        <div id="q-resultado" class="oculto"></div>
+      </div>
+
+      <div class="tarjeta">
+        <h2>Cotizaciones emitidas</h2>
+        <p class="sub">Para volver a mandar una liga o ver en cuánto quedó.</p>
+        <div id="q-lista"></div>
       </div>
     </section>
 
@@ -619,6 +721,32 @@ html[data-tema="oscuro"] #acceso .iso{content:url("../assets/renaste-iso-blanco.
         <h2 id="c-titulo">Caso</h2>
         <p class="sub" id="c-sub"></p>
         <div id="c-detalle"></div>
+
+        <!-- Cambiar al anestesiologo del caso.
+
+             El anestesiologo no es un dato informativo: es la llave con la que
+             el expediente decide quien puede abrir el caso. Los turnos se
+             mueven seguido y hasta hoy eso obligaba a editar la base a mano;
+             el dia que el correo se escribio mal, el caso quedo en manos de
+             otra persona. Aqui se elige del padron, nunca se teclea. -->
+        <div id="c-anest" class="oculto" style="margin-top:12px">
+          <div class="fila">
+            <button class="btn sec" id="c-anest-abrir" type="button">Cambiar anestesiólogo</button>
+            <span id="c-anest-msg"></span>
+          </div>
+          <div id="c-anest-caja" class="oculto" style="margin-top:8px">
+            <div class="rejilla">
+              <div style="grid-column:1/-1">
+                <label for="c-anest-sel">Anestesiólogo del caso</label>
+                <select id="c-anest-sel"><option value="">— por definir —</option></select>
+              </div>
+            </div>
+            <div class="fila">
+              <button class="btn" id="c-anest-ok" type="button">Guardar el cambio</button>
+              <button class="btn sec" id="c-anest-no" type="button">Mejor no</button>
+            </div>
+          </div>
+        </div>
 
         <!-- Valoración prequirúrgica.
 
@@ -683,6 +811,68 @@ html[data-tema="oscuro"] #acceso .iso{content:url("../assets/renaste-iso-blanco.
               <input type="checkbox" id="q-realizada" style="width:auto;padding:0">
               Dar por realizada la valoración preanestésica</label>
             <span id="q-msg"></span>
+          </div>
+        </div>
+
+        <!-- Cotización del caso.
+
+             Lo que se opera no siempre es lo que se programó: el paciente llega
+             a una blefaroplastia y antes de entrar decide también un implante de
+             mentón. Aquí se agrega, el caso se recalcula completo —el más caro
+             siempre al 100%— y se ve la diferencia a cobrar. El ajuste de precio
+             vive aquí mismo, cerrado por rol y con motivo obligatorio: el precio
+             del quirófano es ingreso de Renasté, no del cirujano que lo renta. -->
+        <div id="c-cotiza-caja" class="oculto">
+          <h3 class="grupo">Cotización</h3>
+          <div id="c-cotiza"></div>
+          <div class="fila">
+            <button class="btn sec oculto" id="c-recotizar" type="button">Agregar o cambiar procedimientos</button>
+            <button class="btn sec oculto" id="c-ajustar" type="button">Ajustar el precio</button>
+          </div>
+
+          <div id="c-recotiza-caja" class="oculto">
+            <div class="fila" style="margin:0 0 12px">
+              <input id="c-filtro-proc" placeholder="Filtrar procedimientos" style="flex:1;min-width:220px">
+              <label style="display:flex;align-items:center;gap:8px;white-space:nowrap">Noches
+                <input type="number" id="c-noches" min="0" max="14" step="1" style="width:84px"></label>
+            </div>
+            <div id="c-procs" class="tabla-scroll" style="max-height:230px;overflow:auto"></div>
+
+            <!-- En Zorvix no sólo se opera cirugía plástica, y el catálogo es de
+                 precios de cirugía plástica. Lo que no está en la lista se
+                 escribe aquí con su precio, igual que en la reserva. Si el caso
+                 ya traía uno, estos dos campos vienen cargados: la recotización
+                 recalcula el caso COMPLETO, así que dejarlos vacíos lo borraría. -->
+            <div class="rejilla" style="margin-top:12px">
+              <div style="grid-column:1/-1">
+                <label>Procedimiento fuera del catálogo</label>
+                <input id="c-proc-otro" placeholder="Como debe aparecer en la cotización"></div>
+              <div><label>Precio de ese procedimiento ($)</label>
+                <input type="number" id="c-proc-precio" min="0" step="100" placeholder="0"></div>
+            </div>
+
+            <div id="c-previa"></div>
+            <div class="fila">
+              <button class="btn" id="c-recotiza-ok" type="button">Guardar la nueva cotización</button>
+              <button class="btn sec" id="c-recotiza-no" type="button">Cancelar</button>
+              <span id="c-recotiza-msg"></span>
+            </div>
+          </div>
+
+          <div id="c-ajuste-caja" class="oculto" style="margin-top:12px">
+            <div class="rejilla">
+              <div><label>Descuento o sobreprecio ($)</label>
+                <input type="number" id="c-ajuste-monto" step="100" placeholder="en negativo = descuento"></div>
+              <div><label>…o en porcentaje (%)</label>
+                <input type="number" id="c-ajuste-pct" step="1" placeholder="en negativo = descuento"></div>
+              <div style="grid-column:1/-1"><label>Motivo *</label>
+                <input id="c-ajuste-motivo" placeholder="Queda asentado con su nombre y la hora."></div>
+            </div>
+            <div class="fila">
+              <button class="btn" id="c-ajuste-ok" type="button">Aplicar el ajuste</button>
+              <button class="btn sec" id="c-ajuste-no" type="button">Cancelar</button>
+              <span id="c-ajuste-msg"></span>
+            </div>
           </div>
         </div>
 
@@ -987,7 +1177,7 @@ async function entro(resp, silencioso){
     }
     fijaCirujano();
     pintaTabs();
-    await Promise.all([cargaPaquetes(), cargaCasos(), cargaMedicos()]);
+    await Promise.all([cargaPaquetes(), cargaCasos(), cargaMedicos(), cargaCatalogoCotizador()]);
   }catch(e){
     TOKEN = null;
     olvidaSesion();
@@ -1092,6 +1282,7 @@ async function cargaMedicos(){
 const VISTAS = {
   agenda:      {tab:'Casos',      el:'vista-agenda'},
   reservar:    {tab:'Reservar',   el:'vista-reservar'},
+  cotizar:     {tab:'Cotizar',    el:'vista-cotizar'},
   pendientes:  {tab:'Pendientes', el:'vista-pendientes'}
 };
 
@@ -1100,6 +1291,8 @@ function pintaTabs(){
   Object.keys(VISTAS).forEach(function(k){
     if (k === 'pendientes' && !YO.ve_todo) return;
     if (k === 'reservar' && YO.nivel !== 'escritura') return;
+    /* Cotizar escribe un folio y una liga: es escritura, igual que reservar. */
+    if (k === 'cotizar' && YO.nivel !== 'escritura') return;
     const b = document.createElement('button');
     b.className = 'tab'; b.type = 'button'; b.textContent = VISTAS[k].tab;
     b.setAttribute('role','tab'); b.dataset.vista = k;
@@ -1118,6 +1311,7 @@ function muestra(k){
   });
   window.scrollTo({top:0, behavior:'smooth'});
   if (k === 'pendientes') cargaPendientes();
+  if (k === 'cotizar') abreCotizar();
 }
 
 /* ── Casos ────────────────────────────────────────────────── */
@@ -1138,14 +1332,31 @@ async function cargaCasos(){
 
   const c = $('lista-casos');
   if (!CASOS.length){ c.innerHTML = '<div class="vacio">Todavía no hay casos.</div>'; return; }
-  CASOS.sort((a,b) => String(a.Fecha_Cirugia).localeCompare(String(b.Fecha_Cirugia)));
+  /* De lo más reciente a lo más viejo. Esta lista se abre para ver lo que
+     sigue o lo que acaba de pasar, no para repasar el año: lo útil queda
+     arriba y lo viejo se hunde solo conforme pasa el tiempo.
+
+     Se desempata por hora dentro del mismo día, cosa que antes no se hacía:
+     por eso las 09:00 salían antes que las 07:30 del mismo 12 de octubre
+     —no estaba ordenado por hora, era el orden en que venían de la base—.
+     Un caso sin fecha se va hasta el final: no compite con los que sí la
+     tienen. */
+  CASOS.sort(function(a, b){
+    const fa = String(a.Fecha_Cirugia || ''), fb = String(b.Fecha_Cirugia || '');
+    if (fa !== fb) return fb.localeCompare(fa);
+    return String(b.Hora_Inicio || '').localeCompare(String(a.Hora_Inicio || ''));
+  });
   c.innerHTML = CASOS.map(function(x){
     const est = String(x.Estatus_Agenda||'');
     const clase = est === 'Confirmado' ? 'ok' : (est === 'Preaparto' ? 'warn' : '');
+    /* El renglón grande es el NOMBRE. El folio es para la máquina y el
+       procedimiento se repite entre pacientes: ninguno de los dos sirve para
+       que alguien reconozca de quién es el caso de un vistazo. */
     return '<div class="caso" data-id="'+esc(x.Caso_ID)+'">' +
       '<div class="top"><span class="folio">'+esc(x.Folio_Caso)+'</span>' +
       '<span class="pastilla '+clase+'">'+esc(etiquetaAgenda(est))+'</span></div>' +
-      '<div class="nom">'+esc(x.Procedimiento_Principal || 'Procedimiento por definir')+'</div>' +
+      '<div class="nom">'+esc(x.paciente || 'Paciente sin ficha')+'</div>' +
+      '<div class="meta">'+esc(x.Procedimiento_Principal || 'Procedimiento por definir')+'</div>' +
       '<div class="meta">'+esc(x.Fecha_Cirugia||'sin fecha')+' · '+esc(x.Hora_Inicio||'')+
         ' · '+esc(x.Quirofano||'')+'</div></div>';
   }).join('');
@@ -1165,7 +1376,8 @@ async function abreCaso(id){
     ['Procedimiento', r.caso.Procedimiento_Principal], ['Fecha', r.caso.Fecha_Cirugia],
     ['Hora', (r.caso.Hora_Inicio||'') + ' – ' + (r.caso.Hora_Fin||'')],
     ['Quirófano', r.caso.Quirofano], ['Cama', r.caso.Cama_Asignada],
-    ['Cirujano', r.caso.Cirujano_Email], ['Anestesiólogo', r.caso.Anestesiologo_Nombre ? r.caso.Anestesiologo_Nombre + ' · ' + r.caso.Anestesiologo_Email : r.caso.Anestesiologo_Email],
+    ['Cirujano', quienEs(r.caso.Cirujano_Nombre, r.caso.Cirujano_Email)],
+    ['Anestesiólogo', quienEs(r.caso.Anestesiologo_Nombre, r.caso.Anestesiologo_Email)],
     ['Tipo de anestesia', r.caso.Tipo_Anestesia], ['Paquete', r.caso.Paquete_ID]
   ];
   $('c-detalle').innerHTML = '<div class="tabla-scroll"><table>' + campos.map(function(f){
@@ -1184,8 +1396,10 @@ async function abreCaso(id){
   pintaAnestesiologo(r.caso, !!r.puedo_editar && est !== 'cancelado');
   $('c-ficha').classList.toggle('oculto', !r.paciente);
   pintaPrequirurgica(r.caso, !!r.puedo_editar);
+  pintaAnestesiologo(r.caso, !!r.puedo_editar);
   $('c-msg').textContent = '';
   muestra('vista-caso');
+  cargaCotizacionDeCaso(id, !!r.puedo_editar);
 }
 
 $('c-volver').onclick = function(){ muestra('agenda'); };
@@ -1224,6 +1438,96 @@ $('c-cancelar-ok').onclick = async function(){
   }catch(e){ $('c-msg').innerHTML = '<span class="pastilla warn">'+esc(e.message)+'</span>'; }
   finally { boton.disabled = false; }
 };
+/* ── Quien es, en la tabla del caso ───────────────────────
+   Va el nombre Y el correo. El nombre solo no sirve para esto: dos renglones
+   del padron pueden traer el mismo nombre mal escrito, y el correo es lo que
+   de verdad decide quien entra. El correo solo tampoco: nadie lee correos.
+   Juntos, un caso asignado a quien no era se ve de un vistazo. */
+function quienEs(nombre, correo){
+  const n = String(nombre || '').trim();
+  const c = String(correo || '').trim();
+  if (!n && !c) return '';
+  if (!n) return c;
+  if (!c) return n;
+  return n + ' \u00b7 ' + c;
+}
+
+/* ── Cambiar al anestesiologo del caso ────────────────────
+
+   El backend ya sabia recibir el cambio: `actualizarCaso` hace pasar
+   Anestesiologo_Email por la misma aduana que el alta —lo valida contra el
+   padron y escribe el nombre el mismo—. Lo que no existia era por donde
+   pedirselo, y por eso se terminaba editando la hoja a mano.
+
+   No se ofrece si el padron no cargo: mas vale no enseñar un boton que al
+   abrirse sale vacio. */
+function pintaAnestesiologo(caso, puedoEditar){
+  const caja  = $('c-anest');
+  const lista = (MEDICOS && MEDICOS.anestesiologos) || [];
+  caja.classList.toggle('oculto', !(puedoEditar && lista.length));
+  $('c-anest-caja').classList.add('oculto');
+  $('c-anest-msg').textContent = '';
+  if (caja.classList.contains('oculto')) return;
+
+  const actual = String(caso.Anestesiologo_Email || '').toLowerCase().trim();
+  $('c-anest-abrir').textContent = actual ? 'Cambiar anestesi\u00f3logo'
+                                          : 'Asignar anestesi\u00f3logo';
+  $('c-anest-sel').innerHTML = '<option value="">\u2014 sin anestesi\u00f3logo \u2014</option>' +
+    lista.map(function(m){
+      /* Mismo criterio que en el alta: quien tiene papeles pendientes SI
+         aparece y SI se puede elegir —reasignar no exige credenciales,
+         confirmar si—. Solo se bloquea a quien ni siquiera podria entrar. */
+      const nota = !m.disponible ? '  [' + (m.motivo || 'sin acceso') + ']'
+                 : (m.credenciales_ok === false ? '  \u00b7 papeles pendientes' : '');
+      const texto = m.nombre + (m.especialidad ? ' \u00b7 ' + m.especialidad : '') + nota;
+      return '<option value="' + esc(m.correo) + '"' +
+             (m.disponible ? '' : ' disabled') +
+             (String(m.correo).toLowerCase() === actual ? ' selected' : '') +
+             '>' + esc(texto) + '</option>';
+    }).join('');
+}
+
+$('c-anest-abrir').onclick = function(){
+  $('c-anest-caja').classList.remove('oculto');
+  $('c-anest-sel').focus();
+};
+$('c-anest-no').onclick = function(){
+  $('c-anest-caja').classList.add('oculto');
+  $('c-anest-msg').textContent = '';
+};
+
+$('c-anest-ok').onclick = async function(){
+  if (!CASO_SEL) return;
+  const correo = String($('c-anest-sel').value || '').trim().toLowerCase();
+  const antes  = String(CASO_SEL.Anestesiologo_Email || '').trim().toLowerCase();
+  if (correo === antes){
+    $('c-anest-msg').innerHTML = '<span class="pastilla">No hubo cambio</span>';
+    return;
+  }
+  /* Solo viaja el correo. El nombre lo escribe el backend desde el padron:
+     si se mandara desde aqui, el dia que el padron se corrija la hoja Casos
+     se quedaria con el nombre viejo. Al dejarlo vacio se borra, que es lo
+     correcto cuando el caso se queda sin nadie. */
+  const cambios = {Anestesiologo_Email: correo};
+  if (!correo) cambios.Anestesiologo_Nombre = '';
+
+  const boton = $('c-anest-ok');
+  boton.disabled = true;
+  $('c-anest-msg').innerHTML = '<span class="pastilla">Guardando\u2026</span>';
+  try{
+    await api('actualizarCaso', {caso_id: CASO_SEL.Caso_ID, cambios: cambios});
+    await cargaCasos();
+    await abreCaso(CASO_SEL.Caso_ID);
+    /* El aviso va al final: abreCaso vuelve a pintar el bloque y lo limpia. */
+    $('c-anest-msg').innerHTML = correo
+      ? '<span class="pastilla ok">Listo. El caso ya es suyo y el anterior deja de verlo.</span>'
+      : '<span class="pastilla warn">El caso qued\u00f3 sin anestesi\u00f3logo: ' +
+        'nadie puede entrar a escribir la preanest\u00e9sica hasta que se le asigne uno.</span>';
+  }catch(e){
+    $('c-anest-msg').innerHTML = '<span class="pastilla warn">'+esc(e.message)+'</span>';
+  }finally{ boton.disabled = false; }
+};
+
 $('c-ficha').onclick  = function(){ abreFicha(PACIENTE_SEL); };
 function pintaAnestesiologo(caso, puede){
   const caja = $('c-anest-caja');
@@ -1385,15 +1689,10 @@ async function cargaPaquetes(){
     const r = await api('paquetes');
     PAQUETES = r.paquetes || [];
   }catch(e){ PAQUETES = []; }
-  const s = $('r-paquete');
-  s.innerHTML = '<option value="">— elija el procedimiento —</option>' + PAQUETES.map(function(p){
-    return '<option value="'+esc(p.Paquete_ID)+'" data-min="'+esc(p.Minutos_Quirofano_Incluidos||'')+
-           '" data-q="'+esc(p.Quirofano_Elegible||'')+'">'+esc(p.Nombre||p.Paquete_ID)+'</option>';
-  }).join('');
-  s.onchange = function(){
-    const o = s.selectedOptions[0];
-    if (o && o.dataset.min) $('r-duracion').value = o.dataset.min;
-  };
+  /* Aquí se armaba el desplegable de UN procedimiento. Ya no existe: los
+     procedimientos se marcan abajo, en la lista, y pueden ser varios.
+     `PAQUETES` se sigue cargando porque de ahí salen los minutos de
+     quirófano que la cotización propone en `recotiza()`. */
   try{
     const d = await api('disponibilidad', {dias: 30});
     $('r-quirofano').innerHTML = '<option value="">— quirófano —</option>' +
@@ -1402,6 +1701,84 @@ async function cargaPaquetes(){
                (q.minutos_max ? ' (hasta '+esc(q.minutos_max)+' min)' : '')+'</option>';
       }).join('');
   }catch(e){ /* el backend ya avisó */ }
+}
+
+/* El campo abierto no sustituye al catálogo, lo complementa: un paquete del
+   tarifario trae precio, minutos y quirófano elegible, y eso no se quiere
+   perder en lo que sí está tabulado. El texto libre es para lo que no lo
+   está, y ya no vive escondido detrás de una opción del desplegable:
+   Zorvix no opera sólo cirugía plástica. */
+
+/* El renglón de precio a mano que viaja al backend, o null si no hay.
+   Van juntos a propósito: un procedimiento escrito sin precio no se cotiza
+   —no se le inventa cero— y un precio sin procedimiento no significa nada.
+   Ya no se le pregunta al desplegable si dice «otro»: si hay texto, cuenta. */
+function manualDeCotizacion(){
+  const nombre = String($('r-proc-otro').value || '').trim();
+  const precio = Number($('r-proc-precio').value);
+  if (!nombre || !(precio > 0)) return null;
+  return { nombre: nombre, precio: precio };
+}
+
+/* Lo que se va a escribir en la hoja Casos. UNA sola lista alimenta las dos
+   cosas, el caso y la cotización: si se marcan tres procedimientos, los
+   tres quedan asentados —en un renglón, separados por «+»— y de
+   ahí salen a la hoja frontal, a la preoperatoria y a la lista de
+   verificación. Una cirugía de dos tiempos ya no se asienta como una.
+
+   `Paquete_ID` nació para UN paquete y así se queda: sólo se llena
+   cuando lo marcado es exactamente un procedimiento del tarifario. No se
+   inventa un identificador compuesto que nadie del otro lado sabría leer;
+   el detalle completo vive en la cotización, que sí guarda renglón
+   por renglón. */
+function procedimientosDelCaso(){
+  const nombres = ELEGIDOS.map(function(id){
+    const p = CATALOGO.filter(function(x){ return String(x.id) === String(id); })[0];
+    return p ? String(p.nombre).trim() : String(id);
+  });
+  const libre = String($('r-proc-otro').value || '').trim();
+  if (libre) nombres.push(libre);
+
+  /* El id del tarifario y el Paquete_ID salen de la misma hoja, pero eso se
+     comprueba en vez de suponerse: si el id no aparece en Paquetes, el campo
+     se deja en blanco antes que escribir un identificador que no existe. */
+  let paquete = '';
+  if (ELEGIDOS.length === 1 && !libre){
+    const hay = PAQUETES.some(function(p){
+      return String(p.Paquete_ID) === String(ELEGIDOS[0]);
+    });
+    if (hay) paquete = ELEGIDOS[0];
+  }
+  return { nombres: nombres, paquete: paquete, texto: nombres.join(' + ') };
+}
+
+/* Arriba, donde se aparta el quirófano, se ve qué lleva el caso sin
+   tener que bajar a la lista. Es lectura, no captura: se marca abajo, una
+   sola vez, y aquí se refleja. */
+function pintaProcElegidos(){
+  const caja = $('r-proc-elegidos');
+  if (!caja) return;
+  const d = procedimientosDelCaso();
+  if (!d.nombres.length){
+    caja.innerHTML = '<div class="aviso warn">Nada marcado todavía: márquelo ' +
+      'abajo, en «Procedimientos y cotización». Puede marcar varios.</div>';
+    return;
+  }
+  const libre = String($('r-proc-otro').value || '').trim();
+  const faltaPrecio = libre && !(Number($('r-proc-precio').value) > 0);
+  caja.innerHTML =
+    d.nombres.map(function(n){
+      return '<span class="pastilla ok">' + esc(n) + '</span>';
+    }).join(' ') +
+    (d.nombres.length > 1
+      ? '<div class="sub" style="margin-top:6px">Los ' + d.nombres.length +
+        ' quedan asentados en el caso, en un solo renglón.</div>'
+      : '') +
+    (faltaPrecio
+      ? '<div class="aviso warn" style="margin-top:8px">«' + esc(libre) +
+        '» va a quedar escrito en el caso, pero sin precio no entra en la ' +
+        'cotización.</div>'
+      : '');
 }
 
 $('r-ver').onclick = async function(){
@@ -1491,14 +1868,15 @@ $('r-consultorio-btn').onclick = async function(){
 };
 
 $('r-guardar').onclick = async function(){
+  const PROC = procedimientosDelCaso();
   const datos = {
     Quirofano: $('r-quirofano').value,
     Fecha_Cirugia: $('r-fecha').value,
     Hora_Inicio: $('r-hora').value,
     Duracion_Estimada_Min: $('r-duracion').value,
     Tiempo_Bloqueado_Min: $('r-duracion').value,
-    Paquete_ID: $('r-paquete').value,
-    Procedimiento_Principal: ($('r-paquete').selectedOptions[0]||{}).textContent || '',
+    Paquete_ID: PROC.paquete,
+    Procedimiento_Principal: PROC.texto,
     Tipo_Anestesia: $('r-anestesia').value,
     Cirujano_Email: $('r-cirujano').value.trim().toLowerCase(),
     Anestesiologo_Email: $('r-anestesiologo').value.trim().toLowerCase()
@@ -1514,6 +1892,14 @@ $('r-guardar').onclick = async function(){
   if (!datos.Quirofano || !datos.Fecha_Cirugia || !datos.Hora_Inicio){
     aviso('r-msg','warn','Faltan quirófano, fecha u hora.'); return;
   }
+  /* Un caso sin procedimiento escrito sale despu\u00e9s en blanco en la hoja
+     frontal, en la nota preoperatoria y en la lista de verificaci\u00f3n. Se
+     detiene aqu\u00ed, que es donde cuesta diez segundos arreglarlo. */
+  if (!datos.Procedimiento_Principal){
+    aviso('r-msg','warn','Falta el procedimiento: m\u00e1rquelo abajo en la lista ' +
+      '\u2014puede marcar varios\u2014 o escr\u00edbalo si no est\u00e1 en el tarifario.');
+    return;
+  }
   if (!datos.Cirujano_Email){
     aviso('r-msg','warn','Falta el cirujano: es quien va a poder abrir el caso.'); return;
   }
@@ -1522,15 +1908,460 @@ $('r-guardar').onclick = async function(){
      escribir su preanestésica. Por eso se dice en el acuse, no se calla. */
   try{
     const r = await api('crearCaso', datos);
+
+    /* La cotización se guarda DESPUÉS y aparte: el apartado del quirófano
+       ya quedó, y si algo falla al cotizar no se puede perder el espacio.
+       Se avisa, se vuelve a cotizar desde el caso, y ya. */
+    let folioCot = '';
+    const manualCot = manualDeCotizacion();
+    if (ELEGIDOS.length || manualCot){
+      try{
+        const c = await api('guardarCotizacion', {
+          casoId: r.casoId,
+          pacienteId: r.pacienteId,
+          procedimientos: ELEGIDOS,
+          manual: manualCot,
+          noches: $('r-noches').value === '' ? null : Number($('r-noches').value),
+          fechaCirugia: datos.Fecha_Cirugia,
+          cirujanoEmail: datos.Cirujano_Email
+        });
+        folioCot = c.folio || '';
+      }catch(e){ folioCot = null; }
+    }
+
     $('r-msg').innerHTML = '<span class="pastilla ok">Apartado: ' + esc(r.folio) + '</span>' +
+      (folioCot ? ' <span class="pastilla ok">Cotización ' + esc(folioCot) + ': ' +
+                  esc(pesos(COTIZACION ? COTIZACION.total : 0)) + '</span>' : '') +
+      (folioCot === null ? ' <span class="pastilla warn">la cotización no se guardó, vuelva a cotizarla desde el caso</span>' : '') +
       (datos.Anestesiologo_Email ? ''
         : ' <span class="pastilla warn">falta asignar anestesiólogo</span>');
+    ELEGIDOS = []; COTIZACION = null;
+    $('r-noches').value = ''; $('r-cotiza').innerHTML = '';
+    delete $('r-duracion').dataset.tocado;
+    pintaProcedimientos();
     PACIENTE_SEL = null;
     ['p-nombre','p-nacimiento','p-telefono','p-correo','r-buscar'].forEach(i => $(i).value = '');
+    $('r-proc-otro').value = ''; $('r-proc-precio').value = '';
+    pintaProcElegidos();
     $('r-elegido').innerHTML = ''; $('r-nuevo').classList.remove('oculto');
     await cargaCasos();
   }catch(e){ $('r-msg').innerHTML = '<span class="pastilla warn">'+esc(e.message)+'</span>'; }
 };
+
+/* ── Cotizador ─────────────────────────────────────────────────
+   El motor vive en el backend y aquí no se calcula ni un peso: el
+   número que ve el cirujano en pantalla y el que queda escrito en la
+   hoja tienen que ser el mismo, y la única forma de garantizarlo es
+   que lo calcule un solo lado. Aquí sólo se elige y se muestra. */
+
+let CATALOGO = [], ELEGIDOS = [], COTIZACION = null, RELOJ_COTIZA = null, NO_INCLUYE = '';
+
+const pesos = (n) => '$' + (Math.round(Number(n) || 0)).toLocaleString('es-MX');
+
+async function cargaCatalogoCotizador(){
+  try{
+    const r = await api('catalogoCotizador');
+    CATALOGO = r.procedimientos || [];
+    NO_INCLUYE = r.noIncluye || '';
+  }catch(e){
+    CATALOGO = [];
+    aviso('r-cotiza','warn','No se pudo cargar el tarifario: ' + e.message);
+  }
+  pintaProcedimientos();
+}
+
+function pintaProcedimientos(){
+  pintaProcElegidos();
+  const f = ($('r-filtro-proc').value || '').trim().toLowerCase();
+  const lista = CATALOGO.filter(function(p){
+    return !f || String(p.nombre).toLowerCase().indexOf(f) >= 0;
+  });
+  if (!lista.length){
+    $('r-procs').innerHTML = '<div class="aviso warn">Sin procedimientos que coincidan.</div>';
+    return;
+  }
+  $('r-procs').innerHTML = '<table><tr><th style="width:36px"></th><th>Procedimiento</th><th style="text-align:right">Lista</th></tr>' +
+    lista.map(function(p){
+      const marcado = ELEGIDOS.indexOf(p.id) >= 0 ? ' checked' : '';
+      return '<tr><td><input type="checkbox" class="chk-proc" data-pid="' + esc(p.id) + '"' + marcado + '></td>' +
+             '<td>' + esc(p.nombre) + '</td>' +
+             '<td style="text-align:right">' + pesos(p.precio) + '</td></tr>';
+    }).join('') + '</table>';
+
+  $('r-procs').querySelectorAll('.chk-proc').forEach(function(c){
+    c.onchange = function(){
+      const id = c.dataset.pid;
+      const i = ELEGIDOS.indexOf(id);
+      if (c.checked && i < 0) ELEGIDOS.push(id);
+      if (!c.checked && i >= 0) ELEGIDOS.splice(i, 1);
+      pintaProcElegidos();
+      programaCotizacion();
+    };
+  });
+}
+
+/* Se cotiza con un respiro: el cirujano suele marcar tres casillas
+   seguidas y no tiene caso ir al servidor en cada una. */
+function programaCotizacion(){
+  if (RELOJ_COTIZA) clearTimeout(RELOJ_COTIZA);
+  RELOJ_COTIZA = setTimeout(recotiza, 350);
+}
+
+async function recotiza(){
+  const manual = manualDeCotizacion();
+  if (!ELEGIDOS.length && !manual){
+    COTIZACION = null;
+    $('r-cotiza').innerHTML = '';
+    return;
+  }
+  const noches = $('r-noches').value;
+  try{
+    const r = await api('cotizar', {
+      procedimientos: ELEGIDOS,
+      manual: manual,
+      noches: noches === '' ? null : Number(noches)
+    });
+    COTIZACION = r;
+    pintaCotizacion(r);
+    /* El tarifario sabe cuánto dura y dónde cabe: si lo tiene capturado,
+       se propone, pero nunca se pisa lo que el cirujano ya escribió. */
+    if (r.minutos && !$('r-duracion').dataset.tocado) $('r-duracion').value = r.minutos;
+    if (r.noches !== undefined && $('r-noches').value === '') $('r-noches').value = r.noches;
+  }catch(e){
+    COTIZACION = null;
+    aviso('r-cotiza','malo', e.message);
+  }
+}
+
+function pintaCotizacion(r){
+  const renglones = (r.conceptos || []).map(function(c){
+    return '<tr><td>' + esc(c.nombre) + '</td>' +
+           '<td style="text-align:right">' + pesos(c.precioLista) + '</td>' +
+           '<td style="text-align:right">' + (c.factor === 1 ? '100%' : Math.round(c.factor * 100) + '%') + '</td>' +
+           '<td style="text-align:right"><b>' + pesos(c.importe) + '</b></td></tr>';
+  }).join('');
+
+  let concesion = '';
+  if (r.concesion > 0){
+    concesion = '<tr><td colspan="3">Precio cerrado de lista (la regla daba ' + pesos(r.subtotalRegla) + ')</td>' +
+                '<td style="text-align:right">−' + pesos(r.concesion) + '</td></tr>';
+  }
+
+  const noches = r.subtotalNoches > 0
+    ? '<tr><td colspan="3">' + r.noches + ' noche(s) de hospitalización a ' + pesos(r.tarifaNoche) + '</td>' +
+      '<td style="text-align:right">' + pesos(r.subtotalNoches) + '</td></tr>'
+    : '';
+
+  const avisos = (r.avisos || []).length
+    ? '<div class="aviso warn" style="margin-top:12px">' + r.avisos.map(esc).join('<br>') + '</div>'
+    : '';
+
+  $('r-cotiza').innerHTML =
+    '<div class="tabla-scroll" style="margin-top:16px"><table>' +
+      '<tr><th>Concepto</th><th style="text-align:right">Lista</th><th style="text-align:right">Factor</th><th style="text-align:right">Importe</th></tr>' +
+      renglones + concesion + noches +
+      '<tr><td colspan="3"><b>Total Renasté</b></td><td style="text-align:right"><b>' + pesos(r.total) + '</b></td></tr>' +
+    '</table></div>' +
+    (r.quirofanoSugerido ? '<div class="sub" style="margin-top:8px">Quirófano sugerido: ' + esc(r.quirofanoSugerido) +
+      (r.minutos ? ' · ' + r.minutos + ' min incluidos' : '') + '</div>' : '') +
+    (NO_INCLUYE ? '<div class="sub" style="margin-top:8px">' + esc(NO_INCLUYE) + '</div>' : '') +
+    avisos;
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  $('r-filtro-proc').oninput = pintaProcedimientos;
+  $('r-noches').oninput = programaCotizacion;
+  $('r-proc-otro').oninput = function(){ pintaProcElegidos(); programaCotizacion(); };
+  $('r-proc-precio').oninput = function(){ pintaProcElegidos(); programaCotizacion(); };
+  $('r-duracion').addEventListener('input', function(){ $('r-duracion').dataset.tocado = '1'; });
+  $('r-limpiar-proc').onclick = function(){
+    ELEGIDOS = []; COTIZACION = null;
+    $('r-noches').value = ''; $('r-filtro-proc').value = '';
+    $('r-proc-otro').value = ''; $('r-proc-precio').value = '';
+    $('r-cotiza').innerHTML = '';
+    delete $('r-duracion').dataset.tocado;
+    pintaProcedimientos();
+  };
+});
+
+/* ── Cotización dentro del caso ────────────────────────────────
+   Dos cosas que la realidad del quirófano exige:
+
+   1. AGREGAR PROCEDIMIENTOS el mismo día. Se recalcula el caso COMPLETO,
+      no se le suma lo nuevo al 50% sobre lo viejo, porque la regla dice
+      que el 100% es siempre el más caro. Si lo agregado resulta más caro
+      que lo programado, el que sube al 100% es el nuevo. Por eso la
+      pantalla muestra los tres números: lo que estaba, lo que queda y la
+      diferencia a cobrar.
+
+   2. AJUSTAR EL PRECIO. El botón sólo aparece si el rol lo permite, y el
+      backend lo vuelve a verificar: que un botón esté escondido no es una
+      medida de seguridad. */
+
+let COT_CASO = null, COT_ELEGIDOS = [], COT_PERMISOS = null, RELOJ_PREVIA = null;
+
+/* El concepto que se capturó a mano en la cotización vigente, si lo hay. Se
+   reconoce porque es el único sin Paquete_ID: el catálogo siempre trae uno. */
+function manualVigenteDelCaso(){
+  const lista = (COT_CASO && COT_CASO.conceptos) || [];
+  for (let i = 0; i < lista.length; i++){
+    if (!String(lista[i].Paquete_ID || '').trim()){
+      return { nombre: String(lista[i].Nombre || '').trim(),
+               precio: Number(lista[i].Precio_Lista) || 0 };
+    }
+  }
+  return null;
+}
+
+/* El renglón a mano que viaja al backend al recotizar, o null. Mismo criterio
+   que en la reserva: nombre sin precio no se cotiza y precio sin nombre no
+   significa nada. */
+function manualDeCotizacionCaso(){
+  const nombre = String($('c-proc-otro').value || '').trim();
+  const precio = Number($('c-proc-precio').value);
+  if (!nombre || !(precio > 0)) return null;
+  return { nombre: nombre, precio: precio };
+}
+
+async function cargaCotizacionDeCaso(casoId, puedoEditar){
+  $('c-cotiza-caja').classList.add('oculto');
+  $('c-recotiza-caja').classList.add('oculto');
+  $('c-ajuste-caja').classList.add('oculto');
+  $('c-recotiza-msg').textContent = '';
+  $('c-ajuste-msg').textContent = '';
+
+  let d;
+  try{ d = await api('procedimientosDeCaso', {casoId: casoId}); }
+  catch(e){
+    /* Un backend sin el módulo de ajustes no debe romper la pantalla del
+       caso: simplemente no se ofrece la cotización. */
+    return;
+  }
+
+  COT_CASO = d;
+  /* El backend arma esta lista con el Paquete_ID de cada concepto, y el
+     concepto capturado a mano no tiene paquete: viene como cadena vacía.
+     Sin este filtro esa cadena viajaba de regreso como si fuera un
+     procedimiento y el backend la rechazaba («no reconozco: »), de modo que
+     un caso cotizado a precio libre NO se podía recotizar. */
+  COT_ELEGIDOS = (d.procedimientos || []).filter(function (x) { return !!x; });
+  COT_PERMISOS = d.permisos || {};
+
+  $('c-cotiza-caja').classList.remove('oculto');
+  pintaCotizacionCaso(d);
+
+  $('c-recotizar').classList.toggle('oculto',
+    !(puedoEditar && COT_PERMISOS.puedeRecotizar));
+  $('c-ajustar').classList.toggle('oculto',
+    !(puedoEditar && COT_PERMISOS.puedeAjustar && d.cotizacion));
+}
+
+function pintaCotizacionCaso(d){
+  const c = d.cotizacion;
+  if (!c){
+    $('c-cotiza').innerHTML = '<div class="aviso warn">Este caso todavía no tiene cotización. ' +
+      'Use «Agregar o cambiar procedimientos» para generarla.</div>';
+    return;
+  }
+
+  const renglones = (d.conceptos || []).map(function(x){
+    const f = Number(x.Factor);
+    return '<tr><td>' + esc(x.Nombre) + '</td>' +
+           '<td style="text-align:right">' + pesos(x.Precio_Lista) + '</td>' +
+           '<td style="text-align:right">' + (f === 1 ? '100%' : Math.round(f*100) + '%') + '</td>' +
+           '<td style="text-align:right"><b>' + pesos(x.Importe) + '</b></td></tr>';
+  }).join('');
+
+  const noches = Number(c.Subtotal_Noches) > 0
+    ? '<tr><td colspan="3">' + esc(c.Noches_Cotizadas) + ' noche(s) a ' + pesos(c.Tarifa_Noche) +
+      '</td><td style="text-align:right">' + pesos(c.Subtotal_Noches) + '</td></tr>'
+    : '';
+
+  const ajuste = Number(c.Ajuste_Monto)
+    ? '<tr><td colspan="3">' + (Number(c.Ajuste_Monto) < 0 ? 'Descuento' : 'Sobreprecio') +
+      ' · ' + esc(c.Ajuste_Motivo || '') + '</td>' +
+      '<td style="text-align:right">' + (Number(c.Ajuste_Monto) > 0 ? '+' : '−') +
+      pesos(Math.abs(Number(c.Ajuste_Monto))) + '</td></tr>'
+    : '';
+
+  const firma = Number(c.Ajuste_Monto)
+    ? '<div class="sub" style="margin-top:8px">Ajustado por ' + esc(c.Ajuste_Por || '') +
+      ' el ' + esc(String(c.Ajuste_Timestamp || '').replace('T',' ').slice(0,16)) +
+      ' · precio calculado ' + pesos(c.Subtotal_Antes_Ajuste) + '</div>'
+    : '';
+
+  $('c-cotiza').innerHTML =
+    '<div class="tabla-scroll"><table>' +
+      '<tr><th>Concepto</th><th style="text-align:right">Lista</th>' +
+      '<th style="text-align:right">Factor</th><th style="text-align:right">Importe</th></tr>' +
+      renglones + noches + ajuste +
+      '<tr><td colspan="3"><b>Total Renasté</b></td>' +
+      '<td style="text-align:right"><b>' + pesos(c.Total) + '</b></td></tr>' +
+    '</table></div>' +
+    '<div class="sub" style="margin-top:8px">' + esc(c.Folio_Cotizacion || '') +
+      (c.Vigencia_Hasta ? ' · vigente hasta ' + esc(c.Vigencia_Hasta) : '') + '</div>' +
+    firma;
+}
+
+function pintaProcsCaso(){
+  const f = ($('c-filtro-proc').value || '').trim().toLowerCase();
+  const lista = CATALOGO.filter(function(p){
+    return !f || String(p.nombre).toLowerCase().indexOf(f) >= 0;
+  });
+  if (!lista.length){
+    $('c-procs').innerHTML = '<div class="aviso warn">Sin procedimientos que coincidan.</div>';
+    return;
+  }
+  $('c-procs').innerHTML = '<table><tr><th style="width:36px"></th><th>Procedimiento</th>' +
+    '<th style="text-align:right">Lista</th></tr>' +
+    lista.map(function(p){
+      const m = COT_ELEGIDOS.indexOf(p.id) >= 0 ? ' checked' : '';
+      return '<tr><td><input type="checkbox" class="chk-cproc" data-pid="' + esc(p.id) + '"' + m + '></td>' +
+             '<td>' + esc(p.nombre) + '</td>' +
+             '<td style="text-align:right">' + pesos(p.precio) + '</td></tr>';
+    }).join('') + '</table>';
+
+  $('c-procs').querySelectorAll('.chk-cproc').forEach(function(ch){
+    ch.onchange = function(){
+      const id = ch.dataset.pid, i = COT_ELEGIDOS.indexOf(id);
+      if (ch.checked && i < 0) COT_ELEGIDOS.push(id);
+      if (!ch.checked && i >= 0) COT_ELEGIDOS.splice(i, 1);
+      programaPrevia();
+    };
+  });
+}
+
+function programaPrevia(){
+  if (RELOJ_PREVIA) clearTimeout(RELOJ_PREVIA);
+  RELOJ_PREVIA = setTimeout(previaRecotiza, 350);
+}
+
+/* La previa no escribe nada: es para que se vea la diferencia ANTES de
+   comprometerla, no después. */
+async function previaRecotiza(){
+  const manual = manualDeCotizacionCaso();
+  if (!COT_ELEGIDOS.length && !manual){ $('c-previa').innerHTML = ''; return; }
+  const antes = COT_CASO && COT_CASO.cotizacion ? Number(COT_CASO.cotizacion.Total) || 0 : 0;
+  try{
+    const r = await api('cotizar', {
+      procedimientos: COT_ELEGIDOS,
+      manual: manual,
+      noches: $('c-noches').value === '' ? null : Number($('c-noches').value)
+    });
+    const dif = r.total - antes;
+    $('c-previa').innerHTML =
+      '<div class="tabla-scroll" style="margin-top:12px"><table>' +
+        r.conceptos.map(function(x){
+          return '<tr><td>' + esc(x.nombre) + '</td>' +
+                 '<td style="text-align:right">' + pesos(x.precioLista) + '</td>' +
+                 '<td style="text-align:right">' + (x.factor === 1 ? '100%' : Math.round(x.factor*100) + '%') + '</td>' +
+                 '<td style="text-align:right"><b>' + pesos(x.importe) + '</b></td></tr>';
+        }).join('') +
+        (r.subtotalNoches > 0
+          ? '<tr><td colspan="3">' + r.noches + ' noche(s) a ' + pesos(r.tarifaNoche) +
+            '</td><td style="text-align:right">' + pesos(r.subtotalNoches) + '</td></tr>' : '') +
+        '<tr><td colspan="3">Estaba cotizado en</td><td style="text-align:right">' + pesos(antes) + '</td></tr>' +
+        '<tr><td colspan="3"><b>Queda en</b></td><td style="text-align:right"><b>' + pesos(r.total) + '</b></td></tr>' +
+        '<tr><td colspan="3"><b>' + (dif >= 0 ? 'Diferencia a cobrar' : 'A favor del paciente') + '</b></td>' +
+        '<td style="text-align:right"><b>' + (dif >= 0 ? '' : '−') + pesos(Math.abs(dif)) + '</b></td></tr>' +
+      '</table></div>' +
+      ((r.avisos || []).length
+        ? '<div class="aviso warn" style="margin-top:12px">' + r.avisos.map(esc).join('<br>') + '</div>' : '') +
+      (NO_INCLUYE ? '<div class="sub" style="margin-top:8px">' + esc(NO_INCLUYE) + '</div>' : '');
+  }catch(e){ aviso('c-previa','malo', e.message); }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  $('c-recotizar').onclick = function(){
+    $('c-ajuste-caja').classList.add('oculto');
+    const abierta = !$('c-recotiza-caja').classList.contains('oculto');
+    $('c-recotiza-caja').classList.toggle('oculto', abierta);
+    if (abierta) return;
+    $('c-noches').value = COT_CASO && COT_CASO.noches ? COT_CASO.noches : '';
+    $('c-filtro-proc').value = '';
+    /* Se precargan para no perderlos: la recotización reemplaza la cotización
+       entera, no le suma renglones. */
+    const man = manualVigenteDelCaso();
+    $('c-proc-otro').value   = man ? man.nombre : '';
+    $('c-proc-precio').value = man ? man.precio : '';
+    pintaProcsCaso();
+    previaRecotiza();
+  };
+  $('c-filtro-proc').oninput = pintaProcsCaso;
+  $('c-noches').oninput = programaPrevia;
+  $('c-proc-otro').oninput = programaPrevia;
+  $('c-proc-precio').oninput = programaPrevia;
+  $('c-recotiza-no').onclick = function(){
+    $('c-recotiza-caja').classList.add('oculto');
+    COT_ELEGIDOS = COT_CASO
+      ? (COT_CASO.procedimientos || []).filter(function (x) { return !!x; })
+      : [];
+  };
+
+  $('c-recotiza-ok').onclick = async function(){
+    const manual = manualDeCotizacionCaso();
+    if (!COT_ELEGIDOS.length && !manual){
+      aviso('c-recotiza-msg','warn',
+            'Elija al menos un procedimiento del catálogo, o escriba uno fuera ' +
+            'del catálogo con su precio.'); return;
+    }
+    try{
+      const r = await api('recotizarCaso', {
+        casoId: COT_CASO.casoId,
+        procedimientos: COT_ELEGIDOS,
+        manual: manual,
+        noches: $('c-noches').value === '' ? null : Number($('c-noches').value),
+        momento: 'Dia de cirugia'
+      });
+      $('c-recotiza-msg').innerHTML = '<span class="pastilla ok">' + esc(r.folio) + ': ' +
+        esc(pesos(r.total)) + '</span>' +
+        (r.diferencia ? ' <span class="pastilla warn">' +
+          (r.diferencia > 0 ? 'a cobrar ' : 'a favor ') + esc(pesos(Math.abs(r.diferencia))) +
+          '</span>' : '');
+      $('c-recotiza-caja').classList.add('oculto');
+      await cargaCotizacionDeCaso(COT_CASO.casoId, true);
+    }catch(e){ aviso('c-recotiza-msg','malo', e.message); }
+  };
+
+  $('c-ajustar').onclick = function(){
+    $('c-recotiza-caja').classList.add('oculto');
+    $('c-ajuste-caja').classList.toggle('oculto',
+      !$('c-ajuste-caja').classList.contains('oculto'));
+    ['c-ajuste-monto','c-ajuste-pct','c-ajuste-motivo'].forEach(i => $(i).value = '');
+    $('c-ajuste-msg').textContent = '';
+  };
+  $('c-ajuste-no').onclick = function(){ $('c-ajuste-caja').classList.add('oculto'); };
+
+  /* Monto y porcentaje son la misma decisión escrita de dos formas: llenar
+     uno limpia el otro, para que nunca se manden los dos en desacuerdo. */
+  $('c-ajuste-monto').oninput = function(){ if ($('c-ajuste-monto').value !== '') $('c-ajuste-pct').value = ''; };
+  $('c-ajuste-pct').oninput = function(){ if ($('c-ajuste-pct').value !== '') $('c-ajuste-monto').value = ''; };
+
+  $('c-ajuste-ok').onclick = async function(){
+    const monto = $('c-ajuste-monto').value, pct = $('c-ajuste-pct').value;
+    const motivo = $('c-ajuste-motivo').value.trim();
+    const minimo = (COT_PERMISOS && COT_PERMISOS.motivoMinimo) || 10;
+    if (monto === '' && pct === ''){
+      aviso('c-ajuste-msg','warn','Escriba el monto o el porcentaje.'); return;
+    }
+    if (motivo.length < minimo){
+      aviso('c-ajuste-msg','warn','El motivo necesita al menos ' + minimo + ' caracteres.'); return;
+    }
+    try{
+      const r = await api('ajustarCotizacion', {
+        cotizacionId: COT_CASO.cotizacion.Cotizacion_ID,
+        monto: monto === '' ? null : Number(monto),
+        pct: pct === '' ? null : Number(pct),
+        motivo: motivo
+      });
+      $('c-ajuste-msg').innerHTML = '<span class="pastilla ok">' +
+        esc(r.tipo === 'descuento' ? 'Descuento' : 'Sobreprecio') + ' de ' +
+        esc(pesos(Math.abs(r.ajuste))) + ' · total ' + esc(pesos(r.total)) + '</span>';
+      $('c-ajuste-caja').classList.add('oculto');
+      await cargaCotizacionDeCaso(COT_CASO.casoId, true);
+    }catch(e){ aviso('c-ajuste-msg','malo', e.message); }
+  };
+});
 
 /* ── Pendientes ───────────────────────────────────────────── */
 async function cargaPendientes(){
@@ -1740,6 +2571,295 @@ $('f-guardar').onclick = async function(){
     $('f-msg').innerHTML = '<span class="pastilla ok">Guardado</span>';
   }catch(e){ $('f-msg').innerHTML = '<span class="pastilla warn">'+esc(e.message)+'</span>'; }
 };
+
+/* ── Cotizar para mandar ───────────────────────────────────────
+   Una cotización suelta: sin caso, sin quirófano y sin paciente dado de alta.
+   Es la que se le manda a quien todavía está decidiendo. El apartado viene
+   después, por «Reservar», y ahí se amarra sola al caso.
+
+   Los renglones fuera de catálogo son N, no uno: un ginecólogo puede traer
+   histeroscopia Y polipectomía, y ninguna de las dos está en el tarifario. */
+
+let COT_ELEGIDOS_Q = [], RELOJ_Q = null, COT_LIBRES = 0;
+
+function abreCotizar(){
+  if (!CATALOGO.length) cargaCatalogoCotizador().then(pintaProcsQ);
+  else pintaProcsQ();
+  if (!COT_LIBRES) agregaLibre();
+  /* El campo de cirujano se pregunta SIEMPRE, también a los médicos.
+
+     Estuvo escondido para el rol `medico` con el argumento de que un médico
+     cotiza lo suyo. En Zorvix eso es falso: el negocio es rentarle el
+     quirófano a cirujanos invitados, y quien cotiza para el invitado suele
+     ser un médico —el dueño— desde su propia cuenta. Esconderlo lo obligaba
+     a cambiarse de cuenta para hacer su trabajo.
+
+     En blanco, la cotización sale a nombre de quien la emite si es médico, y
+     sin cirujano si no lo es. El backend valida el correo contra el padrón,
+     así que no se puede cotizar a nombre de alguien que no existe. */
+  $('q-cirujano').placeholder = YO.rol === 'medico'
+    ? 'En blanco sale a su nombre · o el correo del invitado'
+    : 'correo@gmail.com · opcional';
+  cargaMisCotizaciones();
+}
+
+function pintaProcsQ(){
+  const f = ($('q-filtro').value || '').trim().toLowerCase();
+  const lista = CATALOGO.filter(function(p){
+    return !f || String(p.nombre).toLowerCase().indexOf(f) >= 0;
+  });
+  if (!lista.length){
+    $('q-procs').innerHTML = '<div class="aviso warn">Sin procedimientos que coincidan.</div>';
+    return;
+  }
+  $('q-procs').innerHTML = '<table><tr><th style="width:36px"></th><th>Procedimiento</th>' +
+    '<th style="text-align:right">Lista</th></tr>' +
+    lista.map(function(p){
+      const m = COT_ELEGIDOS_Q.indexOf(p.id) >= 0 ? ' checked' : '';
+      return '<tr><td><input type="checkbox" class="chk-qproc" data-pid="' + esc(p.id) + '"' + m + '></td>' +
+             '<td>' + esc(p.nombre) + '</td>' +
+             '<td style="text-align:right">' + pesos(p.precio) + '</td></tr>';
+    }).join('') + '</table>';
+
+  $('q-procs').querySelectorAll('.chk-qproc').forEach(function(ch){
+    ch.onchange = function(){
+      const id = ch.dataset.pid, i = COT_ELEGIDOS_Q.indexOf(id);
+      if (ch.checked && i < 0) COT_ELEGIDOS_Q.push(id);
+      if (!ch.checked && i >= 0) COT_ELEGIDOS_Q.splice(i, 1);
+      programaPreviaQ();
+    };
+  });
+}
+
+/* Cada renglón libre es un par nombre+precio. Se numeran para que los ids no
+   choquen; el orden en pantalla es el orden en que se cotizan. */
+function agregaLibre(nombre, precio){
+  const n = ++COT_LIBRES;
+  const caja = document.createElement('div');
+  caja.className = 'rejilla';
+  caja.dataset.libre = String(n);
+  caja.innerHTML =
+    '<div><label for="q-lib-nom-' + n + '">Procedimiento</label>' +
+      '<input id="q-lib-nom-' + n + '" class="q-lib-nom" maxlength="120" ' +
+      'placeholder="Histeroscopia diagnóstica" value="' + esc(nombre || '') + '"></div>' +
+    '<div><label for="q-lib-pre-' + n + '">Precio</label>' +
+      '<input type="number" id="q-lib-pre-' + n + '" class="q-lib-pre" min="0" step="100" ' +
+      'inputmode="numeric" placeholder="6000" value="' + (precio ? esc(precio) : '') + '"></div>';
+  $('q-libres').appendChild(caja);
+  caja.querySelectorAll('input').forEach(function(i){ i.oninput = programaPreviaQ; });
+}
+
+/* Lo que viaja al backend. Mismo criterio que en la reserva: nombre sin precio
+   no se cotiza —no se le inventa cero— y precio sin nombre no significa nada. */
+function manualesDeCot(){
+  const salida = [];
+  $('q-libres').querySelectorAll('[data-libre]').forEach(function(caja){
+    const nombre = String(caja.querySelector('.q-lib-nom').value || '').trim();
+    const precio = Number(caja.querySelector('.q-lib-pre').value);
+    if (!nombre || !(precio > 0)) return;
+    salida.push({ nombre: nombre, precio: precio });
+  });
+  return salida;
+}
+
+function programaPreviaQ(){
+  if (RELOJ_Q) clearTimeout(RELOJ_Q);
+  RELOJ_Q = setTimeout(previaQ, 350);
+}
+
+/* La previa no escribe nada: es para ver el número antes de comprometer un
+   folio. Cada «Emitir» gasta un folio de la serie COT. */
+async function previaQ(){
+  const manuales = manualesDeCot();
+  if (!COT_ELEGIDOS_Q.length && !manuales.length){ $('q-previa').innerHTML = ''; return; }
+  try{
+    const r = await api('cotizar', {
+      procedimientos: COT_ELEGIDOS_Q,
+      manuales: manuales,
+      noches: $('q-noches').value === '' ? null : Number($('q-noches').value)
+    });
+    $('q-previa').innerHTML =
+      '<div class="tabla-scroll" style="margin-top:16px"><table>' +
+        '<tr><th>Concepto</th><th style="text-align:right">Lista</th>' +
+        '<th style="text-align:right">Aplica</th><th style="text-align:right">Importe</th></tr>' +
+        r.conceptos.map(function(x){
+          return '<tr><td>' + esc(x.nombre) + '</td>' +
+                 '<td style="text-align:right">' + pesos(x.precioLista) + '</td>' +
+                 '<td style="text-align:right">' + (x.factor === 1 ? '100%' : Math.round(x.factor*100) + '%') + '</td>' +
+                 '<td style="text-align:right"><b>' + pesos(x.importe) + '</b></td></tr>';
+        }).join('') +
+        (r.subtotalNoches > 0
+          ? '<tr><td colspan="3">' + r.noches + ' noche(s) a ' + pesos(r.tarifaNoche) +
+            '</td><td style="text-align:right">' + pesos(r.subtotalNoches) + '</td></tr>' : '') +
+        '<tr><td colspan="3"><b>Total Renasté</b></td>' +
+        '<td style="text-align:right"><b>' + pesos(r.total) + '</b></td></tr>' +
+      '</table></div>' +
+      ((r.avisos || []).length
+        ? '<div class="aviso warn" style="margin-top:12px">' + r.avisos.map(esc).join('<br>') + '</div>' : '') +
+      (NO_INCLUYE ? '<div class="sub" style="margin-top:8px">' + esc(NO_INCLUYE) + '</div>' : '');
+  }catch(e){ aviso('q-previa','malo', e.message); }
+}
+
+/* El mensaje que lee el paciente. Va de USTED, como todo lo que sale de aquí
+   hacia afuera. Si no hay cirujano, la frase se acomoda sola en vez de mandar
+   un hueco. */
+function mensajeCotizacion(nombre, folio, url, vence, total, cirujano){
+  const medico = String(cirujano || '').trim();
+  const oficio = /^dra\.?\s/i.test(medico) ? 'cirujana' : 'cirujano';
+  const presenta = medico
+    ? 'Somos *Clínicas Renasté*, la clínica donde su ' + oficio +
+      ', *' + medico + '*, realiza sus cirugías.'
+    : 'Somos *Clínicas Renasté*.';
+
+  return 'Hola, ' + nombre + '.\n\n' + presenta + '\n\n' +
+    'Le preparamos su cotización *' + folio + '*, por *' + total + '*.\n\n' +
+    'Puede verla completa desde su celular aquí:\n\n' + url + '\n\n' +
+    (vence ? 'Este precio está vigente hasta el *' + fechaLarga(vence) + '*.\n\n' : '') +
+    'Esta cotización corresponde únicamente a lo que cobra Clínicas Renasté. Los honorarios ' +
+    'de su cirujano y del anestesiólogo se pagan por separado y directamente con ellos.\n\n' +
+    'Quedamos al pendiente para resolverle cualquier duda.';
+}
+
+/* El resultado reemplaza nada: se pinta debajo y deja el formulario como
+   estaba, por si hay que emitir otra parecida. WhatsApp NO se abre solo —un
+   window.open después de un await ya no cuenta como consecuencia del clic y
+   Chrome lo bloquea— así que se deja un enlace que la persona aprieta. */
+function pintaResultadoQ(r, telefono){
+  const nombre = String($('q-paciente').value || '').trim().split(/\s+/)[0];
+  const texto  = mensajeCotizacion(nombre, r.folio, r.url, r.vigenciaHasta,
+                                   pesos(r.total), r.cirujanoNombre);
+  const tel = String(telefono || '').replace(/\D/g, '').slice(-10);
+
+  const caja = $('q-resultado');
+  caja.classList.remove('oculto');
+  caja.innerHTML =
+    '<div class="aviso ok" style="margin-top:16px">' +
+      '<b>' + esc(r.folio) + '</b> · ' + esc(pesos(r.total)) +
+      (r.vigenciaHasta ? ' · vigente hasta ' + esc(fechaLarga(r.vigenciaHasta)) : '') +
+    '</div>' +
+    /* El recordatorio del alta va AQUÍ, para quien cotiza, y no en los avisos
+       de la cotización: eso último lo lee el paciente y no tiene por qué
+       enterarse del papeleo interno de su cirujano. */
+    (r.fueraDePadron
+      ? '<div class="aviso warn">' + esc(r.cirujanoNombre || 'Ese cirujano') +
+        ' todavía no está en el padrón. La cotización ya se puede mandar, pero ' +
+        'para apartarle quirófano hay que darlo de alta primero.</div>'
+      : '') +
+    '<div class="fila" id="q-acciones"></div>' +
+    '<div class="meta" style="margin-top:6px">La liga quedó copiada al portapapeles. ' +
+      'Si emite otra cotización para esta persona, ésta deja de servir.</div>';
+
+  const acciones = $('q-acciones');
+
+  if (tel){
+    const a = document.createElement('a');
+    a.className = 'btn'; a.style.display = 'inline-block'; a.style.textDecoration = 'none';
+    a.href = 'https://wa.me/52' + tel + '?text=' + encodeURIComponent(texto);
+    a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = 'Abrir WhatsApp con el mensaje listo';
+    acciones.appendChild(a);
+  }
+
+  const ver = document.createElement('a');
+  ver.className = 'btn sec'; ver.style.display = 'inline-block'; ver.style.textDecoration = 'none';
+  ver.href = r.url; ver.target = '_blank'; ver.rel = 'noopener';
+  ver.textContent = 'Abrir la hoja para imprimir';
+  acciones.appendChild(ver);
+
+  try { navigator.clipboard.writeText(r.url); } catch(e){ /* sin portapapeles, ni modo */ }
+}
+
+async function cargaMisCotizaciones(){
+  try{
+    const r = await api('misCotizaciones', {tope: 30});
+    const lista = r.cotizaciones || [];
+    if (!lista.length){
+      $('q-lista').innerHTML = '<div class="meta">Todavía no hay cotizaciones emitidas.</div>';
+      return;
+    }
+    $('q-lista').innerHTML = '<div class="tabla-scroll"><table>' +
+      '<tr><th>Folio</th><th>Paciente</th><th>Procedimientos</th>' +
+      '<th style="text-align:right">Total</th><th>Vigente hasta</th><th></th></tr>' +
+      lista.map(function(c){
+        return '<tr><td>' + esc(c.folio) + '</td>' +
+               '<td>' + esc(c.paciente) + '</td>' +
+               '<td>' + esc(c.procedimientos) + '</td>' +
+               '<td style="text-align:right">' + pesos(c.total) + '</td>' +
+               '<td>' + esc(c.vigenciaHasta) + '</td>' +
+               '<td><button class="btn sec" type="button" data-liga-cot="' +
+                 esc(c.cotizacionId) + '">Volver a mandar</button></td></tr>';
+      }).join('') + '</table></div>';
+
+    $('q-lista').querySelectorAll('[data-liga-cot]').forEach(function(b){
+      b.onclick = function(){ reenviaLiga(b); };
+    });
+  }catch(e){ aviso('q-lista','malo', e.message); }
+}
+
+async function reenviaLiga(boton){
+  const original = boton.textContent;
+  boton.disabled = true; boton.textContent = 'Generando…';
+  try{
+    const r = await api('ligaCotizacion', {cotizacionId: boton.dataset.ligaCot});
+    try { await navigator.clipboard.writeText(r.url); } catch(e){ /* ni modo */ }
+    const caja = document.createElement('span');
+    const a = document.createElement('a');
+    a.href = r.url; a.target = '_blank'; a.rel = 'noopener';
+    a.className = 'btn sec'; a.style.textDecoration = 'none';
+    a.textContent = 'Abrir ' + r.folio;
+    caja.appendChild(a);
+    boton.replaceWith(caja);
+  }catch(e){
+    boton.disabled = false; boton.textContent = original;
+    alert('No se pudo generar la liga: ' + e.message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  $('q-filtro').oninput = pintaProcsQ;
+  $('q-noches').oninput = programaPreviaQ;
+  $('q-mas').onclick = function(){ agregaLibre(); };
+
+  $('q-limpiar').onclick = function(){
+    COT_ELEGIDOS_Q = [];
+    $('q-paciente').value = ''; $('q-tel').value = '';
+    $('q-cirujano').value = ''; $('q-cirujano-nombre').value = '';
+    $('q-noches').value = '';
+    $('q-filtro').value = '';
+    $('q-libres').innerHTML = ''; COT_LIBRES = 0; agregaLibre();
+    $('q-previa').innerHTML = ''; $('q-msg').textContent = '';
+    $('q-resultado').classList.add('oculto');
+    pintaProcsQ();
+  };
+
+  $('q-emitir').onclick = async function(){
+    const paciente = String($('q-paciente').value || '').trim();
+    const manuales = manualesDeCot();
+    if (!paciente){
+      aviso('q-msg','warn','Escriba a nombre de quién va la cotización.'); return;
+    }
+    if (!COT_ELEGIDOS_Q.length && !manuales.length){
+      aviso('q-msg','warn','Elija al menos un procedimiento del catálogo, o escriba ' +
+            'uno fuera del catálogo con su precio.'); return;
+    }
+    const boton = this;
+    boton.disabled = true;
+    try{
+      const r = await api('cotizacionLibre', {
+        pacienteNombre: paciente,
+        cirujanoEmail: String($('q-cirujano').value || '').trim(),
+        cirujanoNombre: String($('q-cirujano-nombre').value || '').trim(),
+        procedimientos: COT_ELEGIDOS_Q,
+        manuales: manuales,
+        noches: $('q-noches').value === '' ? null : Number($('q-noches').value)
+      });
+      $('q-msg').textContent = '';
+      pintaResultadoQ(r, $('q-tel').value);
+      cargaMisCotizaciones();
+    }catch(e){ aviso('q-msg','malo', e.message); }
+    finally { boton.disabled = false; }
+  };
+});
 </script>
 </body>
 </html>
