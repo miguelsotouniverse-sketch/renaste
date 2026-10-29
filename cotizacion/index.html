@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clínicas Renasté · Su cotización</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Cotización de tiempo quirúrgico en Clínicas Renasté">
+<meta name="theme-color" content="#7B5DC2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16131F" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="../assets/renaste-favicon.png">
+<link rel="apple-touch-icon" href="../assets/renaste-iso.png">
+<link rel="stylesheet" href="../renaste-tokens.css">
+<script>
+/* El tema antes de pintar, para no enseñar el destello blanco. */
+(function(){
+  var t=null; try{ t=localStorage.getItem('renaste-tema'); }catch(e){}
+  if(!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
+  document.documentElement.setAttribute('data-tema', t);
+})();
+</script>
+<style>
+/* Esta página hace DOS trabajos con un solo archivo:
+
+   1. En el celular del paciente es lo que abre desde el WhatsApp.
+   2. En la clínica es la hoja que se imprime o se guarda en PDF.
+
+   Por eso toda la decisión de impresión vive en @media print y no hay una
+   segunda plantilla que se desincronice de ésta. Lo que el paciente ve en la
+   pantalla y lo que sale en el papel son el mismo documento. */
+:root{
+  color-scheme: light;
+  --morado:var(--zx-violeta-600); --morado-50:var(--zx-violeta-050);
+  --tinta:var(--zx-txt); --tinta2:var(--zx-txt-2); --tinta3:var(--zx-txt-3);
+  --papel:var(--zx-superficie); --fondo:var(--zx-lienzo); --linea:var(--zx-borde);
+  --ok-bg:var(--zx-ok-bg); --ok-txt:var(--zx-ok-txt); --ok-linea:var(--zx-ok);
+  --al-bg:var(--zx-alerta-bg); --al-txt:var(--zx-alerta-txt); --al-linea:var(--zx-alerta);
+  --mal-bg:var(--zx-error-bg); --mal-txt:var(--zx-error-txt); --mal-linea:var(--zx-error);
+  --r:var(--zx-r-tarjeta);
+}
+html[data-tema="oscuro"]{ color-scheme: dark; }
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--fondo); color:var(--tinta);
+  font-family:var(--zx-cuerpo, "Inter", system-ui, -apple-system, sans-serif);
+  font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  padding:0 0 env(safe-area-inset-bottom,0px);
+}
+h1,h2{font-family:var(--zx-titulo, "Space Grotesk", system-ui, sans-serif);letter-spacing:-.01em;margin:0}
+h1{font-size:1.35rem}
+h2{font-size:1rem;text-transform:uppercase;letter-spacing:.08em;color:var(--tinta2);font-weight:600}
+.oculto{display:none !important}
+button{font:inherit}
+
+.envoltura{max-width:680px;margin:0 auto;padding:0 16px 48px}
+.centro{text-align:center;padding:64px 16px;color:var(--tinta2)}
+
+header{text-align:center;padding:28px 16px 12px}
+header img{height:48px;width:auto}
+header .sub{color:var(--tinta2);font-size:.9rem;margin-top:6px}
+
+.hoja{
+  background:var(--papel); border:1px solid var(--linea); border-radius:var(--r);
+  padding:22px; margin-top:18px;
+}
+
+.datos{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px 20px;margin-bottom:20px}
+.dato .et{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--tinta3)}
+.dato .vl{font-weight:600}
+
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;
+   color:var(--tinta3);font-weight:600;padding:0 0 8px;border-bottom:1px solid var(--linea)}
+td{padding:11px 0;border-bottom:1px solid var(--linea);vertical-align:top}
+.num{text-align:right;white-space:nowrap}
+.total td{border-bottom:none;padding-top:16px;font-size:1.15rem;font-weight:700}
+.total .num{color:var(--morado)}
+.matiz{font-size:.82rem;color:var(--tinta3);margin-top:2px}
+
+.aviso{border-radius:var(--zx-r-control);padding:12px 14px;margin:14px 0;font-size:.92rem;
+       border:1px solid transparent}
+.aviso.ok{background:var(--ok-bg);color:var(--ok-txt);border-color:var(--ok-linea)}
+.aviso.alerta{background:var(--al-bg);color:var(--al-txt);border-color:var(--al-linea)}
+.aviso.malo{background:var(--mal-bg);color:var(--mal-txt);border-color:var(--mal-linea)}
+
+.pie{color:var(--tinta3);font-size:.85rem;margin-top:22px}
+.pie strong{color:var(--tinta2)}
+
+.acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.btn{background:var(--morado);color:#fff;border:0;border-radius:var(--zx-r-control);
+     padding:12px 20px;font-weight:600;cursor:pointer}
+.btn.sec{background:transparent;color:var(--morado);border:1px solid var(--morado)}
+
+/* ─── El papel ───────────────────────────────────────────────────────────
+   Se imprime en claro SIEMPRE, aunque el celular esté en tema oscuro: una
+   hoja con fondo negro se come el tóner y se lee peor. Y desaparecen los
+   botones, que en papel no sirven para nada. */
+@media print{
+  html[data-tema="oscuro"]{ color-scheme: light; }
+  html,body{background:#fff;color:#000}
+  .acciones,.no-imprime{display:none !important}
+  .envoltura{max-width:none;padding:0}
+  .hoja{border:0;border-radius:0;padding:0;margin-top:8px;background:#fff}
+  header{padding:0 0 10px}
+  td,th{border-color:#ccc}
+  .matiz{color:#555}
+  .aviso{border:1px solid #999;background:transparent;color:#000}
+  @page{margin:16mm}
+}
+</style>
+</head>
+<body>
+
+<div id="cargando" class="centro">Abriendo su cotización…</div>
+
+<!-- Liga inválida, vencida o reemplazada. -->
+<div id="pantalla-error" class="oculto">
+  <header>
+    <img src="../assets/renaste-iso.png" alt="Clínicas Renasté">
+    <h1>No pudimos abrir su cotización</h1>
+  </header>
+  <div class="envoltura">
+    <div class="aviso malo" id="error-texto"></div>
+    <p class="pie">Escríbanos por WhatsApp y con gusto le mandamos una liga nueva.</p>
+  </div>
+</div>
+
+<div id="pantalla" class="oculto">
+  <header>
+    <img src="../assets/renaste-iso.png" alt="Clínicas Renasté">
+    <div class="sub">Centro Quirúrgico Especializado</div>
+  </header>
+
+  <div class="envoltura">
+    <div class="hoja">
+      <h1>Cotización de tiempo quirúrgico</h1>
+      <div id="estado-vigencia"></div>
+
+      <div class="datos" id="datos"></div>
+
+      <h2>Conceptos</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Procedimiento</th>
+            <th class="num">Importe</th>
+          </tr>
+        </thead>
+        <tbody id="conceptos"></tbody>
+      </table>
+
+      <p class="pie" id="nota-paciente"></p>
+      <p class="pie" id="no-incluye"></p>
+      <p class="pie">
+        <strong>Esta cotización corresponde únicamente a lo que cobra Clínicas Renasté.</strong>
+        Los honorarios de su cirujano y del anestesiólogo se pagan por separado
+        y directamente con ellos.
+      </p>
+    </div>
+
+    <div class="acciones">
+      <button class="btn" id="imprimir" type="button">Imprimir o guardar en PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   El token es lo único que identifica esta cotización. No viaja ningún
+   Cotizacion_ID ni por la URL ni en la petición: no hay número que cambiar
+   para ver el precio de otra persona.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const API = 'https://script.google.com/macros/s/AKfycbwVoNMAxS-bSAbu5jwNUlutJ6Jaq5-sAJNq3Bq8YPfhLZ9MFkmKGwkXiRlI_FcapAL_/exec';
+
+const TOKEN = new URLSearchParams(location.search).get('t') || '';
+
+const $ = (id) => document.getElementById(id);
+
+/* `credentials:'omit'` NO es opcional: con varias cuentas de Google abiertas,
+   Google redirige /macros/s/.../exec a /macros/u/<N>/s/.../exec y devuelve 404.
+   Sin omit, el paciente ve una página muerta sin saber por qué. */
+async function llamar(cuerpo) {
+  const r = await fetch(API, {
+    method: 'POST', credentials: 'omit',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ token: TOKEN }, cuerpo))
+  });
+  return await r.json();
+}
+
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;');
+
+const pesos = (n) => '$' + (Math.round(Number(n) || 0)).toLocaleString('es-MX');
+
+const MESES = ['enero','febrero','marzo','abril','mayo','junio',
+               'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+/* "2026-10-13" -> "13 de octubre de 2026". Se arma a mediodía a propósito: con
+   T00:00 un huso negativo recorre la fecha al día anterior.
+
+   El segundo camino NO es adorno. Cuando la hoja de cálculo devuelve una fecha
+   como objeto y no como texto, lo que llega aquí es "Tue Oct 13 2026 …". La
+   versión anterior recortaba a diez caracteres y le imprimía al paciente
+   «Tue Oct 13». Si no viene en ISO, se intenta interpretar la fecha completa
+   antes de rendirse, y sólo se devuelve el texto crudo cuando de veras no se
+   pudo entender. */
+function fechaLarga(iso){
+  const bruto = String(iso || '').trim();
+  if (!bruto) return '';
+  const s = bruto.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const d = new Date(s + 'T12:00:00');
+    if (!isNaN(d.getTime())) {
+      return d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear();
+    }
+  }
+  const d2 = new Date(bruto);
+  if (!isNaN(d2.getTime())) {
+    return d2.getDate() + ' de ' + MESES[d2.getMonth()] + ' de ' + d2.getFullYear();
+  }
+  return bruto;
+}
+
+function campo(etiqueta, valor){
+  if (!valor) return '';
+  return '<div class="dato"><div class="et">' + esc(etiqueta) + '</div>' +
+         '<div class="vl">' + esc(valor) + '</div></div>';
+}
+
+function pinta(d){
+  $('datos').innerHTML =
+    campo('Folio', d.folio) +
+    campo('A nombre de', d.paciente) +
+    campo('Cirujano', d.cirujano) +
+    campo('Emitida', fechaLarga(d.emitida));
+
+  /* El estado va arriba y en palabras, no en un color nada más: el paciente que
+     abre la liga tres meses después tiene que entender por qué el número que le
+     dijeron ya no aplica. */
+  $('estado-vigencia').innerHTML = d.vigente
+    ? '<div class="aviso ok">Este precio está vigente hasta el ' +
+      esc(fechaLarga(d.vigenciaHasta)) + '.</div>'
+    : '<div class="aviso alerta">Este precio ya venció' +
+      (d.vigenciaHasta ? ' el ' + esc(fechaLarga(d.vigenciaHasta)) : '') +
+      '. Pídanos una cotización nueva y con gusto se la preparamos.</div>';
+
+  /* DOS COLUMNAS, NO CUATRO. Antes salían «Lista», «Aplica 100%» e «Importe».
+     Las tres primeras son la contabilidad interna de cómo se armó el precio:
+     al paciente le dicen que hay un precio de lista y un factor que alguien le
+     movió —o no—, y lo invitan a preguntar por qué a él le tocó 100%. Lo único
+     que le corresponde ver es qué le van a cobrar por cada cosa.
+
+     El precio de lista reaparece SÓLO cuando hay descuento real, porque ahí sí
+     es información a su favor y hay que enseñársela. */
+  const filas = (d.conceptos || []).map(function(c){
+    const lista   = Number(c.precioLista) || 0;
+    const importe = Number(c.importe) || 0;
+    const rebaja  = lista > importe
+      ? '<div class="matiz">Precio de lista ' + pesos(lista) + '</div>'
+      : '';
+    return '<tr><td>' + esc(c.nombre) + rebaja + '</td>' +
+           '<td class="num"><b>' + pesos(importe) + '</b></td></tr>';
+  }).join('');
+
+  const noches = Number(d.subtotalNoches) > 0
+    ? '<tr><td>' + esc(d.noches) + ' noche(s) de hospitalización</td>' +
+      '<td class="num"><b>' + pesos(d.subtotalNoches) + '</b></td></tr>'
+    : '';
+
+  const ajuste = Number(d.ajusteMonto)
+    ? '<tr><td>' +
+      (Number(d.ajusteMonto) < 0 ? 'Descuento' : 'Ajuste') +
+      (d.ajusteMotivo ? ' · ' + esc(d.ajusteMotivo) : '') + '</td>' +
+      '<td class="num"><b>' + (Number(d.ajusteMonto) > 0 ? '+' : '−') +
+      pesos(Math.abs(Number(d.ajusteMonto))) + '</b></td></tr>'
+    : '';
+
+  $('conceptos').innerHTML = filas + noches + ajuste +
+    '<tr class="total"><td>Total</td>' +
+    '<td class="num">' + pesos(d.total) + '</td></tr>';
+
+  /* Aquí vivían los avisos del motor de precios, y era un error mío. La
+     intención era buena —no callarle al paciente que algo no se pudo
+     calcular— pero el texto estaba escrito para quien programa el tarifario:
+     «no está en el tarifario», «va al 100%, sin factor». Eso no informa a un
+     paciente, lo inquieta, y además enseña la cocina.
+
+     Lo que sí le toca saber —que la hospitalización no viene incluida— ahora
+     lo manda el backend ya redactado para él, en `notaPaciente`, y se imprime
+     como una nota al pie y no como una alarma de color. */
+  $('nota-paciente').textContent = d.notaPaciente || '';
+  $('nota-paciente').classList.toggle('oculto', !d.notaPaciente);
+
+  $('no-incluye').textContent = d.noIncluye || '';
+  $('no-incluye').classList.toggle('oculto', !d.noIncluye);
+
+  $('cargando').classList.add('oculto');
+  $('pantalla').classList.remove('oculto');
+  document.title = 'Clínicas Renasté · Cotización ' + (d.folio || '');
+}
+
+function falla(mensaje){
+  $('error-texto').textContent = mensaje ||
+    'Esta liga no se pudo abrir. Pídanos una nueva.';
+  $('cargando').classList.add('oculto');
+  $('pantalla-error').classList.remove('oculto');
+}
+
+$('imprimir').onclick = function(){ window.print(); };
+
+(async function(){
+  if (!TOKEN) { falla('Esta liga está incompleta. Pídanos que se la reenviemos.'); return; }
+  try{
+    const d = await llamar({ accion: 'cotizacionAbrir' });
+    if (!d || !d.ok) { falla(d && d.mensaje); return; }
+    pinta(d);
+  }catch(e){
+    falla('No pudimos conectarnos. Revise su internet y vuelva a abrir la liga.');
+  }
+})();
+</script>
+
+</body>
+</html>
