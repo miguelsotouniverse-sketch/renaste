@@ -175,7 +175,56 @@
         <div class="zx-titulo" style="font-size:22px;margin-top:9px" id="d-titulo">Documentación del cirujano</div>
         <p style="font-size:12.5px;color:var(--zx-txt-2);margin:9px 0 0" id="d-esp"></p>
       </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;
+                  flex-shrink:0;position:relative">
+        <button class="zx-btn-2" type="button" id="d-btn-editar"
+                style="height:33px;padding:0 15px;font-size:12.5px"
+                onclick="verEditar(true)">Editar datos</button>
+        <span id="d-editar-aviso" style="font-size:11.5px;color:var(--zx-ok-txt)"></span>
+      </div>
       <div id="d-anillo" style="position:relative;flex-shrink:0"></div>
+    </div>
+
+    <!-- Los datos del médico. Lo que se teclea mal en el alta se quedaba mal:
+         no había pantalla para corregirlo y la única salida era abrir la hoja
+         Medicos a mano, que es justo lo que esta app existe para evitar. -->
+    <div class="zx-widget oculto" id="d-editar"
+         style="padding:20px 23px;margin-bottom:var(--zx-gap);position:relative">
+      <div class="zx-widget-etq" style="margin-bottom:14px">Datos del médico</div>
+      <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:12px;position:relative">
+        <div><label class="zx-etiqueta" for="e-titulo">Título</label>
+          <select class="zx-campo" id="e-titulo">
+            <option value="Dr.">Dr.</option>
+            <option value="Dra.">Dra.</option>
+          </select></div>
+        <div><label class="zx-etiqueta" for="e-nombre">Nombre</label>
+          <input class="zx-campo" id="e-nombre"></div>
+        <div><label class="zx-etiqueta" for="e-apellido">Apellido</label>
+          <input class="zx-campo" id="e-apellido"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;position:relative">
+        <div><label class="zx-etiqueta" for="e-tipo">Función</label>
+          <select class="zx-campo" id="e-tipo">
+            <option value="cirujano">Cirujano</option>
+            <option value="anestesiologo">Anestesiólogo</option>
+            <option value="especialista">Otro especialista</option>
+          </select></div>
+        <div><label class="zx-etiqueta" for="e-esp">Especialidad</label>
+          <input class="zx-campo" id="e-esp"></div>
+      </div>
+      <div style="margin-top:12px;position:relative">
+        <label class="zx-etiqueta" for="e-correo">Correo de Google</label>
+        <input class="zx-campo" id="e-correo" type="email">
+        <p style="font-size:11px;color:var(--zx-txt-3);margin:7px 0 0">
+          Es la llave con la que entra y con la que el expediente decide qué
+          casos son suyos. Al cambiarlo, con el anterior ya no entra.
+        </p>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;align-items:center;position:relative">
+        <button class="zx-btn" type="button" onclick="guardarEdicion()">Guardar cambios</button>
+        <button class="zx-btn-2" type="button" onclick="verEditar(false)">Cancelar</button>
+        <span id="e-msg" style="font-size:12.5px"></span>
+      </div>
     </div>
 
     <!-- Invitación. Sólo aparece cuando de verdad falta algo: un botón que
@@ -747,6 +796,10 @@ async function verLista() {
 async function verDetalle(id) {
   MEDICO_ACTIVO = id;
   ver('v-detalle');
+  /* Se cierra al entrar: si quedara abierto con los datos del anterior,
+     el primer Guardar se los escribiria a quien no era. */
+  document.getElementById('d-editar').classList.add('oculto');
+  document.getElementById('d-editar-aviso').textContent = '';
   try {
     const d = await api('cirujanos.detalle', { medicoId: id });
     document.getElementById('d-nombre').textContent = d.medico.nombre;
@@ -759,6 +812,64 @@ async function verDetalle(id) {
     document.getElementById('d-invitar').classList.add('oculto');
     document.getElementById('d-docs').innerHTML = `<p style="grid-column:1/-1;color:var(--zx-error-txt);font-size:12.5px">${e.message}</p>`;
   }
+}
+
+/* ---------- Editar los datos del médico ----------
+
+   Así se coló una doctora capturada como «Dr.» y con especialidad «Médico
+   General»: el alta era un disparo sin vuelta. Lo delicado —arrastrar la
+   fila de Roles y limpiar el caché de las dos direcciones— lo hace el
+   backend; aquí sólo se piden los datos. */
+
+async function verEditar(mostrar) {
+  const caja = document.getElementById('d-editar');
+  document.getElementById('e-msg').textContent = '';
+  if (!mostrar) { caja.classList.add('oculto'); return; }
+  if (!MEDICO_ACTIVO) return;
+  caja.classList.remove('oculto');
+  /* Los campos se le piden al backend en vez de deducirlos del encabezado:
+     ahí el nombre viene armado en una sola línea, y partirlo a la adivina
+     es como terminan los apellidos escritos en la casilla del nombre. */
+  try {
+    const m = await api('cirujanos.medico', { medicoId: MEDICO_ACTIVO });
+    document.getElementById('e-titulo').value = m.tratamiento === 'Dra.' ? 'Dra.' : 'Dr.';
+    document.getElementById('e-nombre').value = m.nombre || '';
+    document.getElementById('e-apellido').value = m.apellido || '';
+    document.getElementById('e-esp').value = m.especialidad || '';
+    document.getElementById('e-tipo').value =
+      ['cirujano', 'anestesiologo', 'especialista'].indexOf(m.tipo) >= 0 ? m.tipo : 'cirujano';
+    document.getElementById('e-correo').value = m.correo || '';
+    document.getElementById('e-nombre').focus();
+  } catch (e) {
+    document.getElementById('e-msg').textContent = e.message;
+  }
+}
+
+async function guardarEdicion() {
+  if (!MEDICO_ACTIVO) return;
+  const g = i => document.getElementById(i).value.trim();
+  const msg = document.getElementById('e-msg');
+  const nombre = g('e-nombre'), apellido = g('e-apellido');
+  const correo = g('e-correo').toLowerCase();
+  if (!nombre || !apellido) { msg.textContent = 'Faltan nombre y apellido.'; return; }
+  if (!correo) { msg.textContent = 'Falta el correo de Google.'; return; }
+
+  msg.textContent = 'Guardando\u2026';
+  try {
+    const r = await api('cirujanos.editar', {
+      medicoId: MEDICO_ACTIVO,
+      tratamiento: document.getElementById('e-titulo').value,
+      nombre: nombre, apellido: apellido, correo: correo,
+      especialidad: g('e-esp'),
+      tipo: document.getElementById('e-tipo').value
+    });
+    const id = MEDICO_ACTIVO;
+    await verDetalle(id);
+    /* El aviso va al final: verDetalle repinta el encabezado y lo limpia. */
+    document.getElementById('d-editar-aviso').textContent = r.cambioCorreo
+      ? 'Guardado. Ahora entra con ' + r.correo + '; con ' + r.correoAnterior + ' ya no.'
+      : 'Guardado.';
+  } catch (e) { msg.textContent = e.message; }
 }
 
 /* ---------- Invitación ----------
