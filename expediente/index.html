@@ -1482,7 +1482,10 @@ $('agenda-fecha').onchange = cargaAgenda;
    los formatos con membrete de Renasté (cambiar esta constante a true y subir
    los SVG nuevos a esta carpeta). Las notas y documentos capturados en la app
    NO dependen de esto: se imprimen con el membrete del diccionario. */
-const FORMATOS_IMPRESOS_LISTOS = false;
+/* 29 oct 2026: ya están. Son los formatos de Zorvix con membrete de Renasté
+   (logotipo, razón social, domicilio, licencia 23-AM-09-003-0001 y teléfonos)
+   y en los colores de Renasté. */
+const FORMATOS_IMPRESOS_LISTOS = true;
 const AVISO_SIN_FORMATOS = 'Los formatos impresos con membrete de Renasté todavía no están listos. ' +
   'Mientras tanto, use la papelería física de Renasté para este documento.';
 
@@ -1652,11 +1655,12 @@ async function buscar(){
 
 let LABS = [];
 
-/* Bandeja de laboratorios: APAGADA en Renasté. En Zorvix la alimenta un índice
-   de resultados de Microtec que escribe otro script y que está compartido sólo
-   con Zorvix. Para prenderla aquí hay que decidir cómo se reparte ese índice
-   entre las dos clínicas y subir LabsImportar.gs al gateway de Renasté. */
-const LABS_ACTIVOS = false;
+/* Bandeja de laboratorios (29 oct 2026). El índice de resultados de Microtec es
+   uno y lo comparten Zorvix y Renasté: Zorvix revisa primero y aquí se ve lo
+   que Zorvix no pudo poner en ninguna paciente suya. Ver el final del Código.gs
+   del gateway. Si el índice todavía no está compartido con la cuenta de
+   Renasté, la bandeja lo dice en vez de quedarse en blanco. */
+const LABS_ACTIVOS = true;
 async function cargaLabs(){
   const L = $('labs-lista');
   L.innerHTML = '<div class="vacio">Consultando…</div>';
