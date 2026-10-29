@@ -270,7 +270,8 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
    el cuadro se dibujo al final del documento, fuera de la vista: los botones
    de guardar «no servian» porque abrian una pregunta invisible y se quedaban
    esperando una respuesta que nadie podia dar. */
-#dictado,#confirmar{position:fixed;inset:0;background:rgba(26,23,20,.55);display:grid;padding:16px}
+#dictado,#confirmar,#traer{position:fixed;inset:0;background:rgba(26,23,20,.55);display:grid;padding:16px}
+#traer{place-items:center;z-index:200}
 #dictado{place-items:end center;z-index:200}
 /* Mas alto que el dictado A PROPOSITO. #confirmar siempre pregunta ALGO de lo
    que ya esta en pantalla, asi que nunca puede quedar debajo. Con los dos en
@@ -278,8 +279,9 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
    invisible detras: «Repartir a los campos» parecia no servir. */
 #confirmar{place-items:center;z-index:300}
 #aviso-global{z-index:400}
-#dictado .caja,#confirmar .caja{background:var(--papel);border:1px solid var(--linea);border-radius:var(--r-lg);
+#dictado .caja,#confirmar .caja,#traer .caja{background:var(--papel);border:1px solid var(--linea);border-radius:var(--r-lg);
   box-shadow:var(--sombra-3);width:min(560px,100%);padding:20px;max-height:86vh;overflow:auto}
+#traer .caja{width:min(860px,100%)}
 .punto{width:10px;height:10px;border-radius:var(--r-full);background:var(--malo-linea);display:inline-block;
   animation:late 1s infinite}
 @keyframes late{50%{opacity:.25}}
@@ -306,7 +308,31 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
   body{background:#fff;color:#000;margin:0}
   #impresion{display:block !important;font:10.5pt/1.45 Georgia,'Times New Roman',serif;
     color:#000;padding:0}
-  @page{margin:14mm 14mm 16mm}
+  /* ¿POR QUÉ MARGEN CERO, SI LA HOJA OBVIAMENTE NECESITA MÁRGENES?
+
+     Porque el encabezado y el pie que el navegador imprime por su cuenta —el
+     título de la pestaña, la dirección de la página, la fecha de impresión y
+     «1/3»— los dibuja DENTRO del margen de @page. Mientras haya margen, hay
+     dónde ponerlos, y salen. En una nota clínica eso no es sólo ruido: estampa
+     la fecha en que se imprimió encima de un documento cuya fecha es la del
+     acto, que es justo la confusión que se corrigió en el índice.
+
+     La casilla «Encabezados y pies de página» del diálogo de impresión los
+     apaga, pero es una preferencia de cada navegador y de cada quien. En la
+     computadora compartida del quirófano eso no sirve: el documento no puede
+     depender de que quien imprime se acuerde de destildar una casilla.
+
+     Con el margen en cero el navegador no tiene dónde dibujarlos. Los márgenes
+     de verdad se meten adentro del pliego, en el <thead> y en un <tfoot>
+     vacío, que es lo único que se reserva en TODAS las hojas.
+
+     Medido con Chromium, con el encabezado del navegador ENCENDIDO:
+       · con @page{margin:14mm}  → sale el título de la pestaña y la ruta del
+         archivo en las 3 hojas, y el texto queda a 4.4 mm del borde;
+       · con @page{margin:0} + estos rellenos → no sale ninguno de los dos,
+         arriba 13.9 mm, izquierda 14.0 mm, abajo libre ≥ 17.8 mm en cada hoja,
+         y el número de hojas no cambia. */
+  @page{margin:0}
 
   /* El correlativo se repite en cada hoja: en un expediente de papel las hojas
      se sueltan y cada una tiene que decir de quién es.
@@ -316,14 +342,21 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
      hoja, pero no ocupa flujo: el espacio se reservaba una sola vez —con el
      padding-top de #impresion, que aplica al bloque entero, o sea nada más
      arriba de la hoja 1— y de la hoja 2 en adelante el correlativo caía encima
-     del texto. El <thead> es lo único que Chrome repite Y cuyo alto descuenta
-     en TODAS las hojas.
+     del texto. El <thead> sí repite Y su alto se descuenta en TODAS las hojas.
+
+     Corrección a lo que decía aquí antes: escribí que el <thead> era lo único
+     que Chrome repite. No es cierto, y lo volví a medir: el <tfoot> también se
+     repite y también reserva su alto en cada hoja. Por eso el margen de abajo
+     ahora es un <tfoot> vacío.
 
      Probado con Chromium contra este mismo CSS: antes se encimaba en la hoja 2,
      después no, y el número de hojas no cambia. */
   .imp-pliego{width:100%;border-collapse:collapse}
-  .imp-pliego>thead>tr>td{padding:0 0 10px}
-  .imp-pliego>tbody>tr>td{padding:0;vertical-align:top}
+  .imp-pliego>thead>tr>td{padding:14mm 14mm 10px}
+  .imp-pliego>tbody>tr>td{padding:0 14mm;vertical-align:top}
+  /* El margen de abajo. Va vacío a propósito: si llevara texto, ese texto se
+     repetiría en todas las hojas. */
+  .imp-pliego>tfoot>tr>td{height:15mm;padding:0;border:0}
   .imp-corre{font-size:8pt;font-family:system-ui,sans-serif;
     color:#333;border-bottom:.5pt solid #999;padding-bottom:3px}
 
@@ -479,6 +512,7 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
   <button data-v="mios" class="sel">Mis pacientes</button>
   <button data-v="agenda">Agenda de quirófano</button>
   <button data-v="buscar">Buscar paciente</button>
+  <button data-v="labs" class="oculto" id="tab-labs">Laboratorios</button>
   <button data-v="expediente" class="oculto" id="tab-exp">Expediente</button>
   <button data-v="documento" class="oculto" id="tab-doc">Documento</button>
 </div>
@@ -517,6 +551,7 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
           <p class="sub" id="agenda-sub">Los casos del día que están en su alcance.</p>
         </div>
         <input type="date" id="agenda-fecha" style="width:auto">
+        <button class="btn" id="btn-programacion" type="button">Imprimir la programación</button>
       </div>
       <div id="agenda-lista"></div>
     </div>
@@ -535,6 +570,41 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
         <button type="button" class="btn" id="btn-esterilizacion">Trazabilidad de esterilización</button>
       </div>
     </div>
+
+    <!-- Papelería en blanco. El día que un médico llega sin credencializar, o
+         que el sistema no esté disponible, el expediente se hace a mano: la
+         NOM-004 pide que exista y sea legible, no que sea electrónico. Lo que
+         faltaba era tener las hojas. Son los MISMOS formatos que imprime la
+         app, sin datos encima, así que una hoja llenada a mano y una llenada
+         por el sistema son el mismo documento y no dos parecidos. -->
+    <div class="tarjeta">
+      <div class="fila">
+        <div class="crece">
+          <h2>Papelería en blanco</h2>
+          <p class="sub">Para llenar a mano cuando no se puede imprimir desde el
+            expediente. Sale sin ningún dato: ni paciente, ni médico, ni folio.
+            Anote el folio del caso en la hoja frontal para poder casarla después
+            con el expediente electrónico.</p>
+          <label class="sub" style="display:flex;gap:8px;align-items:center;margin:6px 0 0">
+            <input type="checkbox" id="chk-blanco-doble" checked style="width:auto;margin:0">
+            Imprimir a doble cara: cada documento empieza en el frente de una hoja
+          </label>
+        </div>
+      </div>
+      <div class="fila" style="flex-wrap:wrap;gap:8px;margin-top:4px">
+        <button type="button" class="btn primario"
+                data-blanco="paquete"
+                title="Hoja frontal, consentimientos, verificación preoperatoria, listas de verificación y las hojas de enfermería y anestesia, todas en blanco">Paquete de ingreso</button>
+        <button type="button" class="btn" data-blanco="ci-quirurgico,ci-anestesia,ci-marcaje">Consentimientos</button>
+        <button type="button" class="btn" data-blanco="hoja-frontal">Hoja frontal</button>
+        <button type="button" class="btn" data-blanco="registro-enfermeria">Registro de enfermería</button>
+        <button type="button" class="btn" data-blanco="registro-anestesia">Registro de anestesia</button>
+        <button type="button" class="btn" data-blanco="verificacion-preop">Verificación preoperatoria</button>
+        <button type="button" class="btn" data-blanco="lista-verificacion">Lista de verificación</button>
+        <button type="button" class="btn" data-blanco="hoja-enfermeria">Hoja quirúrgica de enfermería</button>
+        <button type="button" class="btn" data-blanco="registro-cateter">Registro de catéter</button>
+      </div>
+    </div>
   </section>
 
   <!-- ══════════ BUSCAR ══════════ -->
@@ -549,6 +619,26 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
       </div>
       <div id="buscar-aviso"></div>
       <div id="buscar-lista"></div>
+    </div>
+  </section>
+
+  <!-- ══════════ LABORATORIOS POR ASIGNAR ══════════
+       Los resultados llegan por correo y se enganchan solos cuando el nombre
+       corresponde a UN paciente y nada más uno. Lo que no cuadra cae aquí.
+
+       Antes no caía en ningún lado: se quedaba marcado en una hoja que nadie
+       abre, y un resultado podía llevar semanas detenido sin que se notara.
+       Eso es lo que esta pantalla viene a evitar. -->
+  <section class="vista" id="vista-labs">
+    <div class="tarjeta">
+      <h2>Laboratorios por asignar</h2>
+      <p class="sub" id="labs-sub">Resultados que llegaron al correo y no se pudieron
+        enganchar solos porque el nombre no corresponde exactamente a un paciente.</p>
+      <div class="fila">
+        <button class="btn sec" id="btn-labs-recargar">Volver a consultar</button>
+      </div>
+      <div id="labs-aviso"></div>
+      <div id="labs-lista"></div>
     </div>
   </section>
 
@@ -607,6 +697,7 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
       <div class="fila">
         <div class="crece"><h2 id="doc-titulo">—</h2><p class="sub" id="doc-sub"></p></div>
         <button class="btn" id="btn-dictar">Dictar</button>
+        <button class="btn oculto" id="btn-traer">Traer del consultorio</button>
         <button class="btn" id="btn-imprimir">Imprimir</button>
         <button class="btn" id="btn-volver-exp">Volver</button>
       </div>
@@ -655,6 +746,37 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
   <span class="crece">Nadie ha usado esta pantalla en un rato. La sesión se cierra en
     <b id="cuenta-inactividad">60</b> s. <b>Guarde lo que lleve escrito.</b></span>
   <button type="button" id="sigo-aqui">Sigo aquí</button>
+</div>
+
+<!-- ══════════ TRAER DEL CONSULTORIO ══════════ -->
+<div id="traer" class="oculto">
+  <div class="caja">
+    <div class="fila" style="margin-bottom:12px">
+      <div class="crece"><h2 style="margin:0">Traer la historia del consultorio</h2>
+        <p class="sub" style="margin:0">En consulta.miguelsotomd.com abra la historia
+          de esta paciente, oprima «Llevar a Zorvix» y pegue aquí el código.</p></div>
+      <button class="btn" id="traer-cerrar">Cerrar</button>
+    </div>
+    <textarea id="traer-codigo" rows="4" placeholder="ZXHC1...."
+      style="width:100%;font-family:var(--zx-mono,monospace);font-size:12px"></textarea>
+    <div class="fila" style="margin-top:10px">
+      <button class="btn" id="traer-leer">Revisar qué trae</button>
+    </div>
+    <div id="traer-aviso" style="margin-top:12px"></div>
+    <div id="traer-tabla"></div>
+    <div id="traer-hallazgos-caja" class="oculto" style="margin-top:12px">
+      <label style="display:flex;gap:8px;align-items:flex-start">
+        <input type="checkbox" id="traer-hallazgos" style="margin-top:3px">
+        <span class="sub">Copiar también los hallazgos de aquel día (signos vitales,
+          exploración, diagnósticos). <b>No se recomienda:</b> son de la consulta,
+          no del ingreso de hoy, y una nota no debe nacer con hallazgos de otro día
+          listos para firmarse.</span>
+      </label>
+    </div>
+    <div class="fila" style="margin-top:14px">
+      <button class="btn primario oculto" id="traer-ok">Prellenar la historia</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════ DICTADO ══════════ -->
@@ -805,7 +927,8 @@ window.RENASTE_ULTIMO_FALLO = null;
    audio que ya está guardado (se vuelve a transcribir el mismo Audio_ID,
    no se crea otro). Guardar, subir y borrar NO se reintentan nunca. */
 const REPETIBLES = ['ping','sesion','esquema','buscarPaciente','expediente',
-                    'documento','agendaDelDia','bitacora','audioTranscribir'];
+                    'documento','agendaDelDia','bitacora','audioTranscribir',
+                    'labsPorAsignar'];
 
 const esperaMs = ms => new Promise(res => setTimeout(res, ms));
 
@@ -1226,6 +1349,11 @@ async function entro(resp, silencioso){
     $('barra').classList.remove('oculto');
     $('tabs').classList.remove('oculto');
     $('app').classList.remove('oculto');
+    /* La bandeja de laboratorios sólo para quien ve todo el centro: asignar
+       un resultado es escribir en el expediente de alguien, y hacerlo a partir
+       de un nombre que NO cuadró es el momento de más riesgo del circuito.
+       El servidor exige lo mismo; esto sólo evita enseñar una puerta cerrada. */
+    if (s.ve_todo && LABS_ACTIVOS) $('tab-labs').classList.remove('oculto');
     $('quien-txt').textContent = s.nombre;
     $('quien-rol').textContent = s.rol;
     $('quien-ini').textContent = String(s.nombre||'?').trim().charAt(0).toUpperCase();
@@ -1337,6 +1465,9 @@ function vista(v){
   document.querySelectorAll('.vista').forEach(s => s.classList.toggle('on', s.id === 'vista-'+v));
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('sel', b.dataset.v === v));
   window.scrollTo(0,0);
+  /* La bandeja se consulta al entrar, no al arrancar la aplicación: que abrir
+     el expediente de una paciente no pague el costo de leer el índice. */
+  if (v === 'labs') cargaLabs();
 }
 
 const hoyISO = () => new Date().toLocaleDateString('sv-SE');
@@ -1359,6 +1490,18 @@ $('btn-esterilizacion').onclick = function(){
   if (!FORMATOS_IMPRESOS_LISTOS) { avisoGlobal(AVISO_SIN_FORMATOS); return; }
   imprimeHojaDelDia('trazabilidad-esterilizacion', this);
 };
+document.querySelectorAll('[data-blanco]').forEach(function(b){
+  /* La papelería en blanco son los mismos formatos de Zorvix: apagada igual. */
+  if (!FORMATOS_IMPRESOS_LISTOS) { b.style.opacity = '.55'; b.title = AVISO_SIN_FORMATOS; }
+  b.onclick = function(){
+    if (!FORMATOS_IMPRESOS_LISTOS) { avisoGlobal(AVISO_SIN_FORMATOS); return; }
+    /* La identificaci\u00f3n sale del Drive del paciente: en blanco no existe. */
+    const claves = b.dataset.blanco === 'paquete'
+      ? PAQUETE_INGRESO.filter(function(k){ return k !== 'identificacion'; })
+      : b.dataset.blanco.split(',');
+    imprimeEnBlanco(claves, b);
+  };
+});
 async function cargaAgenda(){
   try{
     const r = await api('agendaDelDia', { fecha: $('agenda-fecha').value || hoyISO() });
@@ -1494,6 +1637,190 @@ async function buscar(){
       aviso('buscar-aviso','warn','Se muestran los primeros '+r.tope+'. Afine la búsqueda.');
   }catch(e){ aviso('buscar-aviso','malo', e.message); }
 }
+
+/* ══════════ LABORATORIOS POR ASIGNAR ══════════
+
+   Aquí la máquina deja de adivinar. Para enganchar solo, el servidor exige
+   coincidencia estricta —mismas letras, con o sin acentos, con o sin espacios
+   de más—. Para SUGERIR basta un apellido en común, porque de este lado hay
+   una persona mirando: una sugerencia equivocada se descarta con la vista, un
+   laboratorio en el expediente equivocado no se nota hasta que ya hizo daño.
+
+   Asignar se confirma en dos tiempos a propósito. No es burocracia: es la
+   única acción de esta pantalla que escribe en el expediente de un paciente
+   y no se deshace sola. */
+
+let LABS = [];
+
+/* Bandeja de laboratorios: APAGADA en Renasté. En Zorvix la alimenta un índice
+   de resultados de Microtec que escribe otro script y que está compartido sólo
+   con Zorvix. Para prenderla aquí hay que decidir cómo se reparte ese índice
+   entre las dos clínicas y subir LabsImportar.gs al gateway de Renasté. */
+const LABS_ACTIVOS = false;
+async function cargaLabs(){
+  const L = $('labs-lista');
+  L.innerHTML = '<div class="vacio">Consultando…</div>';
+  aviso('labs-aviso', '', '');
+  try{
+    const r = await api('labsPorAsignar', {});
+    LABS = r.pendientes || [];
+    $('labs-sub').textContent = LABS.length
+      ? 'Llegaron al correo y no se engancharon solos porque el nombre no corresponde ' +
+        'exactamente a un paciente de Renasté. ' + LABS.length + ' de los últimos ' +
+        r.dias + ' días' + (r.viejos ? ' (' + r.viejos + ' más viejos no se muestran).' : '.')
+      : 'Nada pendiente de los últimos ' + r.dias + ' días' +
+        (r.viejos ? ' (' + r.viejos + ' más viejos no se muestran).' : '.');
+    pintaLabs();
+  }catch(e){
+    L.innerHTML = '';
+    aviso('labs-aviso', 'malo', e.message);
+  }
+}
+
+function pintaLabs(){
+  const L = $('labs-lista');
+  if (!LABS.length){
+    L.innerHTML = '<div class="vacio">Ningún laboratorio esperando. Todo lo que llegó ' +
+      'está en el expediente de alguien o se descartó.</div>';
+    return;
+  }
+
+  L.innerHTML = LABS.map(function(x){
+    const sug = (x.sugeridos || []).map(function(s){
+      return '<button type="button" class="btn sec labs-asignar" data-pac="' + esc(s.id) + '">' +
+        esc(s.nombre) + (s.expediente ? ' · ' + esc(s.expediente) : '') + '</button>';
+    }).join(' ');
+    return '<div class="renglon" data-r="' + esc(String(x.renglon)) + '" ' +
+             'style="display:block">' +
+      '<div class="nom">' + esc(x.nombre_lab || '(sin nombre)') + '</div>' +
+      '<div class="det">' + esc(x.fecha) +
+        (x.folio_lab ? ' · folio ' + esc(x.folio_lab) : '') +
+        ' · ' + esc(x.estado) +
+        (x.archivo_url ? ' · <a href="' + esc(x.archivo_url) + '" target="_blank" ' +
+          'rel="noopener">ver el PDF</a>' : '') +
+      '</div>' +
+      '<div class="det" style="margin-top:8px">' +
+        (sug ? 'Se parece a: ' + sug : 'Ningún paciente de Renasté se le parece.') +
+      '</div>' +
+      '<div class="fila" style="margin-top:8px">' +
+        '<input type="text" class="labs-q crece" placeholder="otro paciente: tres letras del nombre">' +
+        '<button type="button" class="btn sec labs-buscar">Buscar</button>' +
+        '<button type="button" class="btn sec labs-descartar">No es de este centro</button>' +
+      '</div>' +
+      '<div class="labs-res"></div>' +
+    '</div>';
+  }).join('');
+
+  /* Los botones se cablean después de pintar, nunca con onclick interpolado:
+     por ahí se cuela una comilla de un nombre y se rompe la pantalla. */
+  L.querySelectorAll('.labs-asignar').forEach(function(b){
+    b.onclick = function(){ labPideConfirmar(b); };
+  });
+  L.querySelectorAll('.labs-buscar').forEach(function(b){
+    b.onclick = function(){ labBuscaOtro(b); };
+  });
+  L.querySelectorAll('.labs-q').forEach(function(i){
+    i.onkeydown = function(e){
+      if (e.key === 'Enter') labBuscaOtro(i.parentNode.querySelector('.labs-buscar'));
+    };
+  });
+  L.querySelectorAll('.labs-descartar').forEach(function(b){
+    b.onclick = function(){ labDescarta(b); };
+  });
+}
+
+function labRenglonDe(el){
+  const caja = el.closest('[data-r]');
+  return { caja: caja, renglon: Number(caja.dataset.r) };
+}
+
+async function labBuscaOtro(boton){
+  const { caja } = labRenglonDe(boton);
+  const q = caja.querySelector('.labs-q').value.trim();
+  const res = caja.querySelector('.labs-res');
+  if (q.length < 3){ res.innerHTML = '<div class="det">Escriba al menos tres letras.</div>'; return; }
+  res.innerHTML = '<div class="det">Buscando…</div>';
+  try{
+    const r = await api('buscarPaciente', { q: q });
+    if (!r.pacientes.length){ res.innerHTML = '<div class="det">Ningún paciente con ese texto.</div>'; return; }
+    res.innerHTML = '<div class="det" style="margin-top:6px">' +
+      r.pacientes.map(function(p){
+        return '<button type="button" class="btn sec labs-asignar" data-pac="' +
+          esc(p.Paciente_ID) + '">' + esc(p.Nombre_Completo) +
+          (p.Expediente_No ? ' · ' + esc(p.Expediente_No) : '') + '</button>';
+      }).join(' ') + '</div>';
+    res.querySelectorAll('.labs-asignar').forEach(function(b){
+      b.onclick = function(){ labPideConfirmar(b); };
+    });
+  }catch(e){ res.innerHTML = '<div class="det">' + esc(e.message) + '</div>'; }
+}
+
+/* Dos tiempos. El primer clic sólo cambia el botón; el segundo escribe. */
+function labPideConfirmar(boton){
+  if (boton.dataset.confirmando === '1'){ labAsigna(boton); return; }
+  const nombre = boton.textContent;
+  boton.dataset.confirmando = '1';
+  boton.classList.add('primario');
+  boton.textContent = 'Confirmar: va al expediente de ' + nombre;
+  setTimeout(function(){
+    if (boton.dataset.confirmando !== '1') return;
+    boton.dataset.confirmando = '';
+    boton.classList.remove('primario');
+    boton.textContent = nombre;
+  }, 8000);
+}
+
+async function labAsigna(boton){
+  const { caja, renglon } = labRenglonDe(boton);
+  boton.disabled = true;
+  boton.textContent = 'Asignando…';
+  try{
+    const r = await api('labAsignar', { renglon: renglon, paciente_id: boton.dataset.pac });
+    LABS = LABS.filter(function(x){ return x.renglon !== renglon; });
+    caja.remove();
+    aviso('labs-aviso', 'ok', 'Quedó en el expediente de ' + r.paciente +
+      ' (' + r.expediente + ') como ' + r.adjunto + '.');
+    if (!LABS.length) pintaLabs();
+  }catch(e){
+    boton.disabled = false;
+    boton.dataset.confirmando = '';
+    boton.classList.remove('primario');
+    aviso('labs-aviso', 'malo', e.message);
+    pintaLabs();
+  }
+}
+
+async function labDescarta(boton){
+  const { caja, renglon } = labRenglonDe(boton);
+  if (boton.dataset.confirmando !== '1'){
+    boton.dataset.confirmando = '1';
+    boton.textContent = 'Confirmar que no es de aquí';
+    setTimeout(function(){
+      if (boton.dataset.confirmando !== '1') return;
+      boton.dataset.confirmando = '';
+      boton.textContent = 'No es de este centro';
+    }, 8000);
+    return;
+  }
+  boton.disabled = true;
+  boton.textContent = 'Descartando…';
+  try{
+    await api('labDescartar', { renglon: renglon });
+    LABS = LABS.filter(function(x){ return x.renglon !== renglon; });
+    caja.remove();
+    /* No se borra el renglón del índice: queda marcado con quién lo descartó
+       y cuándo. Lo que el laboratorio mandó, mandado está. */
+    aviso('labs-aviso', 'ok', 'Fuera de la lista. El registro de que llegó se queda.');
+    if (!LABS.length) pintaLabs();
+  }catch(e){
+    boton.disabled = false;
+    boton.dataset.confirmando = '';
+    boton.textContent = 'No es de este centro';
+    aviso('labs-aviso', 'malo', e.message);
+  }
+}
+
+$('btn-labs-recargar').onclick = cargaLabs;
 
 /* ══════════ EXPEDIENTE ══════════ */
 $('btn-volver-agenda').onclick = () => vista('agenda');
@@ -2083,7 +2410,11 @@ function datosDeFormato(caso){
    más, el último renglón lo dice en vez de callárselo. */
 function renglonesDeTabla(tabla, hoja){
   if (!tabla || tabla.p !== hoja) return '';
-  const casos = (EXP.casos || []).slice()
+  /* `EXP` puede no existir: la papelería en blanco se imprime desde la agenda,
+     sin paciente abierto. Sin esta guarda, el juego en blanco truena con
+     «Cannot read properties of null». Sin casos no hay renglones que pintar,
+     que es justo lo que una hoja en blanco necesita. */
+  const casos = ((EXP && EXP.casos) || []).slice()
     .sort((a,b) => String(b.Fecha_Cirugia).localeCompare(String(a.Fecha_Cirugia)));
   let html = '';
   tabla.filas.forEach((y, i) => {
@@ -2223,6 +2554,70 @@ async function imprimeHojaDelDia(clave, boton){
     /* Una hoja apaisada necesita que la página del navegador también lo sea:
        si sólo se agranda el div, se imprime cortada por la derecha. */
     margenes.textContent = f.apaisado ? '@page{size:792pt 612pt;margin:0}' : '@page{margin:0}';
+    document.head.appendChild(margenes);
+    window.addEventListener('afterprint', function limpia(){
+      window.removeEventListener('afterprint', limpia);
+      quitaModoFormato();
+      imp.innerHTML = '';
+    });
+    window.print();
+  }catch(e){
+    quitaModoFormato();
+    imp.innerHTML = '';
+    avisoGlobal('No se pudo imprimir: ' + e.message);
+  } finally {
+    IMPRIMIENDO_FORMATO = false;
+    boton.disabled = false;
+    boton.textContent = textoBoton;
+  }
+}
+
+/* ── Imprimir los formatos SIN datos ───────────────────────────
+
+   Es el mismo camino que `imprimeFormatos`, con una sola diferencia: no hay
+   caso del cual sacar los datos. `hojaDeFormato` ya sólo pinta los campos que
+   traen valor —filtra por `d[c.k]`— así que con un objeto vacío salen las
+   hojas limpias. Importa que sea el mismo camino y no un PDF aparte: el día
+   que un formato cambie, cambia en los dos lados solo.
+
+   No se ofrece la trazabilidad de esterilización: es apaisada y el navegador
+   no mezcla tamaños de página en una misma impresión. Tiene su propio botón
+   arriba, que ya la imprime sola. */
+async function imprimeEnBlanco(claves, boton){
+  if (IMPRIMIENDO_FORMATO) return;
+  IMPRIMIENDO_FORMATO = true;
+  const textoBoton = boton.textContent;
+  boton.disabled = true;
+  boton.textContent = 'Preparando\u2026';
+  const imp = $('impresion');
+  quitaModoFormato();
+  const margenes = document.createElement('style');
+  margenes.id = 'margenes-formato';
+  try{
+    const d = {};
+    /* Casilla propia: la de la vista del paciente no existe en la agenda, y
+       ahí `dobleCara()` contestaría siempre que sí. */
+    const chk = $('chk-blanco-doble');
+    const par = chk ? chk.checked : true;
+    let html = '';
+    for (let i = 0; i < claves.length; i++) {
+      const f = FORMATOS[claves[i]];
+      if (!f) continue;
+      for (let h = 1; h <= f.hojas; h++) html += hojaDeFormato(claves[i], h, d);
+      /* Mismo criterio que con datos: se completa sólo si hay otro documento
+         atrás, para que cada uno empiece en hoja propia al imprimir por los
+         dos lados. Al final sería una hoja suelta al fondo del folder. */
+      if (par && f.hojas % 2 === 1 && i < claves.length - 1) html += hojaEnBlanco();
+    }
+    if (!html) throw new Error('No hay formatos que imprimir.');
+    imp.classList.add('imp-formato');
+    imp.innerHTML = html;
+
+    await Promise.all(Array.from(imp.querySelectorAll('img')).map(img =>
+      img.decode().catch(() => { throw new Error('No se pudo cargar el formato (' +
+        img.getAttribute('src') + ').'); })));
+
+    margenes.textContent = '@page{margin:0}';
     document.head.appendChild(margenes);
     window.addEventListener('afterprint', function limpia(){
       window.removeEventListener('afterprint', limpia);
@@ -2483,7 +2878,20 @@ function edad(nac){
 
 /* ══════════ DOCUMENTO ══════════ */
 $('btn-volver-exp').onclick = () => vista('expediente');
-$('btn-imprimir').onclick = function(){ armaImpresion(); window.print(); };
+$('btn-imprimir').onclick = function(){
+  /* Lo de «Sin ubicar» no sale en papel. Si hay algo ahí, se dice antes de
+     imprimir: no para impedirlo, para que nadie firme creyendo que salió. */
+  const sinUbicar = String((DOC.campos && DOC.campos.__sin_ubicar) ||
+    ($('f__sin_ubicar') && $('f__sin_ubicar').value) || '').trim();
+  if (sinUbicar){
+    aviso('doc-aviso', 'warn',
+      'Esta nota tiene texto en «Sin ubicar», al final de la pantalla, y eso NO ' +
+      'se imprime. Si algo de ahí es clínico, cópielo al campo que le toca antes ' +
+      'de firmar la hoja.');
+  }
+  armaImpresion();
+  window.print();
+};
 
 /* ══════════ LA HOJA QUE SE IMPRIME ══════════
 
@@ -2574,13 +2982,24 @@ function armaImpresion(){
     return titulo + linea + resto.map(c => filaImp(c.etiqueta, val(c))).join('');
   }).join('');
 
-  /* Lo que el dictado no logró ubicar NO se pierde en el papel: si se quedó
-     en la nota, se imprime, señalado como lo que es. */
-  const suelto = String(DOC.campos.__sin_ubicar || $('f__sin_ubicar') && $('f__sin_ubicar').value || '').trim();
-  const bloqueSuelto = suelto
-    ? '<div class="imp-grupo">Texto dictado sin ubicar</div>' +
-      '<div class="imp-campo"><div class="v">'+esc(suelto)+'</div></div>'
-    : '';
+  /* «SIN UBICAR» NO SE IMPRIME. Corrección del 20 oct 2026.
+
+     Esto sí se imprimía, con el argumento de que así no se perdía nada.
+     El argumento era malo y se vio en cuanto se usó: ese cajon recoge lo que
+     el dictado no supo repartir y, desde que existe la importación del
+     consultorio, también las explicaciones de por qué un dato no cupo
+     —texto sobre el funcionamiento del sistema—. Eso acabó impreso en la
+     historia clínica de una paciente, debajo del diagnóstico y encima de la
+     firma del médico tratante.
+
+     Una hoja que se firma y se archiva sólo lleva lo que el médico asienta
+     en su campo. El cajon se queda en pantalla, se guarda con el documento y
+     se puede leer cuando se quiera; lo que de ahí sea clínico, el médico lo
+     mueve al campo que le toca y entonces sí sale impreso.
+
+     Para que no se pierda en silencio, al imprimir se avisa que hay texto
+     ahí. Ver el botón Imprimir. */
+  const bloqueSuelto = '';
 
   /* El pie se arma del medico tratante en este momento, no de lo que quedo
      guardado: si el caso cambio de cirujano, la hoja que se imprime hoy tiene
@@ -2619,7 +3038,9 @@ function armaImpresion(){
         ? ' por cuenta de '+esc(firma.correo) : '')+
       '. El expediente es propiedad del establecimiento y se conserva cinco años '+
       'contados desde el último acto médico (NOM-004-SSA3-2012, 5.4).</div>' +
-    '</td></tr></tbody></table>';
+    '</td></tr></tbody>' +
+    /* El margen de abajo de cada hoja. Ver el CSS de .imp-pliego>tfoot. */
+    '<tfoot><tr><td></td></tr></tfoot></table>';
 }
 
 function nuevoDocumento(tipo){
@@ -2824,6 +3245,10 @@ function pintaDocumento(){
      privacidad lo pide en una casilla propia y dice, con esas palabras, que
      dejarla en blanco significa que no autoriza. */
   $('btn-dictar').disabled = !audioAutorizado();
+  /* Traer del consultorio sólo tiene sentido en la historia clínica, y sólo
+     mientras la nota se pueda prellenar: una nota ya archivada o anulada no.  */
+  $('btn-traer').classList.toggle('oculto',
+    !/historia/i.test(String(DOC.Tipo || '')) || anulada || archivada);
   if (anulada){
     aviso('doc-aviso', 'malo',
       'Este documento está ANULADO. Sigue en el expediente y se puede leer, pero ya no ' +
@@ -2944,15 +3369,88 @@ function esEquipoLibre(c){ return EQUIPO_LIBRE.indexOf(String(c && c.id)) >= 0; 
    sabe una sola persona. Mientras no haya un punto único de captura confiable,
    las dos quedan como celdas libres: el cirujano y el anestesiólogo se ponen de
    acuerdo y escriben la misma hora en su propia nota. */
-const HORAS_LIBRES = ['qx_hora_cirugia', 'qx_hora_anestesia'];
+const HORAS_LIBRES = ['qx_cirugia_inicio', 'qx_cirugia_fin',
+                      'qx_anestesia_inicio', 'qx_anestesia_fin',
+                      'qx_hora_cirugia', 'qx_hora_anestesia'];
 function esHoraLibre(c){ return HORAS_LIBRES.indexOf(String(c && c.id)) >= 0; }
+
+/* ── LAS NOTAS ESCRITAS ANTES DE PARTIR LAS HORAS ─────────
+
+   Hasta el 20 de octubre de 2026 la nota postoperatoria pedía las horas en
+   dos campos que decían «inicio y término» pero eran una sola casilla de
+   reloj, así que sólo cabía una hora. Se partieron en cuatro.
+
+   Cuatro notas en borrador alcanzaron a guardar hora en los campos viejos.
+   Esos campos ya no se pintan, y sin esto el valor quedaría guardado pero
+   invisible: nadie lo vería y nadie sabría que se perdió.
+
+   Entonces el campo nuevo de INICIO, si está vacío, se pinta con lo que
+   tuviera el campo viejo. Se propone como inicio y no como término porque en
+   una sola casilla lo que se teclea primero es la hora de empezar —pero es
+   una suposición mía, no un dato: hay que verificarla al abrir la nota. En
+   cuanto se guarde, el valor queda en su campo nuevo y esto deja de actuar.
+   La versión anterior del documento conserva el campo viejo intacto
+   (NOM-004-SSA3-2012 5.11). */
+const HORA_PARTIDA = {
+  qx_cirugia_inicio:   'qx_hora_cirugia',
+  qx_anestesia_inicio: 'qx_hora_anestesia'
+};
+function rescataHoraVieja(c){
+  const propio = DOC.campos[c.id];
+  if (propio !== undefined && propio !== null && propio !== '') return propio;
+  const viejo = HORA_PARTIDA[String(c && c.id)];
+  if (!viejo) return propio;
+  const g = DOC.campos[viejo];
+  return (g === undefined || g === null || g === '') ? propio : g;
+}
+
+/* ── LA FECHA DEL DOCUMENTO: se propone, no se impone ───────────
+   Salía bloqueada con el día en que se abría la pantalla, y de ahí pasaba a la
+   hoja impresa. Eso rompe algo que en la clínica se hace siempre: imprimir el
+   juego de papelería la VÍSPERA, para no estar peleándose con la impresora
+   cuando la paciente ya está en la puerta. Impreso el día anterior, el
+   expediente entero quedaba fechado un día antes de la cirugía.
+
+   La fecha de un documento clínico es la del acto, no la del papel. Sigue
+   siendo la sugerencia —nueve de cada diez veces es la correcta— pero ahora se
+   puede corregir, y lo corregido manda. Mismo trato para la hora. */
+const FECHAS_LIBRES = ['doc_fecha', 'doc_hora'];
+function esFechaLibre(c){ return FECHAS_LIBRES.indexOf(String(c && c.id)) >= 0; }
+
+/* ── EL ANESTESIÓLOGO: SU NOMBRE SE ESCRIBE, SU LLAVE NO SE TOCA ────
+   Estos tres campos imprimen el nombre del anestesiólogo: `caso_anestesiologo`
+   sale en TODOS los formatos, `pan_anestesiologos` en la preanestésica y
+   `qx_anestesiologo` en la postoperatoria. El diccionario los trae como lista
+   heredada del padrón, así que con un anestesiólogo que todavía no está dado
+   de alta los tres salían EN BLANCO y no había manera de escribirlos.
+
+   Eso pasa justo el primer día de cada anestesiólogo nuevo, que es cuando sí
+   trabaja y todavía no tiene cuenta. El caso se puede asignar, el juego se
+   puede imprimir y llenar a mano, pero el renglón de su nombre salía vacío: el
+   papel quedaba sin decir quién dio la anestesia, que es precisamente lo que un
+   expediente no puede dejar de decir.
+
+   QUÉ **NO** CAMBIA, Y ES LO IMPORTANTE
+   El control de acceso no vive aquí. Quién puede abrir un caso lo decide
+   `Casos.Anestesiologo_Email`, que se sigue eligiendo del padrón y se sigue
+   validando contra él. Esto es la celda de un documento que se imprime: deja
+   escribir a quién NOMBRA el papel, no a quién DEJA ENTRAR el sistema. Un
+   anestesiólogo que vaya a usar la plataforma —abrir su preanestésica, firmar
+   desde el sistema— sigue necesitando su alta completa.
+
+   Mismo trato que ayudante, instrumentista y circulante, y por la misma razón:
+   el padrón es la sugerencia, no la condición para poder nombrar a alguien. */
+const ANEST_LIBRE = ['caso_anestesiologo', 'pan_anestesiologos', 'qx_anestesiologo'];
+function esAnestLibre(c){ return ANEST_LIBRE.indexOf(String(c && c.id)) >= 0; }
 
 /* Un campo libre es el que el diccionario declara heredado pero que en la sala
    tiene que poder escribirse. Nunca se bloquea. */
-function esLibre(c){ return esEquipoLibre(c) || esHoraLibre(c); }
+function esLibre(c){
+  return esEquipoLibre(c) || esHoraLibre(c) || esFechaLibre(c) || esAnestLibre(c);
+}
 
 function pintaCampo(c){
-  const v = sinLeyenda(DOC.campos[c.id]);
+  const v = sinLeyenda(rescataHoraVieja(c));
   const her = heredado(c);
   const hayHer = her !== null && her !== '' && !(Array.isArray(her) && !her.length);
   const libre = esLibre(c);
@@ -2977,7 +3475,30 @@ function pintaCampo(c){
   let cuerpo = '';
   /* Sólo el equipo cambia de control: las horas siguen siendo reloj, nada más
      que ya no llegan bloqueadas. */
-  const control = esEquipoLibre(c) ? 'equipo_libre' : c.control;
+  let control = (esEquipoLibre(c) || esAnestLibre(c)) ? 'equipo_libre' : c.control;
+
+  /* LA FECHA Y LA HORA DEL DOCUMENTO, QUE NUNCA SE PUDIERON ESCRIBIR.
+
+     Arriba, en FECHAS_LIBRES, se decidió en septiembre que la fecha del
+     documento se propone y no se impone, porque el juego de papelería se
+     imprime la víspera y si no, el expediente entero queda fechado un día
+     antes. La decisión quedó escrita y nunca llegó a la pantalla: los dos
+     campos están declarados `automatico` en el diccionario, y esa rama del
+     switch pintaba `readonly` SIEMPRE, por encima de `bloq`. O sea que la
+     bandera de campo libre no servía de nada para ellos.
+
+     Se veían normales —se podían enfocar y seleccionar— pero no se podía
+     teclear nada. El costo real: una nota que se escribe hoy sobre una
+     cirugía de otro día salía impresa con la fecha y la hora de hoy.
+
+     `automatico` describe de dónde SALE el valor, no que esté prohibido
+     corregirlo. Y ya que se abren, se pintan con el control que les toca por
+     naturaleza: calendario y reloj, no un renglón de texto donde cabe
+     «8:15 am» y al guardar se recorta a cinco caracteres. */
+  if (control === 'automatico' && libre){
+    if (c.id === 'doc_fecha') control = 'fecha';
+    else if (c.id === 'doc_hora') control = 'hora';
+  }
 
   switch(control){
     case 'equipo_libre': {
@@ -3043,9 +3564,11 @@ function pintaCampo(c){
     case 'adjunto_ref':
       cuerpo = pintaAdjuntoRef(c, val, bloq, id); break;
     case 'automatico': {
+      /* Honra `bloq` como todas las demás ramas. Un campo automático que
+         nadie declaró libre sigue saliendo bloqueado, igual que antes. */
       const ley = (val === '' || val === null || val === undefined) ? leyendaVacia(c) : '';
-      cuerpo = '<input type="text" id="'+id+'" class="bloqueado" readonly value="'+esc(val)+'"'+
-               (ley ? ' placeholder="'+esc(ley)+'"' : '')+'>'; break; }
+      cuerpo = '<input type="text" id="'+id+'"'+(bloq ? ' class="bloqueado" readonly' : '')+
+               ' value="'+esc(val)+'"'+(ley ? ' placeholder="'+esc(ley)+'"' : '')+'>'; break; }
     default:
       cuerpo = '<input type="text" id="'+id+'" value="'+esc(val)+'"'+(bloq?' readonly class="bloqueado"':'')+'>';
   }
@@ -3500,6 +4023,30 @@ function conecta(){
   });
   const nac = $('f_pac_nacimiento'), ed = $('f_pac_edad');
   if (nac && ed) { const c = () => ed.value = edad(nac.value); nac.oninput = c; if (!ed.value) c(); }
+
+  /* La fecha del documento ya se puede corregir, y hay dos campos que se
+     calculan A PARTIR de ella: la edad del paciente el día del acto y el
+     «ciudad y fecha» que firma el paciente en los consentimientos.
+
+     Si no siguieran a la fecha corregida, el documento saldría impreso
+     diciéndose dos fechas a sí mismo: arriba la de la cirugía y abajo, en la
+     línea de la firma, la del día en que se imprimió. En un consentimiento
+     informado eso no es un detalle de formato — es la fecha en que consta que
+     la paciente aceptó. */
+  const fFecha = $('f_doc_fecha');
+  if (fFecha){
+    const sigueALaFecha = function(){
+      const iso = fFecha.value || DOC.Fecha || hoyISO();
+      const fCiudad = $('f_ci_ciudad_fecha');
+      if (fCiudad) fCiudad.value = ciudadYFecha(iso);
+      const fEdad = $('f_pac_edad');
+      if (fEdad && !nac) {
+        fEdad.value = edadAl(EXP.paciente && EXP.paciente.Fecha_Nacimiento, iso);
+      }
+    };
+    fFecha.addEventListener('input', sigueALaFecha);
+  }
+
   redibuja();
 }
 function redibuja(){ document.querySelectorAll('.gfx > div[id$="_svg"]').forEach(d => dibujaGrafica(d.id.replace(/_svg$/,''))); }
@@ -4203,6 +4750,657 @@ function sacaVitales(frase, paso, modo, choques){
     }
   });
 }
+
+/* ══════════ TRAER LA HISTORIA DEL CONSULTORIO ══════════
+
+   El Dr. Soto ya levanta la historia clínica de sus pacientes en el
+   expediente de su consultorio (consulta.miguelsotomd.com). Volver a
+   capturarla aquí no sólo cuesta tiempo: dos capturas del mismo
+   interrogatorio terminan diciendo cosas distintas, y entonces el
+   expediente ya no sirve para lo que existe.
+
+   Esto NO conecta los dos sistemas. Él aprieta un botón allá, que le da un
+   código; lo pega aquí, ve exactamente qué va a entrar y en qué campo, y
+   entonces prellena. Se hizo así a propósito: él elige las dos puntas, de
+   modo que el sistema nunca puede empatar por su cuenta a dos pacientes
+   distintas, que es el error que de verdad hace daño.
+
+   Cuatro reglas que no se negocian:
+
+   1. NO SE PISA NADA. Un campo que ya tiene algo escrito se respeta y se
+      reporta como respetado. Lo traído sólo llena huecos.
+
+   2. NO SE TRAEN LOS HALLAZGOS DEL DÍA. Signos vitales, exploración
+      física, diagnósticos y plan son de la consulta de aquel día, no del
+      ingreso de hoy. Se muestran aparte y él decide. Esto ya nos pasó una
+      vez al heredar notas dentro del consultorio: una nota nacía con los
+      hallazgos de otro día listos para firmarse.
+
+   3. NO SE TRADUCE «EMBARAZO». El consultorio pregunta «¿embarazo actual?»
+      y Renasté pregunta «¿embarazo descartado?». No son la misma pregunta
+      invertida: que hace meses no hubiera embarazo no lo descarta hoy, y
+      esa casilla se firma antes de anestesiar. Se captura aquí.
+
+   4. SÓLO SE ESCRIBE DONDE DE VERDAD CABE. No basta con que el diccionario
+      tenga un campo equivalente: hay que poder escribirlo. Un control de
+      casillas no recibe texto, una casilla de fecha no recibe «hace dos
+      años», y un campo bloqueado porque se hereda del caso no se toca. El
+      programa no lo supone leyendo el diccionario: se lo pregunta al
+      formulario que está en pantalla, que es de donde leeFormulario() va a
+      leer al guardar. Lo que no cabe se dice y se guarda en «Sin ubicar».
+
+   Queda rastro: de dónde vino, de qué fecha y cuándo se trajo, escrito en
+   el propio documento. NOM-004-SSA3-2012 5.10 y 5.11. */
+
+const TRAER_MARCA = 'ZXHC1.';
+
+/* El JSON viaja en base64 por una razón práctica: un pegado de texto plano
+   con saltos de línea se corta o se reacomoda al pasar por el portapapeles
+   y por los cuadros de texto. Esto no es cifrado y no pretende serlo: son
+   datos de la paciente y por eso el código no viaja por correo ni por una
+   dirección web, sólo del portapapeles de su máquina a esta pantalla. */
+function traerDeB64(b64){
+  const bin = atob(String(b64).replace(/-/g, '+').replace(/_/g, '/'));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+/* ── El mapeo, como tabla y no escondido en el código ──────────────────
+
+   Los dos diccionarios nacieron por separado: de los 151 campos del
+   consultorio sólo 17 identificadores coinciden con los de Renasté. Cada
+   renglón de aquí abajo es una traducción, y las que no tienen destino se
+   dicen en voz alta en vez de perderse.
+
+   `de`    id (o ids) del consultorio
+   `a`     id de Renasté, o null si no existe campo equivalente
+   `une`   rótulos con los que se juntan varios campos del consultorio en uno
+   `dia`   es hallazgo de aquel día: se muestra, no se escribe solo
+   `nota`  por qué, cuando hace falta explicarlo */
+const MAPA_CONSULTORIO = [
+  /* Antecedentes heredo-familiares. Renasté separa trombosis, que es la que
+     cambia la conducta; el resto va junto. */
+  { de:['ahf_positivos','ahf_descripcion'], a:'ahf_otros',
+    une:['Positivos','Descripción'] },
+
+  /* Personales patológicos */
+  { de:'app_alergicos',       a:'app_alergicos' },
+  { de:'app_quirurgicos',     a:'app_quirurgicos' },
+  { de:'app_anestesicos',     a:'app_anestesicos' },
+  { de:'app_transfusionales', a:'app_transfusionales' },
+  { de:'app_oncologicos',     a:'app_cancer' },
+  { de:'app_dermatologicos',  a:'app_dermatologicas' },
+  { de:['app_cronicos','app_medicamentos_actuales','app_hospitalizaciones'],
+    a:'app_enf_medicamentos',
+    une:['Crónico-degenerativos','Medicamentos de uso actual','Hospitalizaciones previas'],
+    nota:'Renasté no tiene campo propio para hospitalizaciones ni para ' +
+         'medicamentos de uso actual; los tres van juntos aquí, rotulados.' },
+
+  /* Personales no patológicos */
+  { de:'apnp_tabaquismo',   a:'apnp_tabaquismo' },
+  { de:'apnp_alcoholismo',  a:'apnp_alcoholismo' },
+  { de:'apnp_toxicomanias', a:'apnp_toxicomanias' },
+  { de:'apnp_actividad_fisica', a:null,
+    nota:'Renasté no pregunta actividad física en la historia clínica.' },
+  { de:'apnp_dieta', a:null,
+    nota:'Renasté no captura la dieta como texto sino en nueve casillas de ' +
+         'frecuencia semanal (agua, fruta, verduras…). No se reparte solo.' },
+
+  /* Gineco-obstétricos */
+  { de:'ago_fum',             a:'ago_fum' },
+  { de:'ago_papanicolaou',    a:'ago_papanicolaou' },
+  { de:'ago_estudio_mamario', a:'ago_mastografia' },
+  { de:'ago_menarca', a:null, nota:'Renasté no pide menarca en la historia clínica.' },
+  { de:'ago_lactancia', a:null, nota:'Renasté no pide lactancia.' },
+  { de:'ago_anticonceptivo', a:null, nota:'Renasté no pide método anticonceptivo.' },
+  { de:'ago_embarazo_actual', a:null,
+    nota:'A PROPÓSITO no se trae. Allá la pregunta es «¿embarazo actual?» y ' +
+         'aquí es «¿embarazo descartado?», que no es la misma pregunta al revés: ' +
+         'se descarta antes de anestesiar, no hace meses. Se captura aquí.' },
+
+  /* Padecimiento: cuatro campos de allá en uno de aquí. Juntar no pierde
+     nada; al revés sí perdería. */
+  { de:['pa_motivo','pa_evolucion','pa_tratamientos_previos','pa_expectativa'],
+    a:'hc2_padecimiento',
+    une:['Motivo','Tiempo de evolución','Tratamientos previos','Expectativa del paciente'] },
+
+  /* Interrogatorio por aparatos: seis en uno. */
+  { de:['ap_cardiovascular','ap_respiratorio','ap_digestivo','ap_urinario',
+        'ap_nervioso','ap_piel_anexos'],
+    a:'hc2_aparatos',
+    une:['Cardiovascular','Respiratorio','Digestivo','Urinario','Nervioso','Piel y anexos'] },
+
+  /* Ficha y piel */
+  { de:'paciente_grupo_etnico', a:'hc_grupo_etnico' },
+  { de:'piel_fototipo',         a:'piel_fototipo' },
+  { de:'piel_valoracion', a:null,
+    nota:'Renasté valora la piel en siete casillas (estado, tipo, biotipo, tacto, ' +
+         'características, alteraciones, arrugas). No se reparte solo.' },
+
+  /* Hallazgos de aquel día: se muestran, no se escriben. */
+  { de:'sv_ta',    a:'hc_sv_ta',    dia:true },
+  { de:'sv_fc',    a:'hc_sv_fc',    dia:true },
+  { de:'sv_fr',    a:'hc_sv_fr',    dia:true },
+  { de:'sv_temp',  a:'hc_sv_temp',  dia:true },
+  { de:'sv_sato2', a:'hc_sv_sato2', dia:true },
+  { de:'sv_peso',  a:'hc_sv_peso',  dia:true },
+  { de:'sv_talla', a:'hc_sv_talla', dia:true },
+  { de:'ef_habitus',       a:'hc2_habitus',       dia:true },
+  { de:'ef_cabeza_cuello', a:'hc2_cabeza_cuello', dia:true },
+  { de:'ef_torax',         a:'hc2_torax',         dia:true },
+  { de:'ef_mamas',         a:'hc2_mamas',         dia:true },
+  { de:'ef_abdomen',       a:'hc2_abdomen',       dia:true },
+  { de:'ef_genitales',     a:'hc2_genitales',     dia:true },
+  { de:'ef_extremidades',  a:'hc2_extremidades',  dia:true },
+  { de:'estudios_resultados', a:'hc2_laboratorio',  dia:true },
+  { de:'diagnosticos',        a:'hc2_diagnosticos', dia:true },
+  { de:'pronostico',          a:'hc2_pronostico',   dia:true },
+  { de:'plan_tratamiento',    a:'hc2_indicacion',   dia:true },
+  { de:'ef_regional', a:null, dia:true,
+    nota:'Renasté explora por regiones con campos propios; no hay un campo ' +
+         '«regional dirigida» donde ponerlo.' },
+  { de:'ef_antropometria', a:null, dia:true,
+    nota:'Renasté no tiene campo de medidas antropométricas en la historia.' }
+];
+
+/* ── ¿De verdad cabe? Se le pregunta al formulario, no al diccionario ──
+
+   El diccionario dice qué control le toca a cada campo, pero lo que decide
+   si un valor se puede escribir es el control pintado en pantalla:
+   leeFormulario() lee del DOM al guardar, así que escribir en un <div> de
+   casillas no guarda nada, y escribir «hace dos años» en un <input
+   type=date> lo deja vacío. Las dos cosas pasarían en silencio. */
+function traerAFecha(v){
+  const s = String(v || '').trim();
+  let m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (m) return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (m) return m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+  return '';
+}
+
+function traerCabe(id, valor){
+  const c = PORID[id];
+  if (!c) return { ok:false, porque:'El campo «' + id + '» ya no está en el ' +
+                                    'diccionario de Renasté: hay que actualizar el mapeo.' };
+  const el = $('f_' + id);
+  if (!el) return { ok:false, porque:'Ese campo no aparece en esta historia clínica.' };
+  if (el.readOnly || el.disabled)
+    return { ok:false, porque:'Renasté lo hereda del caso y lo deja bloqueado.' };
+
+  const tag = String(el.tagName || '').toLowerCase();
+  if (tag === 'textarea') return { ok:true, valor:valor };
+  if (tag === 'select'){
+    const ops = Array.prototype.map.call(el.options, function(o){ return o.value; })
+                     .filter(Boolean);
+    const igual = ops.filter(function(o){ return traerNorm(o) === traerNorm(valor); })[0];
+    return igual ? { ok:true, valor:igual }
+                 : { ok:false, porque:'Aquí es una lista cerrada y «' + valor +
+                                      '» no es una de sus opciones.' };
+  }
+  if (tag === 'input'){
+    const tipo = String(el.type || 'text').toLowerCase();
+    if (tipo === 'date'){
+      const f = traerAFecha(valor);
+      return f ? { ok:true, valor:f }
+               : { ok:false, porque:'Aquí es una casilla de fecha y allá vino como ' +
+                                    'texto libre («' + String(valor).slice(0, 40) + '»).' };
+    }
+    if (tipo === 'number'){
+      const n = String(valor).trim().replace(',', '.');
+      return /^-?\d+(\.\d+)?$/.test(n)
+        ? { ok:true, valor:n }
+        : { ok:false, porque:'Aquí es un número y allá vino como texto.' };
+    }
+    if (tipo === 'checkbox')
+      return { ok:false, porque:'Aquí es una casilla de marcar, no un texto.' };
+    return { ok:true, valor:valor };
+  }
+  return { ok:false, porque:'Renasté captura esto con casillas, no con un renglón ' +
+                            'de texto: hay que marcarlas a mano.' };
+}
+
+/* Gestas/partos/abortos/cesáreas: allá es un texto («2/1/0/1», «G2 P1 A0 C1»),
+   aquí son cuatro casillas. Se parte sólo cuando se entiende sin adivinar. */
+function traerPareGPAC(txt){
+  const s = String(txt || '').trim();
+  if (!s) return null;
+  const m = s.match(/^\s*G?\s*(\d+)\D+P?\s*(\d+)\D+A?\s*(\d+)\D+C?\s*(\d+)\s*$/i);
+  if (!m) return null;
+  return { ago_g:m[1], ago_p:m[2], ago_a:m[3], ago_c:m[4] };
+}
+
+function traerNorm(s){
+  return String(s == null ? '' : s).toLowerCase().normalize('NFD')
+    .replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+/* Dos nombres son el mismo aunque vengan en otro orden: aquí se guarda
+   «Ailyn Hernández Porello» y allá se arma «Hernández Porello Ailyn». */
+function traerMismoNombre(a, b){
+  const pa = traerNorm(a).split(' ').filter(Boolean).sort().join(' ');
+  const pb = traerNorm(b).split(' ').filter(Boolean).sort().join(' ');
+  return !!pa && pa === pb;
+}
+
+/* Lo que ya tiene valor en el documento abierto. Cuenta tanto lo guardado
+   como lo que esté escrito en pantalla sin guardar: pisar lo segundo sería
+   borrarle a alguien lo que acaba de teclear. */
+function traerYaTiene(id){
+  const el = $('f_' + id);
+  if (el && String(el.value || '').trim()) return true;
+  return !!String(DOC.campos[id] == null ? '' : DOC.campos[id]).trim();
+}
+
+function traerUne(payload, ids, rotulos){
+  const partes = [];
+  ids.forEach(function(id, i){
+    const v = String(payload.campos[id] == null ? '' : payload.campos[id]).trim();
+    if (!v) return;
+    partes.push(ids.length > 1 ? (rotulos[i] + ': ' + v) : v);
+  });
+  return partes.join('\n');
+}
+
+/* El rótulo humano lo manda el consultorio junto con los datos, así que el
+   día que él agregue un campo allá, aquí sale con su nombre y no con su id. */
+function traerRotulo(payload, ids, r){
+  if (r.une) return r.une.join(' + ');
+  if (r.a && PORID[r.a]) return PORID[r.a].etiqueta;
+  return (payload.etiquetas || {})[ids[0]] || ids[0];
+}
+
+/* ── La revisión: qué va a pasar con cada cosa, antes de que pase ────── */
+function traerRevisa(payload){
+  const filas = [];
+  MAPA_CONSULTORIO.forEach(function(r){
+    const ids = Array.isArray(r.de) ? r.de : [r.de];
+    const valor = traerUne(payload, ids, r.une || []);
+    if (!valor) return;                      /* vacío allá: no se reporta */
+    const nombre = traerRotulo(payload, ids, r);
+
+    if (r.dia){
+      const c = r.a ? traerCabe(r.a, valor) : { ok:false, porque:'' };
+      filas.push({ estado:'dia', nombre:nombre, valor:valor,
+                   final: c.ok ? c.valor : valor,
+                   destino: c.ok ? r.a : null,
+                   nota: r.nota || (c.ok ? '' : c.porque) });
+      return;
+    }
+    if (!r.a){
+      filas.push({ estado:'sin-campo', nombre:nombre, valor:valor, final:valor,
+                   destino:null, nota:r.nota || '' });
+      return;
+    }
+    if (traerYaTiene(r.a)){
+      filas.push({ estado:'ocupado', nombre:nombre, valor:valor, final:valor,
+                   destino:r.a, nota:'Aquí ya hay algo escrito. No se pisa.' });
+      return;
+    }
+    const cabe = traerCabe(r.a, valor);
+    if (!cabe.ok){
+      filas.push({ estado:'no-cabe', nombre:nombre, valor:valor, final:valor,
+                   destino:null, nota:cabe.porque });
+      return;
+    }
+    filas.push({ estado:'escribe', nombre:nombre, valor:valor, final:cabe.valor,
+                 destino:r.a, nota:r.nota || '' });
+  });
+
+  /* Trombosis familiar: cambia la conducta, así que tiene campo propio. */
+  const ahf = String(payload.campos.ahf_positivos || '') + ' ' +
+              String(payload.campos.ahf_descripcion || '');
+  if (/trombo/.test(traerNorm(ahf)) && !traerYaTiene('ahf_trombosis')){
+    const v = 'Sí — ver antecedentes heredo-familiares';
+    const c = traerCabe('ahf_trombosis', v);
+    filas.push({ estado: c.ok ? 'escribe' : 'no-cabe',
+                 nombre:'Historia familiar de trombosis', valor:v,
+                 final: c.ok ? c.valor : v, destino: c.ok ? 'ahf_trombosis' : null,
+                 nota:'La historia del consultorio menciona trombosis.' +
+                      (c.ok ? '' : ' ' + c.porque) });
+  }
+
+  /* Gestas / partos / abortos / cesáreas */
+  const bruto = payload.campos.ago_gpac;
+  if (bruto){
+    const gpac = traerPareGPAC(bruto);
+    if (gpac){
+      Object.keys(gpac).forEach(function(id){
+        const etq = (PORID[id] || {}).etiqueta || id;
+        if (traerYaTiene(id)){
+          filas.push({ estado:'ocupado', nombre:etq, valor:gpac[id],
+                       final:gpac[id], destino:id,
+                       nota:'Aquí ya hay algo escrito. No se pisa.' });
+          return;
+        }
+        const c = traerCabe(id, gpac[id]);
+        filas.push({ estado: c.ok ? 'escribe' : 'no-cabe', nombre:etq,
+                     valor:gpac[id], final: c.ok ? c.valor : gpac[id],
+                     destino: c.ok ? id : null,
+                     nota:'De «' + bruto + '».' + (c.ok ? '' : ' ' + c.porque) });
+      });
+    } else {
+      filas.push({ estado:'no-cabe', nombre:'Gestas / partos / abortos / cesáreas',
+                   valor:String(bruto), final:String(bruto), destino:null,
+                   nota:'No se entendió como cuatro números, y aquí son cuatro ' +
+                        'casillas. Cópielo a mano antes que adivinar.' });
+    }
+  }
+  return filas;
+}
+
+/* ── Escribir ───────────────────────────────────────────────────────── */
+function traerAplica(payload, filas, conHallazgos){
+  let n = 0;
+  const sueltos = [];
+  filas.forEach(function(f){
+    const escribible = f.destino &&
+      (f.estado === 'escribe' ||
+       (conHallazgos && f.estado === 'dia' && !traerYaTiene(f.destino)));
+    if (escribible){
+      DOC.campos[f.destino] = f.final;
+      const el = $('f_' + f.destino);
+      if (el) el.value = f.final;
+      n++;
+    } else if (f.estado === 'sin-campo' || f.estado === 'no-cabe'){
+      sueltos.push('· ' + f.nombre + ': ' + f.valor +
+                   (f.nota ? '\n    (' + f.nota + ')' : ''));
+    }
+  });
+
+  /* Lo que no cupo no se tira: cae íntegro en «Sin ubicar», que es el cajón
+     que esta pantalla ya tiene justo para eso. */
+  const cabeza = 'Prellenado desde el expediente del consultorio ' +
+    '(consulta.miguelsotomd.com), historia del ' +
+    (payload.fecha_historia || '(sin fecha)') +
+    (payload.folio ? ', folio ' + payload.folio : '') +
+    ', traída el ' + hoyISO() + '.';
+  const bloque = [cabeza].concat(
+    sueltos.length
+      ? ['', 'Lo que no tiene campo en Renasté y hay que ver a mano:'].concat(sueltos)
+      : []).join('\n');
+  const sin = $('f__sin_ubicar');
+  if (sin) sin.value = (sin.value ? sin.value + '\n\n' : '') + bloque;
+  DOC.campos.__sin_ubicar =
+    (DOC.campos.__sin_ubicar ? DOC.campos.__sin_ubicar + '\n\n' : '') + bloque;
+
+  return { escritos:n, sueltos:sueltos.length };
+}
+
+/* ── La pantalla ────────────────────────────────────────────────────── */
+let TRAER_CARGA = null, TRAER_FILAS = [];
+
+function traerAbre(){
+  $('traer-codigo').value = '';
+  $('traer-aviso').innerHTML = '';
+  $('traer-tabla').innerHTML = '';
+  $('traer-ok').classList.add('oculto');
+  $('traer-hallazgos-caja').classList.add('oculto');
+  $('traer-hallazgos').checked = false;
+  TRAER_CARGA = null; TRAER_FILAS = [];
+  $('traer').classList.remove('oculto');
+}
+
+function traerCierra(){ $('traer').classList.add('oculto'); }
+
+const TRAER_ESTADOS = {
+  'escribe':   ['ok',   'Se escribe'],
+  'dia':       ['warn', 'Hallazgo de aquel día'],
+  'ocupado':   ['warn', 'Ya hay algo aquí'],
+  'no-cabe':   ['warn', 'No cabe aquí'],
+  'sin-campo': ['warn', 'Sin campo en Renasté']
+};
+
+function traerPinta(){
+  const orden = Object.keys(TRAER_ESTADOS);
+  const filas = TRAER_FILAS.slice().sort(function(a, b){
+    return orden.indexOf(a.estado) - orden.indexOf(b.estado);
+  });
+  if (!filas.length){
+    $('traer-tabla').innerHTML =
+      '<div class="aviso warn">Esa historia del consultorio no trae nada que ' +
+      'se pueda pasar: sus campos vinieron vacíos.</div>';
+    $('traer-ok').classList.add('oculto');
+    return;
+  }
+  const cuenta = {};
+  filas.forEach(function(f){ cuenta[f.estado] = (cuenta[f.estado] || 0) + 1; });
+
+  $('traer-tabla').innerHTML =
+    '<div class="fila" style="gap:8px;flex-wrap:wrap;margin-top:12px">' +
+      orden.filter(function(k){ return cuenta[k]; }).map(function(k){
+        return '<span class="etq ' + TRAER_ESTADOS[k][0] + '">' +
+               cuenta[k] + ' · ' + esc(TRAER_ESTADOS[k][1]) + '</span>';
+      }).join('') +
+    '</div>' +
+    '<div class="desbordado" style="max-height:44vh;overflow:auto;margin-top:10px">' +
+    '<table class="rep"><tr><th style="width:150px">Qué pasa</th><th>Dato</th>' +
+    '<th style="width:190px">Va a</th></tr>' +
+    filas.map(function(f){
+      const e = TRAER_ESTADOS[f.estado] || ['', f.estado];
+      return '<tr><td><span class="etq ' + e[0] + '">' + esc(e[1]) + '</span></td>' +
+             '<td><b>' + esc(f.nombre) + '</b>' +
+             '<div class="sub" style="white-space:pre-wrap;margin-top:2px">' +
+               esc(String(f.valor).slice(0, 400)) + '</div>' +
+             (f.nota ? '<div class="sub" style="margin-top:4px"><i>' + esc(f.nota) +
+                       '</i></div>' : '') +
+             '</td><td>' +
+             (f.destino && PORID[f.destino] ? esc(PORID[f.destino].etiqueta)
+                                            : '<i>a «Sin ubicar»</i>') +
+             '</td></tr>';
+    }).join('') + '</table></div>';
+
+  $('traer-hallazgos-caja').classList.toggle('oculto', !cuenta['dia']);
+  $('traer-ok').classList.remove('oculto');
+}
+
+function traerLee(){
+  const txt = String($('traer-codigo').value || '').trim();
+  if (!txt){ aviso('traer-aviso','warn','Pegue el código que le dio el consultorio.'); return; }
+  const i = txt.indexOf(TRAER_MARCA);
+  if (i < 0){
+    aviso('traer-aviso','malo','Eso no parece un código de historia del consultorio: ' +
+          'tiene que empezar con ' + TRAER_MARCA);
+    return;
+  }
+  let p;
+  try{
+    p = JSON.parse(traerDeB64(txt.slice(i + TRAER_MARCA.length).replace(/\s+/g, '')));
+  }catch(e){
+    aviso('traer-aviso','malo','El código viene incompleto o cortado. Vuelva a ' +
+          'copiarlo completo desde el consultorio.');
+    return;
+  }
+  if (!p || !p.campos){ aviso('traer-aviso','malo','El código no trae campos.'); return; }
+
+  /* El candado que importa: que sea la MISMA paciente. */
+  const nAqui = String(EXP.paciente.Fecha_Nacimiento || '').slice(0, 10);
+  const nAlla = String((p.paciente && p.paciente.nacimiento) || '').slice(0, 10);
+  const mismoNombre = traerMismoNombre(EXP.paciente.Nombre_Completo,
+                                       p.paciente && p.paciente.nombre);
+  const mismaFecha  = !!nAqui && nAqui === nAlla;
+
+  if (!mismoNombre && !mismaFecha){
+    aviso('traer-aviso','malo',
+      'Esa historia no es de esta paciente. Aquí está abierta «' +
+      (EXP.paciente.Nombre_Completo || '—') + '» y el código viene de «' +
+      ((p.paciente && p.paciente.nombre) || '—') + '». No se trae nada.');
+    $('traer-ok').classList.add('oculto');
+    $('traer-tabla').innerHTML = '';
+    return;
+  }
+  if (!mismoNombre || !mismaFecha){
+    aviso('traer-aviso','warn',
+      'Coincide a medias: aquí «' + (EXP.paciente.Nombre_Completo || '—') +
+      (nAqui ? ', ' + nAqui : '') + '» y allá «' +
+      ((p.paciente && p.paciente.nombre) || '—') + (nAlla ? ', ' + nAlla : '') +
+      '». Revise que sea la misma persona antes de prellenar.');
+  } else {
+    aviso('traer-aviso','ok',
+      'Historia de ' + ((p.paciente && p.paciente.nombre) || '') + ', del ' +
+      (p.fecha_historia || 'sin fecha') + '. Esto es lo que va a entrar:');
+  }
+
+  TRAER_CARGA = p;
+  TRAER_FILAS = traerRevisa(p);
+  traerPinta();
+}
+
+/* ── Cableado ───────────────────────────────────────────────────────── */
+$('btn-traer').onclick    = traerAbre;
+$('traer-cerrar').onclick = traerCierra;
+$('traer-leer').onclick   = traerLee;
+
+$('traer-ok').onclick = function(){
+  if (!TRAER_CARGA) return;
+  const r = traerAplica(TRAER_CARGA, TRAER_FILAS, $('traer-hallazgos').checked);
+  traerCierra();
+  aviso('doc-aviso', 'ok',
+    'Prellenado con la historia del consultorio: ' + r.escritos + ' campo(s) ' +
+    'escrito(s)' + (r.sueltos ? ' y ' + r.sueltos + ' que no caben aquí, guardado(s) ' +
+    'íntegros en «Sin ubicar»' : '') + '. Revísela, complete lo que Renasté pide de ' +
+    'más (piel, dieta, Caprini, embarazo descartado) y guárdela. Nada se firmó solo.');
+};
+
+
+/* ══════════ LA PROGRAMACIÓN DEL DÍA ══════════
+
+   De dónde sale la exigencia, verificado contra la fuente y no supuesto:
+
+   La guía de autoverificación de COFEPRIS para establecimientos que ofrecen
+   procedimientos quirúrgicos con fines estéticos pide, en su punto 14:
+   «En caso de contar con servicio consulta externa, cuenta con registro
+   diario de los pacientes». Está condicionado a la consulta externa, y la
+   guía NO exige bitácora diaria de intervenciones quirúrgicas. Así que esta
+   hoja es obligatoria sólo si la licencia de Renasté ampara consulta externa;
+   si no, es un documento operativo que de todos modos conviene tener.
+
+   Se imprime de cualquier fecha, no sólo de hoy: la misma casilla de fecha de
+   la agenda manda. Por eso no hay que «generar las que ya pasaron» como un
+   lote de archivos — se elige el día y se imprime, que además es más honesto:
+   la hoja se arma con lo que la base dice HOY de ese día, no con una copia
+   congelada que nadie puede volver a cotejar.
+
+   Un día sin cirugías también se imprime, diciendo que no hubo. Un registro
+   que sólo existe los días que hubo movimiento no demuestra nada de los otros.
+
+   EL ALCANCE SE DECLARA EN EL PAPEL. El servidor devuelve sólo los casos que
+   el usuario puede ver: quien no tiene alcance completo recibe únicamente los
+   suyos. Una hoja parcial presentada como registro del establecimiento sería
+   una mentira, así que cuando el alcance es parcial la hoja lo dice en el
+   título y en el pie, y no se llama registro del establecimiento. */
+
+function progFechaLarga(iso){
+  const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio',
+                 'agosto','septiembre','octubre','noviembre','diciembre'];
+  const s = String(iso || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = new Date(s + 'T12:00:00');
+  if (isNaN(d.getTime())) return s;
+  return d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear();
+}
+
+function progCuandoAhora(){
+  const a = new Date();
+  const dos = n => String(n).padStart(2, '0');
+  return a.getFullYear() + '-' + dos(a.getMonth() + 1) + '-' + dos(a.getDate()) +
+         ' ' + dos(a.getHours()) + ':' + dos(a.getMinutes());
+}
+
+function progRenglones(casos){
+  if (!casos.length){
+    return '<p class="imp-vitales" style="margin-top:10px">' +
+           'Sin procedimientos programados para esta fecha.</p>';
+  }
+  const fila = c =>
+    '<tr>' +
+      '<td>' + esc(String(c.Hora_Inicio || '').slice(0, 5) || '—') + '</td>' +
+      '<td>' + esc(c.Expediente_No || '—') + '</td>' +
+      '<td>' + esc(c.Paciente_Nombre || c.Paciente_ID || '—') + '</td>' +
+      '<td>' + esc(c.Procedimiento_Principal || '—') + '</td>' +
+      '<td>' + esc(c.Quirofano || '—') + '</td>' +
+      '<td>' + esc(c.Tipo_Anestesia || '—') + '</td>' +
+      '<td>' + esc(nombreDeCorreo(c.Cirujano_Nombre || c.Cirujano_Email || '')) + '</td>' +
+      '<td>' + esc(nombreDeCorreo(c.Anestesiologo_Nombre || c.Anestesiologo_Email || '') || '—') + '</td>' +
+      '<td>' + esc(etiquetaAgenda(c.Estatus_Agenda)) + '</td>' +
+    '</tr>';
+
+  return '<table class="imp-tabla">' +
+    '<tr><th>Hora</th><th>Expediente</th><th>Paciente</th><th>Procedimiento</th>' +
+    '<th>Quirófano</th><th>Anestesia</th><th>Cirujano</th><th>Anestesiólogo</th>' +
+    '<th>Estatus</th></tr>' +
+    casos.map(fila).join('') + '</table>';
+}
+
+async function imprimeProgramacionDelDia(boton){
+  if (IMPRIMIENDO_FORMATO) return;
+  IMPRIMIENDO_FORMATO = true;
+  const textoBoton = boton.textContent;
+  boton.disabled = true;
+  boton.textContent = 'Preparando…';
+  quitaModoFormato();
+
+  try{
+    const dia = ($('agenda-fecha') && $('agenda-fecha').value) || hoyISO();
+    const r = await api('agendaDelDia', { fecha: dia });
+    const casos = (r.casos || []).slice().sort(function(a, b){
+      return String(a.Hora_Inicio || '').localeCompare(String(b.Hora_Inicio || ''));
+    });
+
+    const completo = !!(YO && YO.ve_todo);
+    const quien = (YO && (YO.nombre || YO.correo)) || '';
+    const titulo = completo
+      ? 'Programación quirúrgica del día'
+      : 'Programación del día — casos de ' + (quien || 'este usuario');
+
+    $('impresion').innerHTML =
+      '<table class="imp-pliego"><thead><tr><td>' +
+        '<div class="imp-corre">' + esc((EST.nombre || 'Clínicas Renasté') + ' · ' + titulo +
+          ' · ' + progFechaLarga(dia)) + '</div>' +
+      '</td></tr></thead><tbody><tr><td>' +
+      '<div class="imp-membrete">' +
+        '<div class="n">' + esc(EST.nombre || 'Clínicas Renasté') + '</div>' +
+        '<div class="d">' + esc(EST.domicilio || '') +
+          (EST.licencia_sanitaria ? ' · Licencia sanitaria ' + esc(EST.licencia_sanitaria) : '') +
+          (EST.telefono ? ' · Tel. ' + esc(EST.telefono) : '') + '</div>' +
+      '</div>' +
+      '<div class="imp-titulo">' + esc(titulo) +
+        '<span>' + esc(progFechaLarga(dia)) + ' · ' +
+        casos.length + ' paciente(s)</span></div>' +
+      progRenglones(casos) +
+      '<div class="imp-firma">' +
+        '<div class="linea"></div>' +
+        '<div class="pie"><b>' + esc(quien || '______________________________') + '</b>' +
+          '<br>Responsable del registro</div>' +
+      '</div>' +
+      '<div class="imp-nota">' +
+        (completo
+          ? 'Registro diario de pacientes del establecimiento. '
+          : 'ALCANCE PARCIAL: esta hoja sólo contiene los casos en los que ' +
+            'participa quien la imprimió, no todos los del establecimiento. ') +
+        'Impresa' + (quien ? ' por ' + esc(quien) : '') + ' el ' + progCuandoAhora() +
+        '. Se arma al momento con lo que la base de datos tiene de esa fecha. ' +
+        'El expediente es propiedad del establecimiento y se conserva cinco años ' +
+        'contados desde el último acto médico (NOM-004-SSA3-2012, 5.4).</div>' +
+      '</td></tr></tbody>' +
+      '<tfoot><tr><td></td></tr></tfoot></table>';
+
+    window.print();
+    aviso('agenda-sub', 'ok', 'Programación del ' + progFechaLarga(dia) + ': ' +
+      casos.length + ' paciente(s).' +
+      (completo ? '' : ' OJO: sólo salieron los casos suyos, no todos los del día.'));
+  }catch(e){
+    aviso('agenda-sub', 'malo', 'No se pudo armar la programación: ' + e.message);
+  } finally {
+    IMPRIMIENDO_FORMATO = false;
+    boton.disabled = false;
+    boton.textContent = textoBoton;
+  }
+}
+
+$('btn-programacion').onclick = function(){ imprimeProgramacionDelDia(this); };
+
 </script>
 </body>
 </html>
