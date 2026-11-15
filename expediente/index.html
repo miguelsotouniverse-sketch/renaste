@@ -944,6 +944,25 @@ const cargando = (on) => $('cargando').classList.toggle('on', !!on);
    copie window.RENASTE_ULTIMO_FALLO. Un error mudo es un error que no se arregla. */
 window.RENASTE_ULTIMO_FALLO = null;
 
+/* ── Registro de impresión ────────────────────────────────────────────
+   Imprimir es lo que vuelve real una nota: aquí no hay firma electrónica y la
+   hoja firmada a mano es el expediente. Por eso cada impresión se avisa al
+   servidor —quién, qué documento, de qué paciente y caso, qué versión— y
+   Augusta la usa para saber qué parte del expediente ya está en papel.
+   Va por fuera de api(): no prende el indicador de carga y, si falla, NO
+   molesta a quien imprime; sólo deja la huella en la consola. */
+function registraImpresion(datos){
+  try{
+    if (!API || !TOKEN) return;
+    fetch(API, { method:'POST', credentials:'omit',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(Object.assign({accion:'impresion', id_token:TOKEN}, datos||{})) })
+      .then(r => r.json())
+      .then(j => { if (!j || !j.ok) console.warn('[impresión] no quedó registrada', j); })
+      .catch(e => console.warn('[impresión] no quedó registrada', e));
+  }catch(e){ console.warn('[impresión] no quedó registrada', e); }
+}
+
 /* ── Reintento, y por qué NO en todas las acciones ───────────────────────
 
    El 16 sep 2026 `audioTranscribir` volvió con HTTP 404 y una página de error
@@ -1950,6 +1969,8 @@ async function imprimeINE(){
     });
     visor.innerHTML = '';
     window.print();
+    registraImpresion({ formatos: ['identificacion'],
+      paciente_id: (EXP && EXP.paciente && EXP.paciente.Paciente_ID) || '' });
   }catch(e){
     quitaModoFormato();
     imp.innerHTML = '';
@@ -2724,6 +2745,8 @@ async function imprimeFormatos(casoId, claves, boton){
       imp.innerHTML = '';
     });
     window.print();
+    registraImpresion({ caso_id: casoId, formatos: claves,
+      paciente_id: (EXP && EXP.paciente && EXP.paciente.Paciente_ID) || '' });
     if (avisoIdent) avisoGlobal(avisoIdent);
   }catch(e){
     quitaModoFormato();
@@ -2928,6 +2951,14 @@ $('btn-imprimir').onclick = function(){
   }
   armaImpresion();
   window.print();
+  if (DOC.Doc_ID){
+    registraImpresion({ doc_id: DOC.Doc_ID, caso_id: DOC.Caso_ID || '',
+      paciente_id: (EXP && EXP.paciente && EXP.paciente.Paciente_ID) || '' });
+  } else {
+    aviso('doc-aviso', 'warn',
+      'Esta nota todavía no está guardada, así que su impresión no queda registrada. ' +
+      'Guárdela y vuelva a imprimirla para que cuente en el expediente.');
+  }
 };
 
 /* ══════════ LA HOJA QUE SE IMPRIME ══════════
