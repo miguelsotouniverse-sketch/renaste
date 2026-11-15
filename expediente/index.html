@@ -352,37 +352,55 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
      Probado con Chromium contra este mismo CSS: antes se encimaba en la hoja 2,
      después no, y el número de hojas no cambia. */
   .imp-pliego{width:100%;border-collapse:collapse}
-  .imp-pliego>thead>tr>td{padding:14mm 14mm 10px}
+  .imp-pliego>thead>tr>td{padding:12mm 14mm 8px}
   .imp-pliego>tbody>tr>td{padding:0 14mm;vertical-align:top}
-  /* El margen de abajo. Va vacío a propósito: si llevara texto, ese texto se
-     repetiría en todas las hojas. */
-  .imp-pliego>tfoot>tr>td{height:15mm;padding:0;border:0}
+
+  /* EL PIE LLEVA LA NOTA DE PROCEDENCIA, y eso resolvió una queja de verdad:
+     una nota de tamaño normal se iba a dos hojas y la segunda traía nada más
+     la rayita de la firma.
+
+     Medido con Chromium: el margen de abajo reservaba 15 mm EN BLANCO en cada
+     hoja, mientras la nota de procedencia —documento, versión, quién capturó,
+     la leyenda de conservación— ocupaba otros 16 mm dentro del contenido. Eran
+     31 mm por hoja para decir dos cosas que caben en una. Mudando la nota a
+     este pie ocupa el espacio que ya estaba apartado y el contenido recupera
+     ~25 mm por hoja: una nota que antes necesitaba dos hojas ahora cabe en una.
+
+     Que se repita en cada hoja no es efecto colateral, es lo correcto, y por
+     la misma razón que el correlativo del encabezado: en papel las hojas se
+     sueltan, y cada una tiene que poder decir de qué documento es y de dónde
+     salió. */
+  .imp-pliego>tfoot>tr>td{padding:6px 14mm 10mm;border:0;vertical-align:bottom}
   .imp-corre{font-size:8pt;font-family:system-ui,sans-serif;
     color:#333;border-bottom:.5pt solid #999;padding-bottom:3px}
 
-  .imp-membrete{border-bottom:1.5pt solid #000;padding-bottom:5px;margin-bottom:10px}
+  /* Los huecos de abajo salieron de medir, no de gusto: cada milímetro que se
+     recorta aquí es contenido que no se va a una hoja nueva. */
+  .imp-membrete{border-bottom:1.5pt solid #000;padding-bottom:4px;margin-bottom:7px}
   .imp-membrete .n{font-size:13pt;font-weight:700;letter-spacing:.01em}
   .imp-membrete .d{font-size:8.5pt;font-family:system-ui,sans-serif;color:#222}
   .imp-titulo{display:flex;justify-content:space-between;align-items:baseline;
     font-size:12pt;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:0 0 8px}
   .imp-titulo span{font-size:9pt;font-weight:400;text-transform:none;letter-spacing:0}
   .imp-id{display:grid;grid-template-columns:1fr 1fr;gap:1px 20px;font-size:9.5pt;
-    border-bottom:.5pt solid #000;padding-bottom:8px;margin-bottom:12px}
+    border-bottom:.5pt solid #000;padding-bottom:6px;margin-bottom:9px}
   .imp-id div{break-inside:avoid}
   .imp-id b{font-weight:700}
-  .imp-grupo{font-size:11pt;font-weight:700;margin:14px 0 6px;border-bottom:.5pt solid #000;
+  .imp-grupo{font-size:11pt;font-weight:700;margin:9px 0 5px;border-bottom:.5pt solid #000;
     padding-bottom:2px;break-after:avoid}
-  .imp-campo{margin:0 0 9px;break-inside:avoid}
+  .imp-campo{margin:0 0 7px;break-inside:avoid}
   .imp-campo .e{font-weight:700;font-size:9.5pt;font-family:system-ui,sans-serif}
   .imp-campo .v{white-space:pre-wrap;margin-top:1px}
-  .imp-vitales{font-size:10.5pt;margin:0 0 9px}
+  .imp-vitales{font-size:10.5pt;margin:0 0 7px}
   .imp-tabla{width:100%;border-collapse:collapse;font-size:9pt;margin-top:3px}
   .imp-tabla th,.imp-tabla td{border:.5pt solid #666;padding:2px 4px;text-align:left}
-  .imp-firma{margin-top:30px;break-inside:avoid}
-  .imp-firma .linea{border-bottom:.75pt solid #000;height:34px;margin-bottom:3px}
+  /* Indivisible a propósito: una rayita de firma partida entre dos hojas no
+     sirve para firmar. */
+  .imp-firma{margin-top:16px;break-inside:avoid}
+  .imp-firma .linea{border-bottom:.75pt solid #000;height:26px;margin-bottom:3px}
   .imp-firma .pie{font-size:9pt;font-family:system-ui,sans-serif}
-  .imp-nota{font-size:8pt;font-family:system-ui,sans-serif;color:#444;margin-top:14px;
-    border-top:.5pt solid #bbb;padding-top:4px}
+  .imp-nota{font-size:8pt;font-family:system-ui,sans-serif;color:#444;margin-top:0;
+    border-top:.5pt solid #bbb;padding-top:3px}
 
   /* Hoja de identificación: frente arriba, reverso abajo, en una sola carta.
      Cada lado cabe en media hoja; no se fuerza tamaño real porque una foto
@@ -705,11 +723,9 @@ table.serie th:first-child,table.serie td:first-child{position:sticky;left:0;bac
     </div>
     <div id="doc-campos"></div>
     <div id="acciones" class="no-imprime">
-      <span class="etq" id="doc-estado">Borrador</span>
+      <span class="etq" id="doc-estado">Guardada</span>
       <span class="crece"></span>
-      <button class="btn" id="btn-guardar">Guardar borrador</button>
-      <button class="btn" id="btn-listo">Marcar listo para firma</button>
-      <button class="btn primario" id="btn-firmado">Archivar — impresa y firmada</button>
+      <button class="btn primario" id="btn-guardar">Guardar</button>
       <button class="btn" id="btn-anular">Anular</button>
     </div>
   </section>
@@ -891,6 +907,22 @@ function nombreDeCorreo(v){
   return c;   /* nunca se inventa un nombre: si no se sabe, va el correo */
 }
 
+/* ── Por qué hay un solo estado ────────────────────────────────────────
+
+   Hubo tres: «Borrador», «Listo para firma» e «Impresa y archivada».
+   Describían un circuito de firma que aquí no existe: Renasté no tiene firma
+   electrónica validada, la firma es autógrafa sobre papel. Entonces ninguno
+   de los tres decía nada que la hoja impresa no dijera mejor, y sí obligaban
+   a elegir entre tres botones para una sola cosa. Peor: el único resaltado
+   decía «Archivar — impresa y firmada», que es justo donde va la mano de
+   quien quiere imprimir, y guardaba.
+
+   Queda uno: «Guardada». Decisión del Dr. Soto, 15 nov 2026.
+
+   Los tres viejos NO se borran de aquí: hay notas guardadas con esos valores
+   y la lista las tiene que seguir mostrando como se guardaron. Lo que ya no
+   se hace es crear notas nuevas con ellos. */
+const ESTADO_GUARDADA  = 'Guardada';
 const ESTADO_ARCHIVADA = 'Impresa y archivada';
 const ESTADO_HEREDADO  = 'Firmado y escaneado';   /* notas viejas */
 const ESTADO_ANULADO   = 'Anulado';
@@ -2810,7 +2842,7 @@ const MOMENTOS_DOC = [
       'Nota postoperatoria' ] },
   { titulo:'Estancia y alta', docs:[
       'Notas de evolución', 'Indicaciones médicas',
-      'Nota de egreso', 'Plan de alta de internamiento' ] },
+      'Nota de egreso', 'Plan de alta de internamiento', 'Receta' ] },
   { titulo:'Excepciones', docs:[
       'Nota de referencia/traslado', 'Hoja de egreso voluntario',
       'Hoja de notificación del ministerio público' ] }
@@ -2883,6 +2915,7 @@ function edad(nac){
 /* ══════════ DOCUMENTO ══════════ */
 $('btn-volver-exp').onclick = () => vista('expediente');
 $('btn-imprimir').onclick = function(){
+  if (!DOC){ avisoGlobal('No hay ninguna nota abierta que imprimir.'); return; }
   /* Lo de «Sin ubicar» no sale en papel. Si hay algo ahí, se dice antes de
      imprimir: no para impedirlo, para que nadie firme creyendo que salió. */
   const sinUbicar = String((DOC.campos && DOC.campos.__sin_ubicar) ||
@@ -3035,16 +3068,19 @@ function armaImpresion(){
         (cedEsp ? ' · Cédula de especialidad '+esc(cedEsp) : '')+
         '<br>Firma autógrafa del médico tratante</div>'+
     '</div>' +
-    '<div class="imp-nota">Documento '+esc(DOC.Doc_ID || '(sin guardar)')+
-      ' · versión '+esc(String(DOC.Version || 1))+
-      ' · capturó '+esc(YO.correo || '')+
-      (firma.correo && String(firma.correo).toLowerCase() !== String(YO.correo||'').toLowerCase()
-        ? ' por cuenta de '+esc(firma.correo) : '')+
-      '. El expediente es propiedad del establecimiento y se conserva cinco años '+
-      'contados desde el último acto médico (NOM-004-SSA3-2012, 5.4).</div>' +
     '</td></tr></tbody>' +
-    /* El margen de abajo de cada hoja. Ver el CSS de .imp-pliego>tfoot. */
-    '<tfoot><tr><td></td></tr></tfoot></table>';
+    /* La nota de procedencia va en el PIE, no en el cuerpo: ocupa el margen
+       que de todos modos estaba reservado en blanco, y así se repite en cada
+       hoja. Ver el CSS de .imp-pliego>tfoot. */
+    '<tfoot><tr><td>' +
+      '<div class="imp-nota">Documento '+esc(DOC.Doc_ID || '(sin guardar)')+
+        ' · versión '+esc(String(DOC.Version || 1))+
+        ' · capturó '+esc(YO.correo || '')+
+        (firma.correo && String(firma.correo).toLowerCase() !== String(YO.correo||'').toLowerCase()
+          ? ' por cuenta de '+esc(firma.correo) : '')+
+        '. El expediente es propiedad del establecimiento y se conserva cinco años '+
+        'contados desde el último acto médico (NOM-004-SSA3-2012, 5.4).</div>' +
+    '</td></tr></tfoot></table>';
 }
 
 function nuevoDocumento(tipo){
@@ -3066,13 +3102,40 @@ function nuevoDocumento(tipo){
   pintaDocumento();
 }
 
+/* Abrir una nota guardada.
+
+   ESTO ES LO QUE ESTABA MAL. Si la petición fallaba, la función mostraba el
+   error con avisoGlobal —que se esconde solo a los nueve segundos— y se iba
+   sin tocar nada más. En pantalla se quedaba el formulario anterior, y en
+   memoria el documento anterior. Se veía como si la nota se hubiera abierto
+   en blanco; en realidad no se había abierto ninguna. A partir de ahí,
+   cualquier cosa que guardara no corregía esa nota: creaba otra.
+
+   Ahora lo primero que se hace es soltar el documento y vaciar la pantalla.
+   Si el servidor no contesta con una nota, no queda nada abierto, el aviso
+   se queda fijo donde se lee —no se desvanece— y guardar no hace nada. */
 async function abreDocumento(docId){
+  DOC = null;
+  $('doc-campos').innerHTML = '';
+  aviso('doc-aviso', 'ok', 'Abriendo la nota…');
+  ['btn-guardar','btn-anular','btn-imprimir','btn-dictar','btn-traer']
+    .forEach(function(id){ const e = $(id); if (e) e.disabled = true; });
   try{
     const r = await api('documento', { doc_id: docId });
+    if (!r || !r.documento || !r.documento.Doc_ID){
+      throw new Error('el servidor no devolvió la nota.');
+    }
     DOC = r.documento;
     DOC.campos = DOC.campos || {};
     pintaDocumento();
-  }catch(e){ avisoGlobal('No se pudo abrir el documento: ' + e.message); }
+  }catch(e){
+    DOC = null;
+    $('doc-campos').innerHTML = '';
+    aviso('doc-aviso', 'malo',
+      'No se pudo abrir la nota: ' + e.message +
+      ' · No quedó ninguna nota abierta, así que no hay nada que pueda guardarse ' +
+      'por error. Vuelva a intentarlo; si sigue igual, dígamelo con la hora.');
+  }
 }
 
 function casoActual(){
@@ -3239,7 +3302,9 @@ function pintaDocumento(){
      no se edita ni se vuelve a anular. Guardar encima seria revivirlo por la
      puerta de atras, y el servidor lo rechaza de todos modos; esto es para que
      el boton no invite a intentarlo. */
-  ['btn-guardar','btn-listo','btn-firmado'].forEach(b => $(b).disabled = anulada);
+  ['btn-guardar','btn-imprimir'].forEach(function(b){
+    const e = $(b); if (e) e.disabled = (b === 'btn-guardar') ? anulada : false;
+  });
   $('btn-anular').disabled = anulada || !DOC.Doc_ID;
   $('btn-anular').title = !DOC.Doc_ID
     ? 'Primero hay que guardarlo: todavía no existe como documento.'
@@ -3251,6 +3316,10 @@ function pintaDocumento(){
   $('btn-dictar').disabled = !audioAutorizado();
   /* Traer del consultorio sólo tiene sentido en la historia clínica, y sólo
      mientras la nota se pueda prellenar: una nota ya archivada o anulada no.  */
+  /* abreDocumento los apaga mientras pide la nota; aqui vuelven a la vida.
+     Sin esta linea «Traer del consultorio» se quedaba muerto para siempre:
+     abajo solo se decide si se VE, no si se puede apretar. */
+  $('btn-traer').disabled = false;
   $('btn-traer').classList.toggle('oculto',
     !/historia/i.test(String(DOC.Tipo || '')) || anulada || archivada);
   if (anulada){
@@ -4127,17 +4196,7 @@ function faltantes(){
 }
 
 /* ── Guardar ───────────────────────────────────────────────────── */
-$('btn-guardar').onclick = () => guarda('Borrador');
-$('btn-listo').onclick   = () => guarda('Listo para firma');
-$('btn-firmado').onclick = async function(){
-  const ok = await confirma('Archivar la nota',
-    'Queda registrado que esta nota ya se imprimió, se firmó con pluma y está en el ' +
-    'expediente físico. Su audio se elimina en este momento.\n\n' +
-    'La nota sigue siendo editable: si después la cambia, hay que reimprimirla y ' +
-    'sustituir la hoja archivada.', 'Archivar');
-  if (!ok) return;
-  guarda(ESTADO_ARCHIVADA);
-};
+$('btn-guardar').onclick = () => guarda(ESTADO_GUARDADA);
 
 /* ── La reja del doble clic ─────────────────────────────────────
    Dos clics seguidos en «Guardar» creaban DOS documentos. El segundo clic
@@ -4202,26 +4261,22 @@ $('btn-anular').onclick = async function(){
 };
 
 async function guarda(estado){
+  /* Si no hay nota abierta no se guarda NADA. Sin esto, un formulario que
+     quedó en pantalla de la nota anterior se guardaba como nota nueva. */
+  if (!DOC){ avisoGlobal('No hay ninguna nota abierta.'); return; }
   if (GUARDANDO) return;
   GUARDANDO = true;
-  const botonesGuardar = ['btn-guardar','btn-listo','btn-firmado']
+  const botonesGuardar = ['btn-guardar']
     .map(function(id){ return $(id); }).filter(Boolean);
   botonesGuardar.forEach(function(b){ b.disabled = true; });
   try{
-  if (estado !== 'Borrador'){
-    const f = faltantes();
-    if (f.length){
-      const ok = await confirma('Faltan campos obligatorios',
-        'Quedan sin contestar ' + f.length + ':\n\n· ' +
-        f.slice(0,12).join('\n· ') + (f.length>12 ? '\n· …' : '') +
-        '\n\nSe guardan vacíos. No se inventan.', 'Guardar así');
-      if (!ok) return;
-    }
-  }
+  /* Lo que falta ya no detiene el guardado con una ventana: se guarda y se
+     dice después, abajo, con la lista de lo que quedó vacío. Guardar es
+     guardar; avisar es avisar. */
   /* Editar una nota ya archivada no está prohibido —es lo que el Dr. Soto
      pidió— pero deja de coincidir con la hoja que está en el expediente
      físico. Se avisa en el momento, no después. */
-  if (DOC.Doc_ID && esArchivada(DOC.Estado) && estado !== ESTADO_ARCHIVADA){
+  if (DOC.Doc_ID && esArchivada(DOC.Estado)){
     const ok = await confirma('Esta nota ya está archivada',
       'La hoja impresa que está en el expediente físico va a dejar de coincidir ' +
       'con lo que guarde ahora.\n\nSi continúa: imprima la nota otra vez, fírmela y ' +
@@ -4229,18 +4284,32 @@ async function guarda(estado){
     if (!ok) return;
   }
   try{
+    const enviados = leeFormulario();
     const r = await api('documentoGuardar', {
       doc_id: DOC.Doc_ID || '', tipo: DOC.Tipo,
       paciente_id: EXP.paciente.Paciente_ID, caso_id: DOC.Caso_ID || '',
-      estado: estado, campos: leeFormulario()
+      estado: estado, campos: enviados
     });
     DOC.Doc_ID = r.doc_id; DOC.Estado = r.estado; DOC.Version = r.version;
-    aviso('doc-aviso','ok','Guardado como versión '+r.version+
-      (r.audio_borrado ? '. Se eliminaron '+r.audio_borrado+' audio(s) de este documento.' : '.'));
+    /* Lo que se acaba de mandar es ahora lo que la nota tiene. Sin esta
+       línea, cualquier repintado posterior volvía a poner en pantalla los
+       valores con que se abrió la nota —se veía como si lo escrito se
+       hubiera perdido, aunque estuviera guardado—. */
+    DOC.campos = enviados;
+    const faltan = faltantes();
+    aviso('doc-aviso', faltan.length ? 'warn' : 'ok',
+      'Guardado como versión ' + r.version +
+      (r.audio_borrado ? '. Se eliminaron ' + r.audio_borrado + ' audio(s) de este documento.' : '.') +
+      (faltan.length
+        ? ' Quedan ' + faltan.length + ' campo(s) obligatorios sin contestar: ' +
+          faltan.slice(0,8).join(', ') + (faltan.length > 8 ? '…' : '') +
+          '. Se guardaron vacíos; no se inventa nada.'
+        : ''));
     $('doc-estado').textContent = r.estado;
+    $('btn-anular').disabled = false;
+    $('btn-anular').title = 'Retira este documento del expediente, dejando constancia.';
     EXP = await api('expediente', { paciente_id: EXP.paciente.Paciente_ID });
     pintaExpediente();
-    if (esArchivada(estado)) pintaDocumento();
   }catch(e){ aviso('doc-aviso','malo', e.message); }
   } finally {
     GUARDANDO = false;
@@ -5378,17 +5447,18 @@ async function imprimeProgramacionDelDia(boton){
         '<div class="pie"><b>' + esc(quien || '______________________________') + '</b>' +
           '<br>Responsable del registro</div>' +
       '</div>' +
-      '<div class="imp-nota">' +
-        (completo
-          ? 'Registro diario de pacientes del establecimiento. '
-          : 'ALCANCE PARCIAL: esta hoja sólo contiene los casos en los que ' +
-            'participa quien la imprimió, no todos los del establecimiento. ') +
-        'Impresa' + (quien ? ' por ' + esc(quien) : '') + ' el ' + progCuandoAhora() +
-        '. Se arma al momento con lo que la base de datos tiene de esa fecha. ' +
-        'El expediente es propiedad del establecimiento y se conserva cinco años ' +
-        'contados desde el último acto médico (NOM-004-SSA3-2012, 5.4).</div>' +
       '</td></tr></tbody>' +
-      '<tfoot><tr><td></td></tr></tfoot></table>';
+      '<tfoot><tr><td>' +
+        '<div class="imp-nota">' +
+          (completo
+            ? 'Registro diario de pacientes del establecimiento. '
+            : 'ALCANCE PARCIAL: esta hoja sólo contiene los casos en los que ' +
+              'participa quien la imprimió, no todos los del establecimiento. ') +
+          'Impresa' + (quien ? ' por ' + esc(quien) : '') + ' el ' + progCuandoAhora() +
+          '. Se arma al momento con lo que la base de datos tiene de esa fecha. ' +
+          'El expediente es propiedad del establecimiento y se conserva cinco años ' +
+          'contados desde el último acto médico (NOM-004-SSA3-2012, 5.4).</div>' +
+      '</td></tr></tfoot></table>';
 
     window.print();
     aviso('agenda-sub', 'ok', 'Programación del ' + progFechaLarga(dia) + ': ' +
