@@ -674,6 +674,11 @@ html[data-tema="oscuro"] #acceso .iso{content:url("../assets/renaste-iso-blanco.
         <p class="sub">Los campos marcados son los que la NOM-004 pide en la hoja frontal. La ficha se marca
           completa sola cuando ya no falta ninguno.</p>
         <div id="f-estado"></div>
+        <div class="fila" style="margin:4px 0 2px">
+          <button class="btn sec" id="f-consultorio" type="button">Traer datos del consultorio</button>
+          <span class="meta">Sólo sus pacientes. Llena la pantalla; usted revisa y guarda.</span>
+        </div>
+        <div id="f-cons-caja"></div>
         <div class="rejilla">
           <div><label>Nombre completo *</label><input id="f-Nombre_Completo"></div>
           <div><label>Fecha de nacimiento *</label><input type="date" id="f-Fecha_Nacimiento"></div>
@@ -2553,6 +2558,7 @@ async function abreFicha(pac){
     ? '<div class="aviso ok">Ficha completa.</div>'
     : '<div class="aviso warn">Ficha incompleta.</div>';
   $('f-msg').textContent = '';
+  consLimpia();
   muestra('vista-ficha');
 }
 
@@ -2571,6 +2577,160 @@ $('f-guardar').onclick = async function(){
     $('f-msg').innerHTML = '<span class="pastilla ok">Guardado</span>';
   }catch(e){ $('f-msg').innerHTML = '<span class="pastilla warn">'+esc(e.message)+'</span>'; }
 };
+
+/* ── Traer datos del consultorio ──────────────────────────────
+   Los datos generales de sus pacientes ya están capturados en el
+   consultorio. Volverlos a teclear aquí es de donde salen los errores
+   —la paciente que «nació» este año, por ejemplo—. Esto los trae.
+
+   Tres reglas, y las tres importan:
+
+   · SÓLO SUS PACIENTES. Lo decide el servidor comparando contra el
+     cirujano del caso, no esta pantalla. Si alguien más lo intenta le
+     rebota aunque se sepa el número de paciente: no es un botón
+     escondido, es una puerta cerrada.
+
+   · NO PISA LO CAPTURADO. Lo que está vacío se llena solo. Lo que ya
+     tenía algo distinto se muestra lado a lado y se elige renglón por
+     renglón: ningún dato de aquí se cambia sin que alguien lo marque.
+
+   · NO GUARDA. Deja la pantalla llena y ahí se detiene. Se guarda con
+     «Guardar ficha», que es donde corre la validación de siempre —la
+     de la fecha de nacimiento incluida—. */
+
+const ETIQUETA_FICHA = {
+  Nombre_Completo:'Nombre completo', Fecha_Nacimiento:'Fecha de nacimiento',
+  Sexo:'Sexo', CURP:'CURP', Telefono:'Teléfono', Correo:'Correo',
+  Calle_Numero:'Calle y número', Colonia:'Colonia',
+  Alcaldia_Municipio:'Alcaldía o municipio', CP:'CP',
+  Estado_Civil:'Estado civil', Ocupacion:'Ocupación',
+  Contacto_Urgencia_Nombre:'Contacto de urgencia · nombre',
+  Contacto_Urgencia_Parentesco:'Contacto de urgencia · parentesco',
+  Contacto_Urgencia_Telefono:'Contacto de urgencia · teléfono',
+  Grupo_Sanguineo:'Grupo sanguíneo', Alergias_Tiene:'¿Tiene alergias?',
+  Alergias_Cuales:'¿Cuáles?'
+};
+
+function consLimpia(){ const c = $('f-cons-caja'); if (c) c.innerHTML = ''; }
+
+$('f-consultorio').onclick = function(){
+  $('f-cons-caja').innerHTML =
+    '<div class="fila" style="margin-top:10px">' +
+      '<input id="f-cons-q" placeholder="Unas letras del nombre" style="flex:1 1 220px">' +
+      '<button class="btn" id="f-cons-ir" type="button">Buscar</button>' +
+      '<button class="btn sec" id="f-cons-cerrar" type="button">Cerrar</button>' +
+    '</div><div id="f-cons-res"></div>';
+  $('f-cons-cerrar').onclick = consLimpia;
+  $('f-cons-ir').onclick = consBusca;
+  $('f-cons-q').onkeydown = function(e){ if (e.key === 'Enter') consBusca(); };
+  $('f-cons-q').value = PACIENTE_SEL ? String(PACIENTE_SEL.Nombre_Completo || '') : '';
+  if ($('f-cons-q').value.trim().length >= 3) consBusca(); else $('f-cons-q').focus();
+};
+
+async function consBusca(){
+  const q = $('f-cons-q').value.trim();
+  if (q.length < 3){ aviso('f-cons-res','warn','Escriba al menos tres letras.'); return; }
+  if (!CASO_SEL || !CASO_SEL.Caso_ID){
+    aviso('f-cons-res','malo','Abra la ficha desde el caso: el permiso se revisa contra el cirujano del caso.');
+    return;
+  }
+  try{
+    const r = await api('consultorioBuscar', {caso_id: CASO_SEL.Caso_ID, q: q});
+    const lista = r.resultados || [];
+    if (!lista.length){
+      aviso('f-cons-res','warn','Nadie con ese nombre entre sus pacientes del consultorio.');
+      return;
+    }
+    $('f-cons-res').innerHTML = lista.map(function(x){
+      const meta = [ x.nacimiento ? 'Nac. ' + x.nacimiento : '',
+                     x.telefono_fin ? 'Tel. …' + x.telefono_fin : '',
+                     x.tiene_hc ? 'con historia clínica' : 'sin historia clínica' ]
+                   .filter(Boolean).map(esc).join(' · ');
+      return '<div class="caso" data-pid="' + esc(x.paciente_id) + '"><div class="nom">' +
+        esc(x.nombre || x.paciente_id) + '</div><div class="meta">' + meta + '</div></div>';
+    }).join('') + (r.mas
+      ? '<div class="meta" style="margin-top:8px">Hay más coincidencias; afine el nombre.</div>' : '');
+    $('f-cons-res').querySelectorAll('[data-pid]').forEach(function(el){
+      el.onclick = function(){ consTrae(el.dataset.pid); };
+    });
+  }catch(e){ aviso('f-cons-res','malo', e.message); }
+}
+
+async function consTrae(pid){
+  try{
+    const r = await api('consultorioTraer', {caso_id: CASO_SEL.Caso_ID, paciente_id: pid});
+    const campos = r.campos || {};
+    const llenados = [], choques = [], nocupo = [];
+
+    Object.keys(campos).forEach(function(k){
+      const el = $('f-' + k);
+      if (!el) return;
+      const nuevo = campos[k] == null ? '' : String(campos[k]).trim();
+      if (nuevo === '') return;
+      const actual = String(el.value || '').trim();
+      if (actual === ''){
+        el.value = nuevo;
+        /* Un <select> o un <input type="date"> ignoran callados lo que no
+           entienden: quedarían vacíos y uno juraría que se llenaron. Se
+           revisa, y si no entró se dice cuál fue y con qué valor. */
+        if (String(el.value).trim() === nuevo) llenados.push(k);
+        else { el.value = ''; nocupo.push({k:k, valor:nuevo}); }
+      } else if (actual !== nuevo){
+        choques.push({k:k, actual:actual, nuevo:nuevo});
+      }
+    });
+
+    let html = '<div class="aviso ok">Se llenaron ' + llenados.length +
+      ' campo(s) que estaban vacíos. Nada se ha guardado: revise y pulse «Guardar ficha».</div>';
+
+    if (r.hc_fecha){
+      html += '<div class="meta">Historia clínica del consultorio del ' + esc(r.hc_fecha) + '.</div>';
+    }
+    (r.avisos || []).forEach(function(a){
+      html += '<div class="aviso warn">' + esc(a) + '</div>';
+    });
+    if (nocupo.length){
+      html += '<div class="aviso warn">Esto vino del consultorio pero no cupo en su casilla; captúrelo a mano: ' +
+        esc(nocupo.map(function(x){ return (ETIQUETA_FICHA[x.k] || x.k) + ' = ' + x.valor; }).join(' · ')) +
+        '</div>';
+    }
+
+    if (choques.length){
+      html += '<h3 class="grupo">Estos ya tenían algo distinto</h3>' +
+        '<div class="meta">No los toqué. Marque sólo el que quiera cambiar por lo del consultorio.</div>';
+      choques.forEach(function(c, i){
+        html += '<label class="opcion-compartida"><input type="checkbox" data-choque="' + i + '">' +
+          '<span><b>' + esc(ETIQUETA_FICHA[c.k] || c.k) + '</b><br>' +
+          'aquí: ' + esc(c.actual) + '<br>consultorio: ' + esc(c.nuevo) + '</span></label>';
+      });
+      html += '<div class="fila" style="margin-top:12px">' +
+        '<button class="btn sec" id="f-cons-aplica" type="button">Cambiar los marcados</button>' +
+        '<button class="btn txt" id="f-cons-cerrar2" type="button">Cerrar</button></div>';
+    } else {
+      html += '<div class="fila" style="margin-top:12px">' +
+        '<button class="btn txt" id="f-cons-cerrar2" type="button">Cerrar</button></div>';
+    }
+
+    $('f-cons-res').innerHTML = html;
+
+    if (choques.length){
+      $('f-cons-aplica').onclick = function(){
+        let n = 0;
+        $('f-cons-res').querySelectorAll('[data-choque]').forEach(function(ch){
+          if (!ch.checked) return;
+          const c = choques[Number(ch.dataset.choque)];
+          const el = $('f-' + c.k);
+          if (!el) return;
+          el.value = c.nuevo;
+          if (String(el.value).trim() === c.nuevo) n++; else el.value = c.actual;
+        });
+        $('f-msg').innerHTML = '<span class="pastilla ok">' + n + ' cambiado(s) en pantalla</span>';
+        consLimpia();
+      };
+    }
+    $('f-cons-cerrar2').onclick = consLimpia;
+  }catch(e){ aviso('f-cons-res','malo', e.message); }
+}
 
 /* ── Cotizar para mandar ───────────────────────────────────────
    Una cotización suelta: sin caso, sin quirófano y sin paciente dado de alta.
