@@ -258,6 +258,20 @@ textarea{min-height:80px;resize:vertical}
 }
 .caso .nom{font-weight:600;margin-top:5px;font-size:15px}
 .caso .meta{color:var(--tinta2);font-size:13px;margin-top:3px}
+/* El renglón que separa HOY de lo que sigue y de lo que ya pasó. No es
+   decoración: sin él la lista vuelve a ser un listado de 38 fechas en el
+   que hay que leer cada una para saber dónde empieza el día. */
+.corte{
+  display:flex;align-items:center;gap:12px;
+  margin:22px 0 11px;padding-left:2px;
+  font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--tinta3);
+}
+.corte:first-child{margin-top:2px}
+.corte::after{content:"";flex:1;height:1px;background:var(--linea)}
+.corte.hoy{color:var(--zx-txt-marca)}
+.corte.hoy::after{background:linear-gradient(90deg,var(--zx-grad-a),transparent)}
+
 .vacio{
   color:var(--tinta3);text-align:center;padding:44px 16px 40px;font-size:14px;
   background:url("../assets/renaste-iso.png") center 16px/44px no-repeat;
@@ -1327,37 +1341,78 @@ async function cargaCasos(){
     ? 'Todos los casos del centro.'
     : 'Sólo los casos en los que usted participa.';
 
-  /* Tres números que se leen de un vistazo antes de bajar a la lista. */
+  /* Los números que se leen de un vistazo antes de bajar a la lista. El
+     primero es HOY: con 38 casos en la base, «Casos» ya no contesta la
+     única pregunta que alguien se hace al abrir esta pantalla. */
   const cuenta = (est) => CASOS.filter(x => String(x.Estatus_Agenda) === est).length;
+  const diaDeHoy = hoyISO();
+  const deHoy = CASOS.filter(x => String(x.Fecha_Cirugia || '').slice(0,10) === diaDeHoy).length;
   $('agenda-kpis').innerHTML = CASOS.length ? [
-    ['ac', CASOS.length,            'Casos'],
+    ['ac', deHoy,                   'Hoy'],
+    ['',   CASOS.length,            'En total'],
     ['ok', cuenta('Confirmado'),    'Confirmados'],
     ['wa', cuenta('Preaparto'),     'Por confirmar']
   ].map(k => '<div class="kpi '+k[0]+'"><b>'+k[1]+'</b><span>'+k[2]+'</span></div>').join('') : '';
 
   const c = $('lista-casos');
   if (!CASOS.length){ c.innerHTML = '<div class="vacio">Todavía no hay casos.</div>'; return; }
-  /* De lo más reciente a lo más viejo. Esta lista se abre para ver lo que
-     sigue o lo que acaba de pasar, no para repasar el año: lo útil queda
-     arriba y lo viejo se hunde solo conforme pasa el tiempo.
 
-     Se desempata por hora dentro del mismo día, cosa que antes no se hacía:
-     por eso las 09:00 salían antes que las 07:30 del mismo 12 de octubre
-     —no estaba ordenado por hora, era el orden en que venían de la base—.
-     Un caso sin fecha se va hasta el final: no compite con los que sí la
-     tienen. */
+  /* ── EL ORDEN DE LA PROGRAMACIÓN ──────────────────────────────────────
+     Esto estaba ordenado por fecha de mayor a menor, y el comentario decía
+     «lo más reciente arriba». Con una docena de casos, casi todos pasados,
+     «la fecha mayor» y «lo más reciente» eran lo mismo y se veía bien.
+
+     Al entrar la agenda completa dejaron de serlo: «la fecha mayor» pasó a
+     ser LO MÁS LEJANO. El 20 de noviembre la lista abría en el 15 de enero
+     de 2027, seguía con todo diciembre, y la cirugía de ESE día estaba 17
+     renglones abajo. Una programación que no abre en hoy no es una
+     programación: es un archivo ordenado al revés.
+
+     El orden que sirve a las siete de la mañana:
+       1. HOY, por hora, de la primera a la última.
+       2. LO QUE SIGUE, del día más próximo al más lejano —al revés que
+          antes: lo de pasado mañana importa más que lo de enero—.
+       3. LO QUE YA PASÓ, de lo más reciente hacia atrás.
+       4. SIN FECHA, al final: no compite con lo que sí la tiene.
+
+     El día lo da hoyISO(), que ya existía en este archivo y usa la hora del
+     equipo, no UTC: a las 19:00 de México UTC ya es el día siguiente y
+     «Hoy» se vaciaría solo a media tarde.                                 */
+  const dia = hoyISO();
+  const GRUPOS = ['Hoy', 'Lo que sigue', 'Ya pasó', 'Sin fecha'];
+  const grupoDe = function(f){
+    if (!f) return 3;
+    if (f === dia) return 0;
+    return f > dia ? 1 : 2;
+  };
+  const fechaDe = function(x){ return String(x.Fecha_Cirugia || '').slice(0, 10); };
+
   CASOS.sort(function(a, b){
-    const fa = String(a.Fecha_Cirugia || ''), fb = String(b.Fecha_Cirugia || '');
-    if (fa !== fb) return fb.localeCompare(fa);
-    return String(b.Hora_Inicio || '').localeCompare(String(a.Hora_Inicio || ''));
+    const fa = fechaDe(a), fb = fechaDe(b);
+    const ga = grupoDe(fa), gb = grupoDe(fb);
+    if (ga !== gb) return ga - gb;
+    const ha = String(a.Hora_Inicio || ''), hb = String(b.Hora_Inicio || '');
+    /* Hoy y el futuro, hacia adelante. El pasado, hacia atrás. */
+    if (ga === 2) return fb.localeCompare(fa) || hb.localeCompare(ha);
+    return fa.localeCompare(fb) || ha.localeCompare(hb);
   });
+
+  let grupoPintado = -1;
   c.innerHTML = CASOS.map(function(x){
     const est = String(x.Estatus_Agenda||'');
     const clase = est === 'Confirmado' ? 'ok' : (est === 'Preaparto' ? 'warn' : '');
+    /* El corte se pinta cuando cambia el grupo, no antes: si hoy no hay nada,
+       no aparece un «Hoy» vacío que haga dudar de si falta cargar algo. */
+    const g = grupoDe(fechaDe(x));
+    let corte = '';
+    if (g !== grupoPintado){
+      grupoPintado = g;
+      corte = '<div class="corte' + (g === 0 ? ' hoy' : '') + '">' + GRUPOS[g] + '</div>';
+    }
     /* El renglón grande es el NOMBRE. El folio es para la máquina y el
        procedimiento se repite entre pacientes: ninguno de los dos sirve para
        que alguien reconozca de quién es el caso de un vistazo. */
-    return '<div class="caso" data-id="'+esc(x.Caso_ID)+'">' +
+    return corte + '<div class="caso" data-id="'+esc(x.Caso_ID)+'">' +
       '<div class="top"><span class="folio">'+esc(x.Folio_Caso)+'</span>' +
       '<span class="pastilla '+clase+'">'+esc(etiquetaAgenda(est))+'</span></div>' +
       '<div class="nom">'+esc(x.paciente || 'Paciente sin ficha')+'</div>' +
